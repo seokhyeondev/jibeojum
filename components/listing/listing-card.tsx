@@ -27,9 +27,11 @@ export function ListingCard({ recommendation, rank, destination, favorite, onTog
     <article className={listing.status === "expired" ? "expired" : undefined}>
       <Link className="photo" href={href} aria-label={`${listing.title} 상세 보기`}>
         <Image src={cover.src} alt={cover.alt} fill sizes="(max-width:600px) 100vw,360px" />
-        {rank !== null && <em>추천 {rank}위</em>}
-        {commuteFit === "no_transfer_extra" && <em className="alt">환승 없는 추천</em>}
-        {listing.status === "expired" && <em className="gone">거래 완료</em>}
+        <span className="badges">
+          {rank !== null && <em>추천 {rank}위</em>}
+          {commuteFit === "no_transfer_extra" && <em className="alt">환승 없는 추천</em>}
+          {listing.status === "expired" && <em className="gone">거래 완료</em>}
+        </span>
       </Link>
       <button
         type="button"
