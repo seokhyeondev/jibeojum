@@ -24,6 +24,7 @@ export class UploadsController {
     const agentId = verifyValue(req.cookies?.[AGENT_COOKIE]);
     const admin = verifyValue(req.cookies?.[ADMIN_COOKIE]) === "admin";
     if (body.purpose === "listing-photo" && !agentId) throw new ApiException(401, "unauthorized", "로그인이 필요해요.");
+    // 가입 화면(로그인 전)에서 쓰는 프로필 사진·등록증은 IP별로 횟수를 제한한다
     if (!agentId && !admin && !this.limiter.allow(req.ip ?? "unknown")) {
       throw new ApiException(429, "invalid_input", "잠시 후 다시 시도해주세요.");
     }

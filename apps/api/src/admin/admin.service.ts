@@ -40,6 +40,10 @@ function toAgentSummary(a: Agent & { _count: { assignments: number } }, stats: A
     createdAt: a.createdAt.toISOString(),
     launchPartnerAt: a.launchPartnerAt?.toISOString() ?? null,
     stats,
+    verificationStatus: a.verificationStatus as AgentSummary["verificationStatus"],
+    registrationNo: a.registrationNo,
+    hasLicenseImage: a.licenseImageKey !== null,
+    rejectReason: a.rejectReason,
   };
 }
 
@@ -131,6 +135,22 @@ export class AdminService {
     return map;
   }
 
+  /** 등록증 확인: 승인하면 매물을 올릴 수 있고, 반려하면 사유가 공인중개사에게 보인다 */
+  async verifyAgent(agentId: string, status: "verified" | "rejected", reason: string | null) {
+    const updated = await this.prisma.agent.updateMany({
+      where: { id: agentId, loginId: { not: null } },
+      data: status === "verified" ? { verificationStatus: "verified", verifiedAt: new Date(), rejectReason: null } : { verificationStatus: "rejected", verifiedAt: null, rejectReason: reason },
+    });
+    if (!updated.count) throw notFound();
+  }
+
+  /** 등록증 사진을 잠깐 볼 수 있는 주소 */
+  async licenseUrl(agentId: string): Promise<string> {
+    const agent = await this.prisma.agent.findUnique({ where: { id: agentId }, select: { licenseImageKey: true } });
+    if (!agent?.licenseImageKey) throw notFound();
+    return this.uploads.privateUrl(agent.licenseImageKey);
+  }
+
   /** 런칭 파트너 지정·해제 */
   async setLaunchPartner(agentId: string, on: boolean) {
     const updated = await this.prisma.agent.updateMany({
@@ -193,6 +213,11 @@ export class AdminService {
           name: input.name,
           phone: input.phone,
           address: input.address,
+          registrationNo: input.registrationNo,
+          licenseImageKey: input.licenseImageKey,
+          // 운영자가 직접 만든 계정은 운영자가 확인한 것으로 본다
+          verificationStatus: "verified",
+          verifiedAt: new Date(),
           photoUrl: input.photoUrl,
           createdBy: "admin",
         },

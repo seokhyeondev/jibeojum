@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import type {
+  AgentLicenseInput,
   AgentInvitePreview,
   AgentAssignmentDetail,
   AgentAssignmentSummary,
@@ -50,7 +51,18 @@ export class AgentService {
     this.uploads.assertOwnAssets([input.photoUrl], uploadPrefix("agent-photo", null));
     try {
       const agent = await this.prisma.agent.create({
-        data: { loginId: input.loginId, passwordHash: await hashPassword(input.password), name: input.name, phone: input.phone, address: input.address, photoUrl: input.photoUrl, createdBy: "self" },
+        data: {
+          loginId: input.loginId,
+          passwordHash: await hashPassword(input.password),
+          name: input.name,
+          phone: input.phone,
+          address: input.address,
+          photoUrl: input.photoUrl,
+          registrationNo: input.registrationNo,
+          licenseImageKey: input.licenseImageKey,
+          verificationStatus: "pending",
+          createdBy: "self",
+        },
       });
       return agent.id;
     } catch (error) {
@@ -82,7 +94,22 @@ export class AgentService {
       createdAt: agent.createdAt.toISOString(),
       launchPartnerAt: agent.launchPartnerAt?.toISOString() ?? null,
       stats: { proposals: 0, viewed: 0, favorited: 0, inquired: 0, reportsOpen: 0, reportsConfirmed: 0 },
+      verificationStatus: agent.verificationStatus as AgentSummary["verificationStatus"],
+      registrationNo: agent.registrationNo,
+      hasLicenseImage: agent.licenseImageKey !== null,
+      rejectReason: agent.rejectReason,
     };
+  }
+
+  /** 반려된 뒤 등록증을 다시 낸다 → 다시 확인 대기 */
+  async resubmitLicense(agentId: string, input: AgentLicenseInput): Promise<AgentSummary> {
+    const agent = await this.me(agentId);
+    if (agent.verificationStatus === "verified") throw new ApiException(409, "conflict", "이미 확인된 계정이에요.");
+    await this.prisma.agent.update({
+      where: { id: agentId },
+      data: { registrationNo: input.registrationNo, licenseImageKey: input.licenseImageKey, verificationStatus: "pending", rejectReason: null },
+    });
+    return this.me(agentId);
   }
 
   // ───── 초대 링크 ─────
@@ -199,6 +226,9 @@ export class AgentService {
    */
   async registerListing(agentId: string, assignmentId: string, input: AgentListingInput): Promise<ProposedListing> {
     const me = await this.me(agentId);
+    if (me.verificationStatus !== "verified") {
+      throw new ApiException(403, "forbidden", "운영팀이 중개사무소 등록증을 확인한 뒤 매물을 올릴 수 있어요.");
+    }
     const assignment = await this.prisma.requestAssignment.findFirst({
       where: { id: assignmentId, agentId },
       include: { request: { include: { areaRecommendation: true } } },

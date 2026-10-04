@@ -20,7 +20,14 @@ export interface AgentSummary {
   /** 런칭 파트너로 등록한 시각 (유료화 후 평생 할인 대상). null이면 일반 */
   launchPartnerAt: string | null;
   stats: AgentStats;
+  /** 등록증 확인: 승인 전에는 매물을 올릴 수 없다 */
+  verificationStatus: AgentVerificationStatus;
+  registrationNo: string | null;
+  hasLicenseImage: boolean;
+  rejectReason: string | null;
 }
+
+export type AgentVerificationStatus = "pending" | "verified" | "rejected";
 
 /** 공인중개사 실적 (유료화 단가·플랜 판단에 쓴다) */
 export interface AgentStats {

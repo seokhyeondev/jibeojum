@@ -114,31 +114,40 @@ model AgentInvite {
 }
 
 model Agent {
-  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// 중개사무소 (선택). 샘플 중개사는 사무소가 있다
-  officeId        String?             @map("office_id") @db.Uuid
+  officeId           String?             @map("office_id") @db.Uuid
   /// 로그인 아이디 (샘플 중개사는 null)
-  loginId         String?             @unique @map("login_id")
+  loginId            String?             @unique @map("login_id")
   /// scrypt 해시 "salt:hash"
-  passwordHash    String?             @map("password_hash")
-  name            String
+  passwordHash       String?             @map("password_hash")
+  name               String
   /// 사용자 문의 동의 이후에만 공개한다
-  phone           String?
+  phone              String?
   /// 사무소 주소 (도로명 또는 지번)
-  address         String?
+  address            String?
   /// 프로필 사진. 저장소가 생기기 전까지 작은 data URL
-  photoUrl        String?             @map("photo_url")
+  photoUrl           String?             @map("photo_url")
   /// active | inactive
-  status          String              @default("active")
+  status             String              @default("active")
   /// self(직접 가입) | admin(운영자가 만듦) | seed(샘플)
-  createdBy       String              @default("seed") @map("created_by")
-  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdBy          String              @default("seed") @map("created_by")
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   /// 런칭 파트너로 등록한 시각 (유료화 후 평생 30% 할인 대상). null이면 일반
-  launchPartnerAt DateTime?           @map("launch_partner_at") @db.Timestamptz(6)
-  office          BrokerOffice?       @relation(fields: [officeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "agents_office_id_broker_offices_id_fk")
-  listings        Listing[]
-  assignments     RequestAssignment[]
-  invites         AgentInvite[]
+  launchPartnerAt    DateTime?           @map("launch_partner_at") @db.Timestamptz(6)
+  /// 중개사무소 등록번호 (공인중개사가 입력)
+  registrationNo     String?             @map("registration_no")
+  /// 중개사무소 등록증(또는 사업자등록증) 사진의 S3 키. 비공개 경로(private/)라 운영자만 서명 주소로 본다
+  licenseImageKey    String?             @map("license_image_key")
+  /// pending(확인 대기) | verified(승인) | rejected(반려). 승인 전에는 매물을 올릴 수 없다
+  verificationStatus String              @default("pending") @map("verification_status")
+  verifiedAt         DateTime?           @map("verified_at") @db.Timestamptz(6)
+  /// 반려 사유 (공인중개사에게 보여준다)
+  rejectReason       String?             @map("reject_reason")
+  office             BrokerOffice?       @relation(fields: [officeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "agents_office_id_broker_offices_id_fk")
+  listings           Listing[]
+  assignments        RequestAssignment[]
+  invites            AgentInvite[]
 
   @@index([officeId], map: "agents_office_idx")
   @@map("agents")

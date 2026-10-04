@@ -42,6 +42,8 @@ function InviteBanner({ preview }: { preview: NonNullable<ReturnType<typeof useI
 }
 import { AgentAvatar } from "./admin-agents";
 import { OpsShell } from "./ops-shell";
+import { LicenseInput } from "./license-input";
+import { VerificationNotice } from "./verification-notice";
 import { PhotoInput } from "./photo-input";
 import { errorText, useOpsQuery } from "./use-ops-query";
 
@@ -90,7 +92,7 @@ export function AgentLogin() {
 export function AgentSignup() {
   const router = useRouter();
   const { token, preview } = useInvite();
-  const [form, setForm] = useState({ loginId: "", password: "", passwordCheck: "", name: "", phone: "", address: null as string | null, photoUrl: null as string | null });
+  const [form, setForm] = useState({ loginId: "", password: "", passwordCheck: "", name: "", phone: "", address: null as string | null, photoUrl: null as string | null, registrationNo: "", licenseImageKey: null as string | null });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
@@ -138,6 +140,18 @@ export function AgentSignup() {
         <input id="signup-phone" className="ops-input" inputMode="tel" autoComplete="tel" value={form.phone} onChange={(e) => set({ phone: e.target.value })} placeholder="010-1234-5678" />
         <label htmlFor="signup-address">사무소 주소</label>
         <input id="signup-address" className="ops-input" autoComplete="street-address" value={address} onChange={(e) => set({ address: e.target.value })} placeholder="예) 서울 강남구 테헤란로 123 1층" />
+        <label htmlFor="signup-reg">중개사무소 등록번호</label>
+        <input
+          id="signup-reg"
+          className="ops-input"
+          inputMode="numeric"
+          value={form.registrationNo}
+          onChange={(e) => set({ registrationNo: e.target.value })}
+          placeholder="예) 11680-2019-00123"
+        />
+        <span className="ops-field-label">중개사무소 등록증</span>
+        <LicenseInput value={form.licenseImageKey} onChange={(licenseImageKey) => set({ licenseImageKey })} />
+        <p className="ops-muted">운영팀이 등록증을 확인하면 매물을 올릴 수 있어요. 가입 후 요청은 바로 볼 수 있어요.</p>
         {error && <p className="ops-error">{error}</p>}
         <button type="submit" className="ops-btn primary" disabled={busy}>
           {busy ? "가입 중…" : "가입하기"}
@@ -165,6 +179,7 @@ export function AgentAssignments() {
             </span>
           </span>
         )}
+        {me.data && <VerificationNotice agent={me.data} />}
         <h1>배정된 요청</h1>
         <p>요청 조건과 생활권을 보고 맞는 매물을 올려주세요. 올리면 고객에게 바로 알림이 가요.</p>
       </div>

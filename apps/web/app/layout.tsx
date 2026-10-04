@@ -3,6 +3,7 @@ import { AppShell } from "@/components/navigation/app-shell";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 import "./landing.css";
+import "./ops-extra.css";
 
 export const metadata: Metadata = {
   title: "집어줌 | 출근 조건으로 찾는 집",

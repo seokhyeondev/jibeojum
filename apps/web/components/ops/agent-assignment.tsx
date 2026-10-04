@@ -9,10 +9,13 @@ import { toast } from "sonner";
 import { agentApi, naverMapUrl } from "@/lib/api/ops";
 import { AddressSearch, ListingPhotos, type PickedAddress } from "./listing-media";
 import { OpsShell } from "./ops-shell";
+import { VerificationNotice } from "./verification-notice";
 import { errorText, useOpsQuery } from "./use-ops-query";
 
 export function AgentAssignmentPage({ id }: { id: string }) {
   const { data, isPending, error, refetch } = useOpsQuery("agent", ["assignment", id], () => agentApi.assignment(id));
+  const me = useOpsQuery("agent", ["me"], agentApi.me);
+  const verified = me.data?.verificationStatus === "verified";
   return (
     <OpsShell kind="agent">
       <Link href="/agent" className="ops-back">
@@ -24,7 +27,8 @@ export function AgentAssignmentPage({ id }: { id: string }) {
         <div className="ops-grid">
           <section className="ops-col">
             <RequestCard detail={data} />
-            <ListingForm assignmentId={data.id} defaultType={data.request.housingTypes[0]} jeonse={data.request.transactionPreference === "jeonse"} onCreated={() => void refetch()} />
+            {me.data && !verified && <VerificationNotice agent={me.data} />}
+            {verified && <ListingForm assignmentId={data.id} defaultType={data.request.housingTypes[0]} jeonse={data.request.transactionPreference === "jeonse"} onCreated={() => void refetch()} />}
           </section>
           <aside className="ops-col side">
             <div className="ops-card">

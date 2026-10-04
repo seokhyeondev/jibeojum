@@ -1,8 +1,10 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, Res, UseGuards } from "@nestjs/common";
 import {
+  agentLicenseSchema,
   agentListingInputSchema,
   agentLoginSchema,
   agentSignupSchema,
+  type AgentLicenseInput,
   type AgentListingInput,
   type AgentSignupInput,
 } from "@zipazum/shared";
@@ -46,6 +48,14 @@ export class AgentController {
   @UseGuards(AgentGuard)
   async me(@CurrentAgentId() agentId: string) {
     return { agent: await this.agents.me(agentId) };
+  }
+
+  /** 반려된 뒤 등록증 다시 내기 */
+  @Post("license")
+  @HttpCode(200)
+  @UseGuards(AgentGuard)
+  async resubmitLicense(@CurrentAgentId() agentId: string, @Body(new ZodValidationPipe<AgentLicenseInput>(agentLicenseSchema)) body: AgentLicenseInput) {
+    return { agent: await this.agents.resubmitLicense(agentId, body) };
   }
 
   /** 초대 링크로 들어온 요청 미리보기 (로그인 전에도 본다) */

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { assetUrlSchema } from "./upload";
+import { assetUrlSchema, licenseKeySchema } from "./upload";
 
 // 중개사 계정: 아이디, 이름, 사진, 전화번호, 사무소 주소 (+ 비밀번호)
 
@@ -20,6 +20,14 @@ export const agentPhoneSchema = z
 /** 업로드한 프로필 사진 (CloudFront 주소) */
 export const agentPhotoSchema = assetUrlSchema.nullable().default(null);
 
+/** 중개사무소 등록번호 (예: 11680-2019-00123) */
+export const registrationNoSchema = z
+  .string({ required_error: "중개사무소 등록번호를 입력해주세요" })
+  .trim()
+  .min(5, "중개사무소 등록번호를 확인해주세요")
+  .max(30, "중개사무소 등록번호를 확인해주세요")
+  .regex(/^[0-9가-힣-]+$/, "등록번호는 숫자와 -로 입력해주세요");
+
 export const agentSignupSchema = z.object({
   loginId: agentLoginIdSchema,
   password: agentPasswordSchema,
@@ -28,11 +36,21 @@ export const agentSignupSchema = z.object({
   /** 사무소 주소 */
   address: z.string().trim().min(5, "사무소 주소를 입력해주세요").max(120),
   photoUrl: agentPhotoSchema,
+  registrationNo: registrationNoSchema,
+  /** 중개사무소 등록증(또는 사업자등록증) 사진. 운영자가 확인한 뒤 매물을 올릴 수 있다 */
+  licenseImageKey: licenseKeySchema,
 });
+
+/** 반려된 뒤 등록증을 다시 낼 때 */
+export const agentLicenseSchema = z.object({ registrationNo: registrationNoSchema, licenseImageKey: licenseKeySchema });
+export type AgentLicenseInput = z.infer<typeof agentLicenseSchema>;
 
 /** 운영자가 만들 때는 비밀번호를 비우면 임시 비밀번호를 만든다 */
 export const adminCreateAgentSchema = agentSignupSchema.extend({
   password: agentPasswordSchema.nullable().default(null),
+  // 운영자가 직접 만드는 계정은 운영자가 확인한 것으로 보고 등록증을 선택으로 받는다
+  registrationNo: registrationNoSchema.nullable().default(null),
+  licenseImageKey: licenseKeySchema.nullable().default(null),
 });
 
 export const agentLoginSchema = z.object({

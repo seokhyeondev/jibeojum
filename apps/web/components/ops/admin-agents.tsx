@@ -18,6 +18,9 @@ export function AdminAgents() {
       <div className="ops-head">
         <h1>공인중개사</h1>
         <p>공인중개사는 공인중개사 웹(/agent/signup)에서 직접 가입하거나 여기서 만들 수 있어요.</p>
+        {data && data.some((a) => a.verificationStatus === "pending") && (
+          <p className="ops-warn">등록증 확인 대기 {data.filter((a) => a.verificationStatus === "pending").length}명 — 확인해야 매물을 올릴 수 있어요.</p>
+        )}
       </div>
       <div className="ops-grid">
         <section className="ops-col">
@@ -78,6 +81,7 @@ function AgentRow({ agent }: { agent: AgentSummary }) {
               {agent.launchPartnerAt && <span className="ops-badge partner">런칭 파트너</span>}
             </b>
             <small>{agent.loginId}</small>
+            <VerifyCell agent={agent} onChanged={() => void refresh()} />
           </span>
         </span>
       </td>
@@ -236,6 +240,60 @@ function AgentStatsCell({ agent }: { agent: AgentSummary }) {
         <span className={`ops-badge ${stats.reportsConfirmed >= REPORT_SUSPEND_THRESHOLD ? "danger" : "warn"}`}>
           신고 {stats.reportsConfirmed}건 확인{stats.reportsOpen ? ` · ${stats.reportsOpen}건 대기` : ""}
         </span>
+      )}
+    </span>
+  );
+}
+
+
+const VERIFY_LABEL = { pending: "등록증 확인 대기", verified: "확인됨", rejected: "반려" } as const;
+
+/** 등록증 확인 상태 + 보기·승인·반려 */
+function VerifyCell({ agent, onChanged }: { agent: AgentSummary; onChanged: () => void }) {
+  const tone = agent.verificationStatus === "verified" ? "on" : agent.verificationStatus === "pending" ? "warn" : "danger";
+  const act = async (status: "verified" | "rejected") => {
+    const reason = status === "rejected" ? window.prompt("반려 사유 (공인중개사에게 보여요)", "등록증 글자가 잘 안 보여요. 다시 찍어 올려주세요.") : null;
+    if (status === "rejected" && !reason) return;
+    try {
+      await adminApi.verifyAgent(agent.id, status, reason);
+      onChanged();
+    } catch (err) {
+      toast.error(errorText(err));
+    }
+  };
+  return (
+    <span className="ops-verify-cell">
+      <span className={`ops-badge ${tone}`}>{VERIFY_LABEL[agent.verificationStatus]}</span>
+      {agent.registrationNo && <small>등록 {agent.registrationNo}</small>}
+      {agent.hasLicenseImage && (
+        <button
+          type="button"
+          className="ops-link-btn"
+          onClick={async () => {
+            // 팝업 차단을 피하려고 먼저 창을 연 뒤 주소를 넣는다
+            const win = window.open("", "_blank");
+            try {
+              const url = await adminApi.licenseUrl(agent.id);
+              if (win) win.location.href = url;
+              else window.location.href = url;
+            } catch (err) {
+              win?.close();
+              toast.error(errorText(err));
+            }
+          }}
+        >
+          등록증 보기
+        </button>
+      )}
+      {agent.verificationStatus !== "verified" && (
+        <button type="button" className="ops-link-btn strong" onClick={() => void act("verified")}>
+          승인
+        </button>
+      )}
+      {agent.verificationStatus === "pending" && (
+        <button type="button" className="ops-link-btn" onClick={() => void act("rejected")}>
+          반려
+        </button>
       )}
     </span>
   );

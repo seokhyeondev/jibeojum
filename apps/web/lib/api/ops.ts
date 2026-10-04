@@ -5,6 +5,7 @@ import type {
   AgentAssignmentDetail,
   AgentAssignmentSummary,
   AgentInviteLink,
+  AgentLicenseInput,
   AgentInvitePreview,
   BrokerContactCreateInput,
   BrokerContactUpdateInput,
@@ -49,6 +50,11 @@ export const adminApi = {
   createAgent: (body: AdminCreateAgentInput) => post<{ agent: AgentSummary; temporaryPassword: string | null }>("/api/admin/agents", body),
   resetPassword: (agentId: string) => post<{ temporaryPassword: string }>(`/api/admin/agents/${agentId}/password-reset`),
   setStatus: (agentId: string, status: AgentSummary["status"]) => post<{ ok: true }>(`/api/admin/agents/${agentId}/status`, { status }),
+  /** 등록증 확인: 승인 또는 반려(사유) */
+  verifyAgent: (agentId: string, status: "verified" | "rejected", reason: string | null = null) =>
+    post<{ ok: true }>(`/api/admin/agents/${agentId}/verify`, { status, reason }),
+  /** 등록증 사진을 5분 동안 볼 수 있는 주소 */
+  licenseUrl: (agentId: string) => apiRequest<{ url: string }>(`/api/admin/agents/${agentId}/license`).then((b) => b.url),
   /** 런칭 파트너 지정·해제 (유료화 후 평생 할인 대상) */
   setLaunchPartner: (agentId: string, on: boolean) => post<{ ok: true }>(`/api/admin/agents/${agentId}/launch-partner`, { on }),
   reports: (status: "open" | "all") => apiRequest<{ reports: ListingReportView[] }>(`/api/admin/reports?status=${status}`).then((b) => b.reports),
@@ -62,6 +68,8 @@ export const agentApi = {
   me: () => apiRequest<{ agent: AgentSummary }>("/api/agent/me").then((b) => b.agent),
   assignments: () => apiRequest<{ assignments: AgentAssignmentSummary[] }>("/api/agent/assignments").then((b) => b.assignments),
   assignment: (id: string) => apiRequest<{ assignment: AgentAssignmentDetail }>(`/api/agent/assignments/${id}`).then((b) => b.assignment),
+  /** 반려된 뒤 등록증 다시 내기 */
+  resubmitLicense: (body: AgentLicenseInput) => post<{ agent: AgentSummary }>("/api/agent/license", body).then((b) => b.agent),
   invite: (token: string) => apiRequest<{ invite: AgentInvitePreview }>(`/api/agent/invites/${encodeURIComponent(token)}`).then((b) => b.invite),
   acceptInvite: (token: string) => post<{ assignmentId: string }>(`/api/agent/invites/${encodeURIComponent(token)}/accept`),
   registerListing: (assignmentId: string, body: AgentListingInput) =>

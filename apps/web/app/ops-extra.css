@@ -1,0 +1,129 @@
+/* 공인중개사 등록증 확인 */
+.license-input {
+  display: grid;
+  gap: 6px;
+}
+.license-drop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--faint);
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+.license-drop:hover {
+  border-color: var(--g);
+}
+.license-drop.done {
+  border-style: solid;
+  border-color: var(--g-line);
+  background: var(--gs);
+  color: var(--gd);
+}
+.license-drop img {
+  width: 64px;
+  height: 46px;
+  flex: none;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.license-drop > svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  color: var(--muted);
+}
+.license-drop span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.license-drop span svg {
+  width: 16px;
+  height: 16px;
+}
+.ops-verify {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+}
+.ops-verify > svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+.ops-verify > span {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+.ops-verify.pending {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.ops-verify.rejected {
+  background: #fdecee;
+  color: var(--danger);
+}
+.ops-verify small {
+  color: inherit;
+  opacity: 0.85;
+}
+.ops-verify-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--ink);
+}
+.ops-verify-form .ops-btn.primary {
+  margin: 0;
+}
+.ops-verify-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 4px;
+}
+.ops-verify-cell small {
+  display: inline;
+}
+.ops-link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gd);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.ops-link-btn.strong {
+  font-weight: 800;
+}
+
+/* 공인중개사 표: 버튼 셋을 세로로 쌓아 표가 카드 밖으로 넘치지 않게 */
+.ops-table.agents .ops-actions {
+  width: 112px;
+  white-space: normal;
+}
+.ops-table.agents .ops-actions .ops-btn {
+  display: flex;
+  width: 100%;
+  min-height: 32px;
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.ops-table.agents .ops-actions .ops-btn + .ops-btn {
+  margin-left: 0;
+}

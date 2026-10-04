@@ -16,7 +16,14 @@ function toProposedListing(row: ProposalRow): ProposedListing {
     id: l.id,
     proposalId: row.id,
     agentId: l.agentId,
-    agent: { id: l.agent.id, name: l.agent.name, officeName: l.agent.office?.name ?? "", photoUrl: l.agent.photoUrl },
+    agent: {
+      id: l.agent.id,
+      name: l.agent.name,
+      officeName: l.agent.office?.name ?? "",
+      photoUrl: l.agent.photoUrl,
+      // 표시·광고 의무: 확인된 중개사무소의 등록번호를 함께 보여준다
+      registrationNo: l.agent.verificationStatus === "verified" ? l.agent.registrationNo : null,
+    },
     title: l.title,
     housingType: l.housingType as Listing["housingType"],
     transactionType: l.transactionType as Listing["transactionType"],

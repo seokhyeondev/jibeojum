@@ -1,4 +1,4 @@
-import { BellRing, Building2, Clock3, MapPinned, Search, ShieldCheck, TrainFront, Users } from "lucide-react";
+import { BellRing, Building2, MapPinned, Search, ShieldCheck, TrainFront, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { SITE } from "@/lib/site";
@@ -6,9 +6,9 @@ import { SITE } from "@/lib/site";
 const START = "/request?step=1";
 
 const PAINS = [
-  { icon: <Search />, title: "올라온 매물 절반이 허위·중복", body: "연락해보면 이미 나간 집, 같은 집이 여러 번 올라온 광고." },
+  { icon: <Search />, title: "허위·중복 매물이 너무 많아요", body: "연락해보면 이미 나간 집이거나, 같은 집이 여러 번 올라와 있어요." },
   { icon: <TrainFront />, title: "출근시간은 내가 직접 계산", body: "매물마다 지도 앱을 열어 환승·도보 시간을 따로 찾아봐야 해요." },
-  { icon: <Clock3 />, title: "매일 앱을 새로고침", body: "좋은 매물은 금방 나가니 퇴근 후에도 계속 들여다보게 돼요." },
+  { icon: <MapPinned />, title: "어느 동네가 맞는지 모르겠어요", body: "출근하기 편하면서 예산에 맞는 동네가 어디인지 하나하나 찾아봐야 해요." },
 ];
 
 const STEPS = [
@@ -46,7 +46,6 @@ export function UserLanding() {
         <Link href={START} className="lp-cta">
           1분 만에 매물 요청하기
         </Link>
-        <small>무료 · 카카오로 시작</small>
 
         <div className="lp-preview" aria-label="제안 매물 예시">
           <span className="lp-tag">예시</span>

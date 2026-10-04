@@ -33,6 +33,14 @@ const optionalText = (max: number) =>
 
 const statusSchema = z.object({ status: z.enum(["active", "inactive"]) });
 
+const verifySchema = z
+  .object({
+    status: z.enum(["verified", "rejected"]),
+    reason: z.string().trim().max(200, "반려 사유는 200자까지예요").nullable().default(null),
+  })
+  .refine((v) => v.status === "verified" || v.reason, { message: "반려 사유를 적어주세요", path: ["reason"] });
+type VerifyBody = z.infer<typeof verifySchema>;
+
 /** 한 생활권에 여러 공인중개사를 배정한다 */
 const assignSchema = z.object({
   zoneKey: z.string().min(1).max(120),
@@ -111,6 +119,22 @@ export class AdminController {
     if (!zoneKey) throw new ApiException(400, "invalid_input", "zoneKey가 필요해요");
     const request = requestId && /^[0-9a-f-]{36}$/i.test(requestId) ? requestId : null;
     return await this.brokers.forZone(zoneKey, request);
+  }
+
+  /** 등록증 확인 (승인·반려) */
+  @Post("agents/:id/verify")
+  @HttpCode(200)
+  @UseGuards(AdminGuard)
+  async verifyAgent(@Param("id", UuidParamPipe) id: string, @Body(new ZodValidationPipe<VerifyBody>(verifySchema)) body: VerifyBody) {
+    await this.admin.verifyAgent(id, body.status, body.reason);
+    return { ok: true };
+  }
+
+  /** 등록증 사진 보기 (5분짜리 주소) */
+  @Get("agents/:id/license")
+  @UseGuards(AdminGuard)
+  async license(@Param("id", UuidParamPipe) id: string) {
+    return { url: await this.admin.licenseUrl(id) };
   }
 
   /** 런칭 파트너 지정·해제 */

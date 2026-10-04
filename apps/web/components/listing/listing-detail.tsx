@@ -213,6 +213,12 @@ export function ListingDetail({ id }: { id: string }) {
             <b>{agent.name} 공인중개사</b>
             <small>
               {agent.officeName} · {formatDateTime(listing.verifiedAt)} 확인
+              {agent.registrationNo && (
+                <>
+                  <br />
+                  등록번호 {agent.registrationNo}
+                </>
+              )}
             </small>
           </span>
           <em>확인</em>
