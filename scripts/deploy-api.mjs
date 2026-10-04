@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // API 배포: 소스를 묶어 S3에 올리고 → CodeBuild가 Docker 이미지를 만들어 ECR에 올리고 → ECS 서비스를 새 이미지로 바꾼다.
-// 로컬에 Docker가 없어도 된다. AWS CLI와 893918474407 계정 자격 증명(AWS_PROFILE, 기본 default)이 필요하다.
+// 로컬에 Docker가 없어도 된다. AWS CLI와 893918474407 계정 자격 증명이 필요하다.
+// 로컬은 AWS_PROFILE(기본 default), GitHub Actions는 OIDC로 받은 임시 자격 증명을 쓴다 (.github/workflows/deploy-api.yml).
 //
 //   pnpm deploy:api              빌드 + 배포
 //   pnpm deploy:api --build-only 이미지만 만든다 (ECS는 그대로)
@@ -12,7 +13,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const REGION = "ap-northeast-2";
-const PROFILE = process.env.AWS_PROFILE ?? "default";
+const PROFILE = process.env.AWS_PROFILE ?? (process.env.GITHUB_ACTIONS ? null : "default");
+const profileArgs = PROFILE ? ["--profile", PROFILE] : [];
 const BUILD_BUCKET = "zipazum-build-893918474407";
 const PROJECT = "zipazum-api-build";
 const CLUSTER = "zipazum";
@@ -20,7 +22,7 @@ const SERVICE = "zipazum-api";
 const buildOnly = process.argv.includes("--build-only");
 
 const root = new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
-const aws = (...args) => execFileSync("aws", [...args, "--region", REGION, "--profile", PROFILE, "--output", "json"], { encoding: "utf8" });
+const aws = (...args) => execFileSync("aws", [...args, "--region", REGION, ...profileArgs, "--output", "json"], { encoding: "utf8" });
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 const step = (text) => console.log(`\n▶ ${text}`);
 
@@ -70,7 +72,7 @@ if (buildOnly) process.exit(0);
 // 3) ECS 서비스를 새 이미지(latest)로 다시 띄우고 안정될 때까지 기다린다
 step("ECS 배포");
 aws("ecs", "update-service", "--cluster", CLUSTER, "--service", SERVICE, "--force-new-deployment");
-const wait = spawnSync("aws", ["ecs", "wait", "services-stable", "--cluster", CLUSTER, "--services", SERVICE, "--region", REGION, "--profile", PROFILE], { stdio: "inherit" });
+const wait = spawnSync("aws", ["ecs", "wait", "services-stable", "--cluster", CLUSTER, "--services", SERVICE, "--region", REGION, ...profileArgs], { stdio: "inherit" });
 if (wait.status !== 0) {
   console.error("서비스가 안정되지 않았어요. CloudWatch 로그 /ecs/zipazum-api를 확인하세요.");
   process.exit(1);

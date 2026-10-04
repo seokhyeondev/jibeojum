@@ -32,8 +32,14 @@
 
 ## API 배포
 
+**자동:** `main`에 `apps/api/**`, `packages/shared/**`, `pnpm-lock.yaml`이 바뀐 커밋이 올라오면 GitHub Actions(`.github/workflows/deploy-api.yml`)가
+타입체크·테스트 후 배포한다. Actions 탭에서 "Deploy API → Run workflow"로 손으로 돌릴 수도 있다.
+AWS 키는 GitHub에 없다. OIDC로 `zipazum-github-deploy` 역할(main 브랜치만, 빌드 시작·ECS 갱신만 가능)을 잠깐 빌린다.
+
+**수동 (로컬):**
+
 ```sh
-pnpm db:migrate     # 스키마가 바뀌었으면 먼저 (SQL 검토 후)
+pnpm db:migrate     # 스키마가 바뀌었으면 먼저 (SQL 검토 후). 자동 배포도 마이그레이션은 하지 않는다
 pnpm deploy:api     # 소스 → S3 → CodeBuild(이미지) → ECR → ECS 롤링 배포
 ```
 
@@ -60,7 +66,7 @@ pnpm deploy:api     # 소스 → S3 → CodeBuild(이미지) → ECR → ECS 롤
 | ALB | `zipazum-api` (보안 그룹 `zipazum-alb`), 대상 그룹 `zipazum-api` |
 | CloudFront | API `E1UTYCUKXNE92U`, 사진 `E6661YDMC3G0F` |
 | S3 | `zipazum-assets-893918474407` (사진) |
-| IAM | `zipazum-codebuild`, `zipazum-ecs-execution`, `zipazum-api-task`(사진 업로드만) |
+| IAM | `zipazum-codebuild`, `zipazum-ecs-execution`, `zipazum-api-task`(사진 업로드만), `zipazum-github-deploy`(GitHub Actions, OIDC) |
 | SSM | `/zipazum/prod/*` |
 
 같은 계정에 다른 서비스 운영 리소스가 있다. `zipazum-*` 밖은 건드리지 않는다.

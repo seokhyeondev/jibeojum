@@ -1,0 +1,57 @@
+# main에 API 관련 변경이 올라오면 검사 후 AWS(ECS)에 배포한다.
+# AWS 키는 저장하지 않는다. GitHub OIDC로 zipazum-github-deploy 역할을 잠깐 빌려 쓴다 (main 브랜치만 허용).
+# DB 마이그레이션은 하지 않는다. 스키마가 바뀌면 SQL 검토 후 로컬에서 `pnpm db:migrate`를 먼저 돌린다.
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/api/**
+      - packages/shared/**
+      - pnpm-lock.yaml
+      - scripts/deploy-api.mjs
+      - .github/workflows/deploy-api.yml
+  workflow_dispatch:
+
+# 배포가 겹치지 않게 하나씩. 진행 중인 배포는 끝까지 둔다
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 설치
+        run: pnpm install --frozen-lockfile --filter @zipazum/api... --filter @zipazum/shared
+
+      - name: 검사
+        run: |
+          pnpm --filter @zipazum/shared build
+          pnpm --filter @zipazum/shared typecheck
+          pnpm --filter @zipazum/shared test
+          pnpm --filter @zipazum/api typecheck
+          pnpm --filter @zipazum/api test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::893918474407:role/zipazum-github-deploy
+          aws-region: ap-northeast-2
+
+      - name: 배포 (CodeBuild → ECR → ECS)
+        run: node scripts/deploy-api.mjs
