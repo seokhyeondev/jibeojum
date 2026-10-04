@@ -127,3 +127,148 @@
 .ops-table.agents .ops-actions .ops-btn + .ops-btn {
   margin-left: 0;
 }
+
+/* 공인중개사 문의(채팅) */
+.ops-nav-badge {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ff5f4f;
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+.ops-chat-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+  overflow: hidden;
+}
+.ops-chat-list li + li {
+  border-top: 1px solid var(--line);
+}
+.ops-chat-list a {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  color: var(--ink) !important;
+  text-decoration: none;
+}
+.ops-chat-list a.unread {
+  background: #f7fcf9;
+}
+.ops-chat-list img,
+.ops-chat-list i {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.ops-chat-list i {
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  color: var(--faint);
+}
+.ops-chat-list a > span:nth-of-type(1) {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.ops-chat-list b,
+.ops-chat-list p {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ops-chat-list p {
+  margin: 0;
+  color: var(--ink-2);
+}
+.ops-chat-meta {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  align-self: flex-start;
+}
+.ops-chat-meta em {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #ff5f4f;
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  text-align: center;
+}
+.ops-chat {
+  max-width: 760px;
+}
+.ops-chat-head {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.ops-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 60dvh;
+  min-height: 240px;
+  padding: 8px 2px;
+  overflow-y: auto;
+}
+.ops-bubble {
+  display: grid;
+  gap: 3px;
+  max-width: 80%;
+  justify-items: start;
+}
+.ops-bubble.mine {
+  align-self: flex-end;
+  justify-items: end;
+}
+.ops-bubble p {
+  margin: 0;
+  padding: 10px 13px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--surface);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ops-bubble.mine p {
+  border-radius: 14px 4px 14px 14px;
+  background: var(--g);
+  color: #fff;
+}
+.ops-bubble small b {
+  color: var(--g);
+}
+.ops-chat-input {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.ops-chat-input .ops-btn.primary {
+  margin: 0;
+}
+
+/* 요청 스텝 3: 최소 넓이 */
+.min-area {
+  margin-top: 22px;
+}
+.min-area .field-hint {
+  margin-top: 8px;
+}

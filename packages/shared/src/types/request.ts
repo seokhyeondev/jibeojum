@@ -25,6 +25,8 @@ export type FloorPreference = "any" | "2_plus" | "5_plus";
 export type FloorExclusion = "semi_basement" | "rooftop";
 
 export type BuildingAgePreference = "any" | "new" | "value";
+/** 최소 넓이(평). 0이면 상관없음 */
+export type MinPyeong = 0 | 5 | 7 | 10 | 15;
 
 export type SafetyOptionId =
   | "women_only"
@@ -70,6 +72,7 @@ export interface RequestDraft {
   floorPreference: FloorPreference;
   floorExclusions: FloorExclusion[];
   buildingAge: BuildingAgePreference;
+  minPyeong: MinPyeong;
   safetyOptions: SafetyOptionId[];
   infrastructure: InfraId[];
   privacyAgreed: boolean;

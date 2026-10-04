@@ -1,5 +1,5 @@
 import type { RequestInput } from "@zipazum/shared";
-import type { ListingReaction, ListingReportInput, NotificationItem, PlaceCandidate, ProposedListing, UploadRequest, UploadTicket } from "@zipazum/shared";
+import type { ChatThreadSummary, ListingReaction, ListingReportInput, UserChat, NotificationItem, PlaceCandidate, ProposedListing, UploadRequest, UploadTicket } from "@zipazum/shared";
 import type { HousingRequest } from "@zipazum/shared";
 
 // 브라우저에서 쓰는 API 클라이언트. 화면은 이 함수들로만 서버 데이터를 읽고 쓴다.
@@ -113,4 +113,18 @@ export function reactToListing(listingId: string, type: ListingReaction): void {
 /** 매물 신고 */
 export function reportListing(listingId: string, body: ListingReportInput): Promise<{ ok: true }> {
   return apiRequest(`/api/listings/${listingId}/report`, { method: "POST", body: JSON.stringify(body) });
+}
+
+/** 내 대화 목록 */
+export function fetchMyChats(): Promise<ChatThreadSummary[]> {
+  return apiRequest<{ threads: ChatThreadSummary[] }>("/api/chats").then((b) => b.threads);
+}
+
+/** 매물 하나의 대화 (열면 읽음 처리) */
+export function fetchChat(listingId: string): Promise<UserChat> {
+  return apiRequest<{ chat: UserChat }>(`/api/chats/listing/${listingId}`).then((b) => b.chat);
+}
+
+export function sendChat(listingId: string, body: string): Promise<UserChat> {
+  return apiRequest<{ chat: UserChat }>(`/api/chats/listing/${listingId}/messages`, { method: "POST", body: JSON.stringify({ body }) }).then((b) => b.chat);
 }

@@ -6,14 +6,6 @@ import type { HousingRequest, RequestDraft } from "@zipazum/shared";
 import { reactToListing } from "@/lib/api/client";
 import { createPersistentStore, usePersistentStore } from "./persistent-store";
 
-
-
-export interface SentMessage {
-  id: string;
-  body: string;
-  sentAt: string;
-}
-
 const MAX_COMPARE = 2;
 
 const draftStore = createPersistentStore<RequestDraft>("zipazum:draft:v1", DEFAULT_DRAFT, (raw) => {
@@ -36,18 +28,6 @@ const compareStore = createPersistentStore<string[]>("zipazum:compare:v1", [], (
   const list = parseStringList(raw);
   return list ? list.slice(-MAX_COMPARE) : null;
 });
-
-const messagesSchema = z.record(
-  z.array(z.object({ id: z.string(), body: z.string(), sentAt: z.string() })),
-);
-const messagesStore = createPersistentStore<Record<string, SentMessage[]>>(
-  "zipazum:messages:v1",
-  {},
-  (raw) => {
-    const parsed = messagesSchema.safeParse(raw);
-    return parsed.success ? parsed.data : null;
-  },
-);
 
 export function useDraft() {
   const [draft, setDraft] = usePersistentStore(draftStore);
@@ -86,18 +66,6 @@ export function useCompare() {
     return result;
   };
   return { selected, toggle, max: MAX_COMPARE };
-}
-
-export function useMessages(listingId: string) {
-  const [all, setAll] = usePersistentStore(messagesStore);
-  const send = (body: string) => {
-    reactToListing(listingId, "inquire");
-    setAll((prev) => ({
-      ...prev,
-      [listingId]: [...(prev[listingId] ?? []), { id: createId("msg"), body, sentAt: new Date().toISOString() }],
-    }));
-  };
-  return { messages: all[listingId] ?? [], send };
 }
 
 export function createId(prefix: string): string {

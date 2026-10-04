@@ -7,7 +7,7 @@ type Db = Pick<Prisma.TransactionClient, "notification">;
 
 export interface NewNotification {
   userId: string;
-  type: "proposal_arrived";
+  type: "proposal_arrived" | "chat_reply";
   title: string;
   body: string;
   link: string | null;

@@ -34,6 +34,8 @@ const draftShape = {
   floorPreference: z.enum(["any", "2_plus", "5_plus"]),
   floorExclusions: z.array(z.enum(["semi_basement", "rooftop"])),
   buildingAge: z.enum(["any", "new", "value"]),
+  // 예전에 저장된 초안에는 없으므로 기본값을 둔다
+  minPyeong: z.union([z.literal(0), z.literal(5), z.literal(7), z.literal(10), z.literal(15)]).default(0),
   safetyOptions: z.array(safetyOption),
   infrastructure: z.array(infra),
 };
@@ -41,7 +43,7 @@ const draftShape = {
 /** localStorage에 남은 초안이 현재 형태와 맞는지 확인한다. */
 const manwon = z.number().int().nonnegative().nullable();
 
-export const requestDraftSchema: z.ZodType<RequestDraft> = z.object({
+export const requestDraftSchema: z.ZodType<RequestDraft, z.ZodTypeDef, unknown> = z.object({
   ...draftShape,
   depositMax: manwon,
   monthlyRentMax: manwon,
@@ -53,7 +55,7 @@ export const wantsRent = (preference: TransactionPreference) => preference !== "
 export const wantsJeonse = (preference: TransactionPreference) => preference !== "rent";
 
 /** 제출 시점 검증. 서버 도입 후 API에서도 같은 스키마를 다시 적용한다. */
-export const housingRequestSchema: z.ZodType<HousingRequest> = z.object({
+export const housingRequestSchema: z.ZodType<HousingRequest, z.ZodTypeDef, unknown> = z.object({
   ...draftShape,
   id: z.string().min(1),
   commuteDestination: z.object({ label: z.string().trim().min(2), ...placeExtras }),
@@ -137,6 +139,7 @@ const requestInputShape = z.object({
   floorPreference: draftShape.floorPreference,
   floorExclusions: unique(z.enum(["semi_basement", "rooftop"]), 2),
   buildingAge: draftShape.buildingAge,
+  minPyeong: draftShape.minPyeong,
   safetyOptions: unique(safetyOption, 6),
   infrastructure: unique(infra, 7),
   privacyAgreed: z.literal(true),

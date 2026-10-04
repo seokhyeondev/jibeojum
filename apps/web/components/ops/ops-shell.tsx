@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -15,8 +15,17 @@ const NAV: Record<OpsKind, { href: string; label: string }[]> = {
     { href: "/admin/agents", label: "공인중개사" },
     { href: "/admin/reports", label: "신고" },
   ],
-  agent: [{ href: "/agent", label: "배정 요청" }],
+  agent: [
+    { href: "/agent", label: "배정 요청" },
+    { href: "/agent/chats", label: "문의" },
+  ],
 };
+
+/** 공인중개사 메뉴의 안 읽은 문의 수 */
+function ChatUnreadBadge() {
+  const { data } = useQuery({ queryKey: ["agent", "chat-unread"], queryFn: agentApi.chatUnread, refetchInterval: 30_000, retry: false });
+  return data ? <em className="ops-nav-badge" aria-label={`안 읽은 문의 ${data}개`}>{data}</em> : null;
+}
 
 const TITLE: Record<OpsKind, string> = { admin: "운영", agent: "공인중개사" };
 
@@ -48,6 +57,7 @@ export function OpsShell({ kind, children, signedIn = true }: { kind: OpsKind; c
               return (
                 <Link key={item.href} href={item.href} className={on ? "on" : ""} aria-current={on ? "page" : undefined}>
                   {item.label}
+                  {item.href === "/agent/chats" && <ChatUnreadBadge />}
                 </Link>
               );
             })}

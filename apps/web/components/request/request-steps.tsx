@@ -1,6 +1,14 @@
 "use client";
 
-import { Building2, CalendarDays, Check, ChevronDown, ShieldCheck, Sparkles, TrainFront } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  ShieldCheck,
+  Sparkles,
+  TrainFront,
+} from "lucide-react";
 import { useId, useState } from "react";
 import { MultiChips, SingleChips } from "@/components/common/chip-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import {
   BUDGET_FLEXIBILITY_CHOICES,
   BUILDING_AGE_CHOICES,
+  MIN_PYEONG_CHOICES,
+  pyeongToM2,
   COMMUTE_CHOICES,
   FLOOR_EXCLUSION_CHOICES,
   FLOOR_PREFERENCE_CHOICES,
@@ -21,7 +31,13 @@ import {
 } from "@zipazum/shared";
 import { formatManwon, formatNumber, parseManwon } from "@zipazum/shared";
 import { DestinationSearch } from "./destination-search";
-import { choiceLabel, moveInDateWarning, requestConditionLabels, wantsJeonse, wantsRent } from "@zipazum/shared";
+import {
+  choiceLabel,
+  moveInDateWarning,
+  requestConditionLabels,
+  wantsJeonse,
+  wantsRent,
+} from "@zipazum/shared";
 import type { RequestDraft } from "@zipazum/shared";
 
 export interface StepProps {
@@ -30,18 +46,30 @@ export interface StepProps {
 }
 
 export const STEP_COPY = [
-  { title: "어디로 출근하세요?", sub: "출근지를 기준으로 살기 좋은 동네를 찾아드려요" },
-  { title: "예산을 알려주세요", sub: "관리비를 제외한 최대 금액을 입력해주세요" },
+  {
+    title: "어디로 출근하세요?",
+    sub: "출근지를 기준으로 살기 좋은 동네를 찾아드려요",
+  },
+  {
+    title: "예산을 알려주세요",
+    sub: "관리비를 제외한 최대 금액을 입력해주세요",
+  },
   { title: "어떤 집을 찾으세요?", sub: "여러 개를 선택하셔도 괜찮아요" },
   { title: "입주 조건을 확인할게요", sub: "꼭 필요한 조건만 골라주세요" },
-  { title: "이 조건으로 찾아드릴게요", sub: "보내기 전에 한 번만 확인해주세요" },
+  {
+    title: "이 조건으로 찾아드릴게요",
+    sub: "보내기 전에 한 번만 확인해주세요",
+  },
 ];
 
 export function CommuteStep({ draft, update }: StepProps) {
   return (
     <>
       <label htmlFor="destination">출근지</label>
-      <DestinationSearch value={draft.commuteDestination} onChange={(commuteDestination) => update({ commuteDestination })} />
+      <DestinationSearch
+        value={draft.commuteDestination}
+        onChange={(commuteDestination) => update({ commuteDestination })}
+      />
       <label className="mt">최대 통근시간</label>
       <SingleChips
         label="최대 통근시간"
@@ -54,7 +82,9 @@ export function CommuteStep({ draft, update }: StepProps) {
         label="환승 없는 곳 추가 허용 시간"
         choices={NO_TRANSFER_EXTRA_CHOICES}
         value={draft.noTransferExtraMinutes}
-        onChange={(noTransferExtraMinutes) => update({ noTransferExtraMinutes })}
+        onChange={(noTransferExtraMinutes) =>
+          update({ noTransferExtraMinutes })
+        }
       />
       <div className="info">
         <TrainFront aria-hidden />
@@ -71,12 +101,27 @@ export function CommuteStep({ draft, update }: StepProps) {
   );
 }
 
-function MoneyField({ id, label, value, onChange }: { id: string; label: string; value: number | null; onChange: (value: number | null) => void }) {
+function MoneyField({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: number | null;
+  onChange: (value: number | null) => void;
+}) {
   return (
     <div>
       <label htmlFor={id}>{label}</label>
       <div className="money">
-        <Input id={id} inputMode="numeric" value={formatNumber(value)} onChange={(e) => onChange(parseManwon(e.target.value))} />
+        <Input
+          id={id}
+          inputMode="numeric"
+          value={formatNumber(value)}
+          onChange={(e) => onChange(parseManwon(e.target.value))}
+        />
         <span>만원</span>
       </div>
     </div>
@@ -94,13 +139,20 @@ export function BudgetStep({ draft, update }: StepProps) {
           label="거래 유형"
           choices={TRANSACTION_CHOICES}
           value={draft.transactionPreference}
-          onChange={(transactionPreference) => update({ transactionPreference })}
+          onChange={(transactionPreference) =>
+            update({ transactionPreference })
+          }
         />
       </div>
       {rent && (
         <div className={jeonse ? "budget-group" : "fields"}>
           {jeonse && <h3>월세</h3>}
-          <MoneyField id="deposit" label="최대 보증금" value={draft.depositMax} onChange={(depositMax) => update({ depositMax })} />
+          <MoneyField
+            id="deposit"
+            label="최대 보증금"
+            value={draft.depositMax}
+            onChange={(depositMax) => update({ depositMax })}
+          />
           <MoneyField
             id="rent"
             label="최대 월세"
@@ -112,7 +164,12 @@ export function BudgetStep({ draft, update }: StepProps) {
       {jeonse && (
         <div className={rent ? "budget-group" : "fields"}>
           {rent && <h3>전세</h3>}
-          <MoneyField id="jeonse" label="최대 전세금" value={draft.jeonseMax} onChange={(jeonseMax) => update({ jeonseMax })} />
+          <MoneyField
+            id="jeonse"
+            label="최대 전세금"
+            value={draft.jeonseMax}
+            onChange={(jeonseMax) => update({ jeonseMax })}
+          />
         </div>
       )}
       <div>
@@ -129,13 +186,20 @@ export function BudgetStep({ draft, update }: StepProps) {
         <span>
           {rent && (
             <>
-              보증금 <b>{formatNumber(draft.depositMax) || "-"}만원</b> · 월세 <b>{formatNumber(draft.monthlyRentMax) || "-"}만원 이하</b>
+              보증금 <b>{formatNumber(draft.depositMax) || "-"}만원</b> · 월세{" "}
+              <b>{formatNumber(draft.monthlyRentMax) || "-"}만원 이하</b>
             </>
           )}
           {rent && jeonse && <br />}
           {jeonse && (
             <>
-              전세 <b>{draft.jeonseMax === null ? "-" : `${formatManwon(draft.jeonseMax)}원`} 이하</b>
+              전세{" "}
+              <b>
+                {draft.jeonseMax === null
+                  ? "-"
+                  : `${formatManwon(draft.jeonseMax)}원`}{" "}
+                이하
+              </b>
             </>
           )}
         </span>
@@ -152,27 +216,54 @@ export function HousingTypeStep({ draft, update }: StepProps) {
         : [...draft.housingTypes, value],
     });
   return (
-    <div className="types" role="group" aria-label="주택 유형">
-      {HOUSING_TYPE_CHOICES.map(({ value, label, description }) => {
-        const on = draft.housingTypes.includes(value);
-        return (
-          <button type="button" aria-pressed={on} className={on ? "on" : ""} onClick={() => toggle(value)} key={value}>
-            <i>
-              <Building2 aria-hidden />
-            </i>
-            <span>
-              <b>{label}</b>
-              <small>{description}</small>
-            </span>
-            {on && <Check className="tick" aria-hidden />}
-          </button>
-        );
-      })}
-    </div>
+    <>
+      <div className="types" role="group" aria-label="주택 유형">
+        {HOUSING_TYPE_CHOICES.map(({ value, label, description }) => {
+          const on = draft.housingTypes.includes(value);
+          return (
+            <button
+              type="button"
+              aria-pressed={on}
+              className={on ? "on" : ""}
+              onClick={() => toggle(value)}
+              key={value}
+            >
+              <i>
+                <Building2 aria-hidden />
+              </i>
+              <span>
+                <b>{label}</b>
+                <small>{description}</small>
+              </span>
+              {on && <Check className="tick" aria-hidden />}
+            </button>
+          );
+        })}
+      </div>
+      <div className="min-area">
+        <label>최소 넓이 (선택)</label>
+        <SingleChips
+          label="최소 넓이"
+          layout="wrap"
+          choices={MIN_PYEONG_CHOICES}
+          value={draft.minPyeong}
+          onChange={(minPyeong) => update({ minPyeong })}
+        />
+        {draft.minPyeong > 0 && (
+          <p className="min-area-hint">
+            전용 {pyeongToM2(draft.minPyeong)}㎡ 이상인 집만 찾아요.
+          </p>
+        )}
+      </div>
+    </>
   );
 }
 
-export function MoveInStep({ draft, update, today }: StepProps & { today: string }) {
+export function MoveInStep({
+  draft,
+  update,
+  today,
+}: StepProps & { today: string }) {
   const warning = moveInDateWarning(draft.moveInDate, today);
   return (
     <>
@@ -215,10 +306,19 @@ function MorePreferences({ draft, update }: StepProps) {
   const count = countPreferences(draft);
   return (
     <div className={open ? "more-prefs open" : "more-prefs"}>
-      <button type="button" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(!open)}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen(!open)}
+      >
         <span>
           <b>더 꼼꼼하게 고르기</b>
-          <small>{count > 0 ? `${count}개 선택됨` : "선택 · 안심 조건, 층수, 연식, 주변 시설"}</small>
+          <small>
+            {count > 0
+              ? `${count}개 선택됨`
+              : "선택 · 안심 조건, 층수, 연식, 주변 시설"}
+          </small>
         </span>
         <ChevronDown aria-hidden />
       </button>
@@ -273,7 +373,9 @@ function PreferenceFields({ draft, update }: StepProps) {
           onChange={(buildingAge) => update({ buildingAge })}
         />
         <p className="choice-desc">
-          {BUILDING_AGE_CHOICES.find((choice) => choice.value === draft.buildingAge)?.description ?? "신축과 구축 모두 제안받아요"}
+          {BUILDING_AGE_CHOICES.find(
+            (choice) => choice.value === draft.buildingAge,
+          )?.description ?? "신축과 구축 모두 제안받아요"}
         </p>
       </section>
       <section>
@@ -301,15 +403,30 @@ function countPreferences(draft: RequestDraft): number {
 }
 
 /** 마지막 단계: 입력한 조건을 한눈에 확인하고 동의한다. 로그인·제출은 아래 버튼이 맡는다 */
-export function ReviewStep({ draft, update, onEdit }: StepProps & { onEdit: (step: number) => void }) {
-  const types = draft.housingTypes.map((t) => choiceLabel(HOUSING_TYPE_CHOICES, t)).join(", ");
+export function ReviewStep({
+  draft,
+  update,
+  onEdit,
+}: StepProps & { onEdit: (step: number) => void }) {
+  const types = draft.housingTypes
+    .map((t) => choiceLabel(HOUSING_TYPE_CHOICES, t))
+    .join(", ");
   // 집 유형·환승 조건은 위 줄에서 이미 보여준다
   const extras = requestConditionLabels(draft).filter(
-    (label) => !label.startsWith("환승") && !draft.housingTypes.some((t) => choiceLabel(HOUSING_TYPE_CHOICES, t) === label),
+    (label) =>
+      !label.startsWith("환승") &&
+      !label.endsWith("평 이상") &&
+      !draft.housingTypes.some(
+        (t) => choiceLabel(HOUSING_TYPE_CHOICES, t) === label,
+      ),
   );
   const budget = [
-    wantsRent(draft.transactionPreference) ? `보증금 ${formatManwon(draft.depositMax ?? 0)}원 · 월세 ${formatManwon(draft.monthlyRentMax ?? 0)}원` : null,
-    wantsJeonse(draft.transactionPreference) ? `전세 ${formatManwon(draft.jeonseMax ?? 0)}원` : null,
+    wantsRent(draft.transactionPreference)
+      ? `보증금 ${formatManwon(draft.depositMax ?? 0)}원 · 월세 ${formatManwon(draft.monthlyRentMax ?? 0)}원`
+      : null,
+    wantsJeonse(draft.transactionPreference)
+      ? `전세 ${formatManwon(draft.jeonseMax ?? 0)}원`
+      : null,
   ].filter(Boolean);
   const rows: { step: number; label: string; value: string; sub?: string }[] = [
     {
@@ -318,8 +435,20 @@ export function ReviewStep({ draft, update, onEdit }: StepProps & { onEdit: (ste
       value: draft.commuteDestination.label,
       sub: `최대 ${draft.maxCommuteMinutes}분${draft.noTransferExtraMinutes ? ` · 환승 없으면 +${draft.noTransferExtraMinutes}분까지` : ""}`,
     },
-    { step: 2, label: "예산", value: budget.join(" / "), sub: choiceLabel(BUDGET_FLEXIBILITY_CHOICES, draft.budgetFlexibility) },
-    { step: 3, label: "집 유형", value: types },
+    {
+      step: 2,
+      label: "예산",
+      value: budget.join(" / "),
+      sub: choiceLabel(BUDGET_FLEXIBILITY_CHOICES, draft.budgetFlexibility),
+    },
+    {
+      step: 3,
+      label: "집 유형",
+      value: types,
+      sub: draft.minPyeong
+        ? `${draft.minPyeong}평(${pyeongToM2(draft.minPyeong)}㎡) 이상`
+        : undefined,
+    },
     {
       step: 4,
       label: "입주",
@@ -337,15 +466,24 @@ export function ReviewStep({ draft, update, onEdit }: StepProps & { onEdit: (ste
               <b>{row.value}</b>
               {row.sub && <small>{row.sub}</small>}
             </div>
-            <button type="button" onClick={() => onEdit(row.step)} aria-label={`${row.label} 수정`}>
+            <button
+              type="button"
+              onClick={() => onEdit(row.step)}
+              aria-label={`${row.label} 수정`}
+            >
               수정
             </button>
           </li>
         ))}
       </ul>
       <label className="agree">
-        <Checkbox checked={draft.privacyAgreed} onCheckedChange={(v) => update({ privacyAgreed: v === true })} />
-        <span>개인정보 수집 및 공인중개사에게 조건 전달에 동의합니다. (필수)</span>
+        <Checkbox
+          checked={draft.privacyAgreed}
+          onCheckedChange={(v) => update({ privacyAgreed: v === true })}
+        />
+        <span>
+          개인정보 수집 및 공인중개사에게 조건 전달에 동의합니다. (필수)
+        </span>
       </label>
     </div>
   );

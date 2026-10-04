@@ -27,6 +27,7 @@ model User {
   requests         HousingRequest[]
   notifications    Notification[]
   sessions         UserSession[]
+  chatThreads      ChatThread[]
   listingReports   ListingReport[]
 
   @@map("users")
@@ -148,6 +149,7 @@ model Agent {
   listings           Listing[]
   assignments        RequestAssignment[]
   invites            AgentInvite[]
+  chatThreads        ChatThread[]
 
   @@index([officeId], map: "agents_office_idx")
   @@map("agents")
@@ -180,6 +182,8 @@ model HousingRequest {
   floorPreference        String                     @default("any") @map("floor_preference")
   floorExclusions        String[]                   @map("floor_exclusions")
   buildingAge            String                     @default("any") @map("building_age")
+  /// 최소 넓이(평). 0이면 상관없음
+  minPyeong              Int                        @default(0) @map("min_pyeong")
   safetyOptions          String[]                   @map("safety_options")
   infrastructure         String[]
   verificationStatus     String                     @map("verification_status")
@@ -260,6 +264,7 @@ model Proposal {
   /// 사용자가 처음 문의한 시각
   inquiredAt  DateTime?      @map("inquired_at") @db.Timestamptz(6)
   listing     Listing        @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposals_listing_id_listings_id_fk")
+  chatThread  ChatThread?
   request     HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "proposals_request_id_housing_requests_id_fk")
 
   @@unique([requestId, listingId], map: "proposals_request_listing_uq")
@@ -546,4 +551,40 @@ model ListingReport {
   @@unique([listingId, userId], map: "listing_reports_listing_user_uq")
   @@index([status], map: "listing_reports_status_idx")
   @@map("listing_reports")
+}
+
+/// 매물 하나(제안)를 두고 고객과 공인중개사가 나누는 대화
+model ChatThread {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proposalId    String        @unique(map: "chat_threads_proposal_uq") @map("proposal_id") @db.Uuid
+  requestId     String        @map("request_id") @db.Uuid
+  listingId     String        @map("listing_id") @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  agentId       String        @map("agent_id") @db.Uuid
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastMessageAt DateTime      @default(now()) @map("last_message_at") @db.Timestamptz(6)
+  /// 각자 마지막으로 읽은 시각 (그 뒤에 온 상대 메시지가 안 읽은 메시지)
+  userReadAt    DateTime?     @map("user_read_at") @db.Timestamptz(6)
+  agentReadAt   DateTime?     @map("agent_read_at") @db.Timestamptz(6)
+  proposal      Proposal      @relation(fields: [proposalId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chat_threads_proposal_id_fk")
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chat_threads_user_id_fk")
+  agent         Agent         @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chat_threads_agent_id_fk")
+  messages      ChatMessage[]
+
+  @@index([userId, lastMessageAt], map: "chat_threads_user_idx")
+  @@index([agentId, lastMessageAt], map: "chat_threads_agent_idx")
+  @@map("chat_threads")
+}
+
+model ChatMessage {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId  String     @map("thread_id") @db.Uuid
+  /// user | agent
+  sender    String
+  body      String
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "chat_messages_thread_id_fk")
+
+  @@index([threadId, createdAt], map: "chat_messages_thread_idx")
+  @@map("chat_messages")
 }

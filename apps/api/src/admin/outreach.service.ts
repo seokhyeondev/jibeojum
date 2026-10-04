@@ -131,7 +131,7 @@ export function inviteMessage(request: ReturnType<typeof toHousingRequest>, zone
   ]
     .filter(Boolean)
     .join(" 또는 ");
-  const types = request.housingTypes.map((t) => choiceLabel(HOUSING_TYPE_CHOICES, t)).join("·");
+  const types = request.housingTypes.map((t) => choiceLabel(HOUSING_TYPE_CHOICES, t)).join("·") + (request.minPyeong ? ` (${request.minPyeong}평 이상)` : "");
   const where = zoneName ? `${zoneName.split(" · ")[0]} 근처` : "출근 1시간 이내";
   return [
     "안녕하세요, 집어줌입니다.",

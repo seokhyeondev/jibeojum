@@ -17,6 +17,7 @@ export const DEFAULT_DRAFT: RequestDraft = {
   floorPreference: "any",
   floorExclusions: [],
   buildingAge: "any",
+  minPyeong: 0,
   safetyOptions: [],
   infrastructure: [],
   privacyAgreed: false,

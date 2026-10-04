@@ -39,6 +39,7 @@ export function summarizeRequest(request: SummarySource): string {
 /** 요청 요약 아래에 칩으로 보여줄 세부 조건 */
 export function requestConditionLabels(request: RequestDraft | Omit<RequestDraft, "privacyAgreed">): string[] {
   const labels: string[] = request.housingTypes.map((type) => choiceLabel(HOUSING_TYPE_CHOICES, type));
+  if (request.minPyeong > 0) labels.push(`${request.minPyeong}평 이상`);
   if (request.noTransferExtraMinutes > 0) {
     labels.push(`환승 없으면 +${request.noTransferExtraMinutes}분`);
   }

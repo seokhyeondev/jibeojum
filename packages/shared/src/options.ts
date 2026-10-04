@@ -10,7 +10,7 @@ import type {
   TransactionPreference,
   NoTransferExtraMinutes,
   RequiredOptionId,
-  SafetyOptionId,
+  SafetyOptionId, MinPyeong,
 } from "./types/request";
 
 export interface Choice<T extends string | number> {
@@ -80,7 +80,16 @@ export const FLOOR_EXCLUSION_CHOICES: Choice<FloorExclusion>[] = [
 export const BUILDING_AGE_CHOICES: Choice<BuildingAgePreference>[] = [
   { value: "any", label: "상관없어요" },
   { value: "new", label: "신축 위주", description: "준공 5년 이내" },
-  { value: "value", label: "구축 OK", description: "구축이라도 넓고 저렴한 집 우선" },
+  { value: "value", label: "구축 위주", description: "구축이라도 넓고 저렴한 집 우선" },
+];
+
+/** 1평 = 3.3058㎡ */
+export const PYEONG_M2 = 3.3058;
+export const pyeongToM2 = (pyeong: number) => Math.round(pyeong * PYEONG_M2);
+
+export const MIN_PYEONG_CHOICES: Choice<MinPyeong>[] = [
+  { value: 0, label: "상관없어요" },
+  ...([5, 7, 10, 15] as const).map((p) => ({ value: p, label: `${p}평 이상`, description: `전용 ${pyeongToM2(p)}㎡ 이상` })),
 ];
 
 export const SAFETY_CHOICES: Choice<SafetyOptionId>[] = [

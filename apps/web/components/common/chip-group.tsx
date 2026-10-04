@@ -1,6 +1,5 @@
 "use client";
 
-import { Check } from "lucide-react";
 import type { Choice } from "@zipazum/shared";
 
 type Layout = "grid" | "wrap";
@@ -44,7 +43,10 @@ interface MultiProps<T extends string> {
   onChange: (values: T[]) => void;
 }
 
-/** 여러 개를 고르는 칩 묶음. 같은 값은 중복으로 담기지 않는다. */
+/**
+ * 여러 개를 고르는 칩 묶음. 같은 값은 중복으로 담기지 않는다.
+ * 고른 상태는 색으로만 보여준다 (아이콘·굵기를 바꾸면 칩 너비가 달라져 줄이 바뀐다).
+ */
 export function MultiChips<T extends string>({ label, choices, values, onChange }: MultiProps<T>) {
   const toggle = (value: T) =>
     onChange(values.includes(value) ? values.filter((x) => x !== value) : [...values, value]);
@@ -61,7 +63,6 @@ export function MultiChips<T extends string>({ label, choices, values, onChange 
             key={choice.value}
             title={choice.description}
           >
-            {on && <Check aria-hidden />}
             {choice.label}
           </button>
         );
