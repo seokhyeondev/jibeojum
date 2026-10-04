@@ -1,12 +1,15 @@
 import { config } from "dotenv";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "prisma/config";
 
 config({ path: ".env.local", quiet: true });
 
-// 공용 RDS이므로 DATABASE_URL의 schema=zipazum 안에서만 마이그레이션한다.
-// migrate reset / db push는 쓰지 않는다.
+// DATABASE_URL의 schema=zipazum 안에서만 마이그레이션한다. migrate reset / db push는 쓰지 않는다.
+// prisma generate는 DB가 필요 없다. Vercel(웹 빌드)처럼 DATABASE_URL이 없는 곳에서도
+// pnpm install의 postinstall(generate)이 실패하지 않게, 값이 있을 때만 datasource를 둔다.
+const url = process.env.DATABASE_URL;
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: { path: "prisma/migrations" },
-  datasource: { url: env("DATABASE_URL") },
+  ...(url ? { datasource: { url } } : {}),
 });

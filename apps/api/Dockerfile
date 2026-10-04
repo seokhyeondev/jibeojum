@@ -5,8 +5,6 @@
 FROM public.ecr.aws/docker/library/node:22-slim AS build
 WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@11.25.0 --activate
-# prisma.config.ts가 DATABASE_URL을 읽는다. generate는 DB에 붙지 않으므로 빌드 단계에서만 가짜 값을 둔다
-ENV DATABASE_URL=postgres://build:build@localhost:5432/build
 
 # 의존성 먼저 (소스가 바뀌어도 이 층은 캐시된다). postinstall이 prisma generate라 스키마도 같이 넣는다
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
