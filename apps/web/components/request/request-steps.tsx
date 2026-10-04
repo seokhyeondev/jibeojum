@@ -241,19 +241,33 @@ export function HousingTypeStep({ draft, update }: StepProps) {
         })}
       </div>
       <div className="min-area">
-        <label>최소 넓이 (선택)</label>
-        <SingleChips
-          label="최소 넓이"
-          layout="wrap"
-          choices={MIN_PYEONG_CHOICES}
-          value={draft.minPyeong}
-          onChange={(minPyeong) => update({ minPyeong })}
-        />
-        {draft.minPyeong > 0 && (
-          <p className="min-area-hint">
-            전용 {pyeongToM2(draft.minPyeong)}㎡ 이상인 집만 찾아요.
-          </p>
-        )}
+        <label>
+          최소 넓이 <small>선택</small>
+        </label>
+        <div className="area-seg" role="radiogroup" aria-label="최소 넓이">
+          {MIN_PYEONG_CHOICES.map(({ value }) => {
+            const on = draft.minPyeong === value;
+            return (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={on}
+                className={on ? "on" : ""}
+                onClick={() => update({ minPyeong: value })}
+                key={value}
+              >
+                {value === 0 ? (
+                  <b className="any">상관없음</b>
+                ) : (
+                  <>
+                    <b>{value}평+</b>
+                    <small>{pyeongToM2(value)}㎡</small>
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </>
   );
