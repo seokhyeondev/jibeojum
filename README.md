@@ -25,13 +25,19 @@ pnpm dev        # http://localhost:3000
 - `pnpm start`: 빌드 결과 실행
 - `pnpm lint`: ESLint
 - `pnpm typecheck`: TypeScript 검사
+- `pnpm test`: 유틸·폼 검증·추천 로직 테스트 (Vitest)
 
 ## 현재 상태
 
-- 사용자 흐름(조건 입력 → 요청 완료 → 매물 목록 → 상세 → 비교 → 문의)은 `app/page.tsx` 한 파일에 구현되어 있습니다.
-- 매물 4건과 중개사 1명은 고정 샘플 데이터입니다.
-- 데이터베이스, 인증, ODsay 연동은 아직 없습니다.
+- 사용자 흐름: 조건 입력 6단계(`/request?step=1~6`) → 요청 완료 → 매물 목록 → 상세 → 비교 → 문의
+- 입력 초안, 제출한 요청, 찜, 비교함, 문의 내역은 브라우저 localStorage에 저장됩니다.
+- 매물 4건과 중개사 1명은 고정 샘플 데이터입니다(`data/mock-listings.ts`).
+- 추천 순서는 통근·예산·세부 조건·신선도 점수로 정합니다(`lib/recommend.ts`).
+- 데이터베이스, 휴대폰 인증, ODsay 연동은 아직 없습니다.
+
+개발 규칙과 폴더 구조는 `AGENTS.md`를 참고하세요.
 
 ## 환경변수
 
 실제 키는 `.env.local`에만 두고 커밋하지 않습니다. 브라우저에서 직접 써야 하는 공개 키가 아니면 `NEXT_PUBLIC_` 접두사를 붙이지 않습니다.
+"# jibeojum" 

@@ -38,3 +38,6 @@ next-env.d.ts
 /dist/
 /outputs/
 /work/
+
+# build cache
+*.tsbuildinfo
