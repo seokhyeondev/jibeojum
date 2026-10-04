@@ -1,0 +1,51 @@
+{
+  "name": "@zipazum/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node --enable-source-maps dist/main.js",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "postinstall": "prisma generate",
+    "pipeline:collect": "tsx src/pipeline/collect-rents.ts",
+    "pipeline:geocode": "tsx src/pipeline/geocode-addresses.ts",
+    "pipeline:anchors": "tsx src/pipeline/build-anchors.ts",
+    "pipeline:transit-sample": "tsx src/pipeline/transit-sample.ts",
+    "pipeline:stations": "tsx src/pipeline/load-stations.ts",
+    "pipeline:zones": "tsx src/pipeline/build-zones.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@aws-sdk/s3-request-presigner": "^3.1146.0",
+    "@nestjs/common": "12.1.2",
+    "@nestjs/core": "12.1.2",
+    "@nestjs/platform-express": "12.1.2",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "@zipazum/shared": "workspace:*",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.5",
+    "fast-xml-parser": "^5.11.2",
+    "h3-js": "^4.5.0",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "22.19.19",
+    "@types/pg": "^8.23.1",
+    "prisma": "7.10.0",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "^4.1.11"
+  },
+  "type": "module"
+}

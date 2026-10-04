@@ -1,0 +1,450 @@
+// 공용 RDS의 zipazum 스키마만 사용한다 (DATABASE_URL의 schema=zipazum).
+// 테이블·컬럼 이름은 snake_case로 두고 코드에서는 camelCase로 쓴다.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// 사용자 최소 정보. 휴대폰 인증 전에는 브라우저 세션 토큰의 해시로 식별한다.
+model User {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// 예전 단일 세션 토큰 (지금은 user_sessions를 쓴다)
+  sessionTokenHash String?          @unique(map: "users_session_token_hash_unique") @map("session_token_hash")
+  phoneHash        String?          @map("phone_hash")
+  verifiedAt       DateTime?        @map("verified_at") @db.Timestamptz(6)
+  /// 카카오 회원번호. 로그인 전(요청 입력 중)에는 null
+  kakaoId          String?          @unique(map: "users_kakao_id_unique") @map("kakao_id")
+  nickname         String?
+  profileImageUrl  String?          @map("profile_image_url")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  requests         HousingRequest[]
+  notifications    Notification[]
+  sessions         UserSession[]
+
+  @@map("users")
+}
+
+/// 브라우저별 로그인 세션. 쿠키에는 토큰 원문, DB에는 해시만 둔다
+model UserSession {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  tokenHash  String   @unique(map: "user_sessions_token_hash_unique") @map("token_hash")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_sessions_user_id_fk")
+
+  @@index([userId], map: "user_sessions_user_idx")
+  @@map("user_sessions")
+}
+
+model BrokerOffice {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  registrationNo String?  @map("registration_no")
+  address        String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  agents         Agent[]
+
+  @@map("broker_offices")
+}
+
+model Agent {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// 중개사무소 (선택). 샘플 중개사는 사무소가 있다
+  officeId     String?             @map("office_id") @db.Uuid
+  /// 로그인 아이디 (샘플 중개사는 null)
+  loginId      String?             @unique @map("login_id")
+  /// scrypt 해시 "salt:hash"
+  passwordHash String?             @map("password_hash")
+  name         String
+  /// 사용자 문의 동의 이후에만 공개한다
+  phone        String?
+  /// 사무소 주소 (도로명 또는 지번)
+  address      String?
+  /// 프로필 사진. 저장소가 생기기 전까지 작은 data URL
+  photoUrl     String?             @map("photo_url")
+  /// active | inactive
+  status       String              @default("active")
+  /// self(직접 가입) | admin(운영자가 만듦) | seed(샘플)
+  createdBy    String              @default("seed") @map("created_by")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  office       BrokerOffice?       @relation(fields: [officeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "agents_office_id_broker_offices_id_fk")
+  listings     Listing[]
+  assignments  RequestAssignment[]
+
+  @@index([officeId], map: "agents_office_idx")
+  @@map("agents")
+}
+
+/// 사용자 매물 요청. 복수 선택 조건은 배열 컬럼으로 둔다.
+model HousingRequest {
+  id                     String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                 String                     @map("user_id") @db.Uuid
+  /// 같은 제출이 두 번 들어와도 한 건만 만들기 위한 클라이언트 키
+  clientKey              String                     @map("client_key")
+  destinationLabel       String                     @map("destination_label")
+  /// 사용자가 출근지 검색에서 고른 장소 (직접 입력이면 null)
+  destinationAddress     String?                    @map("destination_address")
+  destinationLatitude    Float?                     @map("destination_latitude")
+  destinationLongitude   Float?                     @map("destination_longitude")
+  maxCommuteMinutes      Int                        @map("max_commute_minutes")
+  noTransferExtraMinutes Int                        @default(0) @map("no_transfer_extra_minutes")
+  transactionPreference  String                     @default("rent") @map("transaction_preference")
+  /// 월세 예산(만원). 전세만 찾으면 null
+  depositMax             Int?                       @map("deposit_max")
+  monthlyRentMax         Int?                       @map("monthly_rent_max")
+  /// 전세 예산(만원). 월세만 찾으면 null
+  jeonseMax              Int?                       @map("jeonse_max")
+  budgetFlexibility      String                     @map("budget_flexibility")
+  housingTypes           String[]                   @map("housing_types")
+  moveInDate             DateTime                   @map("move_in_date") @db.Date
+  moveInFlexibility      String                     @map("move_in_flexibility")
+  requiredOptions        String[]                   @map("required_options")
+  floorPreference        String                     @default("any") @map("floor_preference")
+  floorExclusions        String[]                   @map("floor_exclusions")
+  buildingAge            String                     @default("any") @map("building_age")
+  safetyOptions          String[]                   @map("safety_options")
+  infrastructure         String[]
+  verificationStatus     String                     @map("verification_status")
+  status                 String                     @default("matching")
+  submittedAt            DateTime                   @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  updatedAt              DateTime                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user                   User                       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "housing_requests_user_id_users_id_fk")
+  proposals              Proposal[]
+  areaRecommendation     RequestAreaRecommendation?
+  assignments            RequestAssignment[]
+
+  @@unique([userId, clientKey], map: "housing_requests_user_client_key_uq")
+  @@index([userId, submittedAt], map: "housing_requests_user_idx")
+  @@map("housing_requests")
+}
+
+/// 중개사가 확인한 매물
+model Listing {
+  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agentId            String     @map("agent_id") @db.Uuid
+  title              String
+  housingType        String     @map("housing_type")
+  transactionType    String     @map("transaction_type")
+  deposit            Int
+  monthlyRent        Int        @map("monthly_rent")
+  maintenanceFee     Int        @default(0) @map("maintenance_fee")
+  address            String
+  latitude           Float?
+  longitude          Float?
+  stationName        String     @map("station_name")
+  stationWalkMinutes Int        @map("station_walk_minutes")
+  exclusiveAreaM2    Float      @map("exclusive_area_m2")
+  floor              Int
+  totalFloors        Int        @map("total_floors")
+  floorType          String     @default("normal") @map("floor_type")
+  builtYear          Int        @map("built_year")
+  availableFrom      DateTime?  @map("available_from") @db.Date
+  moveInNote         String?    @map("move_in_note")
+  options            String[]
+  security           String[]
+  /// NearbyFacility[]
+  nearby             Json
+  tags               String[]
+  description        String
+  /// ListingImage[]
+  images             Json
+  status             String     @default("available")
+  /// 프로토타입 샘플 매물. 실서비스에서는 테스트 계정에만 노출한다.
+  isSample           Boolean    @default(false) @map("is_sample")
+  verifiedAt         DateTime   @map("verified_at") @db.Timestamptz(6)
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  agent              Agent      @relation(fields: [agentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "listings_agent_id_agents_id_fk")
+  proposals          Proposal[]
+
+  @@index([agentId], map: "listings_agent_idx")
+  @@map("listings")
+}
+
+/// 요청에 전달된 매물. 통근 정보는 요청의 출근지에 따라 달라서 여기 둔다.
+model Proposal {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId String         @map("request_id") @db.Uuid
+  listingId String         @map("listing_id") @db.Uuid
+  /// CommuteSummary
+  commute   Json
+  rank      Int?
+  status    String         @default("proposed")
+  agentNote String?        @map("agent_note")
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing   Listing        @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposals_listing_id_listings_id_fk")
+  request   HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "proposals_request_id_housing_requests_id_fk")
+
+  @@unique([requestId, listingId], map: "proposals_request_listing_uq")
+  @@index([requestId], map: "proposals_request_idx")
+  @@map("proposals")
+}
+
+// ───────────── 주거 앵커 (전월세 실거래 기반) ─────────────
+
+/// 국토부 전월세 실거래. source: apt | rh(연립다세대) | sh(단독다가구) | offi(오피스텔)
+model RentTransaction {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// 원본 행을 다시 받아도 중복 저장되지 않게 만드는 키 (필드 해시 + 같은 행 순번)
+  dedupeKey    String   @unique @map("dedupe_key")
+  source       String
+  sggCd        String   @map("sgg_cd")
+  umdNm        String   @map("umd_nm")
+  /// 단독다가구는 지번이 공개되지 않아 null
+  jibun        String?
+  buildingName String?  @map("building_name")
+  houseType    String   @map("house_type")
+  contractDate DateTime @map("contract_date") @db.Date
+  /// 만원
+  deposit      Int
+  /// 만원. 0이면 전세
+  monthlyRent  Int      @map("monthly_rent")
+  /// 전용면적(단독다가구는 계약면적)
+  areaM2       Float?   @map("area_m2")
+  floor        Int?
+  buildYear    Int?     @map("build_year")
+  contractType String?  @map("contract_type")
+  /// 좌표 변환용 주소 키. 지번이 없으면 null
+  addressKey   String?  @map("address_key")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([sggCd, contractDate], map: "rent_transactions_sgg_date_idx")
+  @@index([addressKey], map: "rent_transactions_address_idx")
+  @@map("rent_transactions")
+}
+
+/// 지번 주소 → 좌표 캐시. 같은 주소는 다시 호출하지 않는다.
+model GeocodedAddress {
+  addressKey     String   @id @map("address_key")
+  query          String
+  /// ok | not_found | error
+  status         String
+  latitude       Float?
+  longitude      Float?
+  refinedAddress String?  @map("refined_address")
+  provider       String
+  geocodedAt     DateTime @default(now()) @map("geocoded_at") @db.Timestamptz(6)
+
+  @@map("geocoded_addresses")
+}
+
+/// H3 해상도 8 격자 단위의 주거 앵커. TMAP 출발 좌표는 실제 거래 건물 좌표 중 하나다.
+model ResidentialAnchor {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gridId               String   @unique @map("grid_id")
+  latitude             Float
+  longitude            Float
+  sido                 String
+  sigungu              String
+  legalDong            String   @map("legal_dong")
+  sggCd                String   @map("sgg_cd")
+  buildingCount        Int      @map("building_count")
+  transactionCount     Int      @map("transaction_count")
+  officetelCount       Int      @map("officetel_count")
+  multifamilyCount     Int      @map("multifamily_count")
+  apartmentCount       Int      @map("apartment_count")
+  /// 같은 법정동의 단독다가구 거래 수 (위치 미공개라 동 단위로만 반영)
+  dongDetachedCount    Int      @map("dong_detached_count")
+  /// 월세 거래 중위 보증금·월세, 전세 거래 중위 보증금 (만원)
+  monthlyDepositMedian Int?     @map("monthly_deposit_median")
+  monthlyRentMedian    Int?     @map("monthly_rent_median")
+  jeonseDepositMedian  Int?     @map("jeonse_deposit_median")
+  smallUnitShare       Float    @map("small_unit_share")
+  residentialScore     Float    @map("residential_score")
+  latestContractDate   DateTime @map("latest_contract_date") @db.Date
+  sourceFrom           DateTime @map("source_from") @db.Date
+  sourceTo             DateTime @map("source_to") @db.Date
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([latitude, longitude], map: "residential_anchors_lat_lng_idx")
+  @@index([sggCd, legalDong], map: "residential_anchors_dong_idx")
+  @@map("residential_anchors")
+}
+
+/// 법정동 × 주택 유형별 전월세 시세. 단독다가구처럼 위치가 없는 거래도 여기서는 쓴다.
+model LegalDongRentStat {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sggCd                String   @map("sgg_cd")
+  umdNm                String   @map("umd_nm")
+  sigungu              String
+  /// apt | rh | sh | offi
+  source               String
+  transactionCount     Int      @map("transaction_count")
+  monthlyDepositMedian Int?     @map("monthly_deposit_median")
+  monthlyRentMedian    Int?     @map("monthly_rent_median")
+  jeonseDepositMedian  Int?     @map("jeonse_deposit_median")
+  sourceFrom           DateTime @map("source_from") @db.Date
+  sourceTo             DateTime @map("source_to") @db.Date
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([sggCd, umdNm, source], map: "legal_dong_rent_stats_uq")
+  @@map("legal_dong_rent_stats")
+}
+
+/// 대중교통 경로 응답 캐시. 키 = 제공자 + 출발 지점 + 도착 좌표(반올림) + 출근 시간대 + 데이터 기준일
+model TransitRouteCache {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cacheKey          String   @unique @map("cache_key")
+  provider          String
+  /// 출발 지점 키 (station:<역 id>, zone:<생활권 key>, H3 셀)
+  originKey         String?  @map("origin_grid_id")
+  originLat         Float    @map("origin_lat")
+  originLng         Float    @map("origin_lng")
+  destLat           Float    @map("dest_lat")
+  destLng           Float    @map("dest_lng")
+  timeSlot          String   @map("time_slot")
+  dataDate          String   @map("data_date")
+  bestMinutes       Int?     @map("best_minutes")
+  bestTransferCount Int?     @map("best_transfer_count")
+  noTransferMinutes Int?     @map("no_transfer_minutes")
+  /// TransitRouteResult 전체
+  result            Json
+  fetchedAt         DateTime @default(now()) @map("fetched_at") @db.Timestamptz(6)
+  expiresAt         DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@index([originKey], map: "transit_route_cache_origin_idx")
+  @@map("transit_route_cache")
+}
+
+/// 요청별 추천 동네 계산 결과 (디버그·운영용, 사용자에게는 노출하지 않음)
+model RequestAreaRecommendation {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId        String         @unique @map("request_id") @db.Uuid
+  /// pending | running | done | failed
+  status           String
+  destinationQuery String         @map("destination_query")
+  /// 출근지 검색으로 고른 장소 (PlaceCandidate)
+  destination      Json?
+  /// AreaRecommendationResult
+  result           Json?
+  error            String?
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  request          HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "request_area_recommendations_request_id_fk")
+
+  @@index([status], map: "request_area_recommendations_status_idx")
+  @@map("request_area_recommendations")
+}
+
+// ───────────── 추천 생활권 (역세권 15분 / 행정동 버스권) ─────────────
+
+/// 수도권 지하철·철도역. 같은 이름의 환승역은 하나로 합친다.
+model Station {
+  id          String   @id
+  name        String
+  /// subway | rail
+  kind        String
+  latitude    Float
+  longitude   Float
+  /// 합쳐진 원본 장소 수 (환승역이면 2 이상)
+  sourceCount Int      @map("source_count")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([latitude, longitude], map: "stations_lat_lng_idx")
+  @@map("stations")
+}
+
+/// 앵커 좌표의 행정동 (역지오코딩 캐시)
+model AnchorAdminArea {
+  gridId    String   @id @map("grid_id")
+  admCode   String?  @map("adm_code")
+  admName   String?  @map("adm_name")
+  sido      String?
+  sigungu   String?
+  provider  String
+  fetchedAt DateTime @default(now()) @map("fetched_at") @db.Timestamptz(6)
+
+  @@map("anchor_admin_areas")
+}
+
+/// 추천 생활권. zone_key = station:<역 id> | bus:<행정동 코드>
+model CommuteZone {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  zoneKey            String   @unique @map("zone_key")
+  /// station | bus
+  kind               String
+  name               String
+  stationId          String?  @map("station_id")
+  stationName        String?  @map("station_name")
+  admCode            String?  @map("adm_code")
+  admName            String?  @map("adm_name")
+  sido               String
+  sigungu            String
+  /// 대표 좌표 (실제 거래 건물)
+  latitude           Float
+  longitude          Float
+  repGridId          String   @map("rep_grid_id")
+  /// 대표 좌표 → 역 도보 분 (버스권은 null)
+  stationWalkMinutes Int?     @map("station_walk_minutes")
+  anchorCount        Int      @map("anchor_count")
+  buildingCount      Int      @map("building_count")
+  transactionCount   Int      @map("transaction_count")
+  residentialScore   Float    @map("residential_score")
+  /// 유형별(studio, two_room, officetel, apartment) 거래 수와 시세 중위값
+  statsByType        Json     @map("stats_by_type")
+  sourceFrom         DateTime @map("source_from") @db.Date
+  sourceTo           DateTime @map("source_to") @db.Date
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([latitude, longitude], map: "commute_zones_lat_lng_idx")
+  @@map("commute_zones")
+}
+
+/// 앵커 → 생활권 배정
+model AnchorZoneAssignment {
+  gridId           String  @id @map("grid_id")
+  zoneKey          String  @map("zone_key")
+  stationId        String? @map("station_id")
+  stationDistanceM Int?    @map("station_distance_m")
+
+  @@index([zoneKey], map: "anchor_zone_assignments_zone_idx")
+  @@map("anchor_zone_assignments")
+}
+
+// ───────────── 운영 · 중개사 · 알림 ─────────────
+
+/// 운영자가 요청을 중개사에게 배정한 기록
+model RequestAssignment {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId String         @map("request_id") @db.Uuid
+  agentId   String         @map("agent_id") @db.Uuid
+  /// 이 중개사에게 맡긴 생활권 (commute_zones.zone_key)
+  zoneKeys  String[]       @map("zone_keys")
+  note      String?
+  /// assigned | proposed | closed
+  status    String         @default("assigned")
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  request   HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "request_assignments_request_id_fk")
+  agent     Agent          @relation(fields: [agentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "request_assignments_agent_id_fk")
+
+  @@unique([requestId, agentId], map: "request_assignments_request_agent_uq")
+  @@index([agentId], map: "request_assignments_agent_idx")
+  @@map("request_assignments")
+}
+
+/// 사용자 알림 (앱 안 알림함). 알림톡·푸시는 이후에 이 행을 보고 보낸다.
+model Notification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  /// proposal_arrived 등
+  type      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "notifications_user_id_fk")
+
+  @@index([userId, createdAt], map: "notifications_user_idx")
+  @@map("notifications")
+}

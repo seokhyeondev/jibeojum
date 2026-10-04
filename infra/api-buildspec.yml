@@ -1,0 +1,17 @@
+# CodeBuild 프로젝트 zipazum-api-build의 buildspec (프로젝트에 인라인으로 들어가 있다. 바꾸면 infra/README.md 참고해 다시 올린다)
+# scripts/deploy-api.mjs가 소스를 tar.gz로 S3에 올리고 SOURCE_KEY·IMAGE_TAG를 넘겨 빌드를 시작한다.
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - aws s3 cp "s3://$BUILD_BUCKET/$SOURCE_KEY" src.tgz
+      - mkdir src && tar -xzf src.tgz -C src
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+  build:
+    commands:
+      - cd src && docker build -f apps/api/Dockerfile -t "$REGISTRY/zipazum-api:$IMAGE_TAG" -t "$REGISTRY/zipazum-api:latest" .
+  post_build:
+    commands:
+      - test "$CODEBUILD_BUILD_SUCCEEDING" = "1"
+      - docker push "$REGISTRY/zipazum-api:$IMAGE_TAG"
+      - docker push "$REGISTRY/zipazum-api:latest"
