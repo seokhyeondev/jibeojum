@@ -34,7 +34,8 @@
 
 **자동:** `main`에 `apps/api/**`, `packages/shared/**`, `pnpm-lock.yaml`이 바뀐 커밋이 올라오면 GitHub Actions(`.github/workflows/deploy-api.yml`)가
 타입체크·테스트 후 배포한다. Actions 탭에서 "Deploy API → Run workflow"로 손으로 돌릴 수도 있다.
-AWS 키는 GitHub에 없다. OIDC로 `zipazum-github-deploy` 역할(main 브랜치만, 빌드 시작·ECS 갱신만 가능)을 잠깐 빌린다.
+AWS 키는 GitHub에 없다. OIDC로 `zipazum-github-deploy` 역할(빌드 시작·ECS 갱신만 가능)을 잠깐 빌린다.
+신뢰 조건은 `repo:seokhyeondev@64835957/jibeojum@1404607378:ref:refs/heads/main` (이 저장소 ID의 main 브랜치만).
 
 **수동 (로컬):**
 
