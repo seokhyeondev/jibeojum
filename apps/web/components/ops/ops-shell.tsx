@@ -13,6 +13,7 @@ const NAV: Record<OpsKind, { href: string; label: string }[]> = {
   admin: [
     { href: "/admin", label: "요청" },
     { href: "/admin/agents", label: "공인중개사" },
+    { href: "/admin/reports", label: "신고" },
   ],
   agent: [{ href: "/agent", label: "배정 요청" }],
 };

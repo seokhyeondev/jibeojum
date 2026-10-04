@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import type {
+  AgentInvitePreview,
   AgentAssignmentDetail,
   AgentAssignmentSummary,
   AgentListingInput,
@@ -24,6 +25,7 @@ import { TransitRouteCacheService } from "../transit/transit-route-cache.service
 import type { TransitRouteResult } from "../transit/transit.types.js";
 import { UploadsService, uploadPrefix } from "../uploads/uploads.service.js";
 import { walkMinutes } from "../zones/zone-builder.js";
+import { inviteTokenHash } from "../admin/outreach.service.js";
 import { WALK_COMMUTE_MAX_M, listingTags, toCommuteSummary, walkingCommute } from "./listing-builder.js";
 
 const STATION_SEARCH_DEG = 0.03;
@@ -78,7 +80,67 @@ export class AgentService {
       createdBy: agent.createdBy === "self" ? "self" : "admin",
       assignmentCount: agent._count.assignments,
       createdAt: agent.createdAt.toISOString(),
+      launchPartnerAt: agent.launchPartnerAt?.toISOString() ?? null,
+      stats: { proposals: 0, viewed: 0, favorited: 0, inquired: 0, reportsOpen: 0, reportsConfirmed: 0 },
     };
+  }
+
+  // ───── 초대 링크 ─────
+
+  /** 초대 링크를 연 사람에게 보여줄 요청 요약 (로그인 전에도 본다. 사용자 개인정보 없음) */
+  async previewInvite(token: string): Promise<AgentInvitePreview> {
+    const invite = await this.findInvite(token);
+    const request = toHousingRequest(invite.request);
+    const zones = invite.zoneKeys.length
+      ? await this.prisma.commuteZone.findMany({ where: { zoneKey: { in: invite.zoneKeys } }, select: { name: true } })
+      : [];
+    return {
+      destinationLabel: request.commuteDestination.label,
+      summary: summarizeRequest(request),
+      conditions: requestConditionLabels(request),
+      zoneNames: zones.map((z) => z.name),
+      officeName: invite.office?.name ?? null,
+      officeAddress: invite.office?.address ?? null,
+      expired: invite.expiresAt.getTime() < Date.now(),
+      accepted: invite.acceptedAgentId !== null,
+      closed: invite.request.status === "closed",
+    };
+  }
+
+  /**
+   * 로그인한 공인중개사가 초대를 받는다: 요청(생활권)을 배정하고, 사무소를 계정에 붙이고, 연락 기록을 "가입함"으로 바꾼다.
+   * 같은 사람이 다시 열면 기존 배정을 돌려준다. 다른 계정이 이미 받은 링크면 막는다.
+   */
+  async acceptInvite(agentId: string, token: string): Promise<{ assignmentId: string }> {
+    await this.me(agentId);
+    const invite = await this.findInvite(token);
+    if (invite.acceptedAgentId && invite.acceptedAgentId !== agentId) throw new ApiException(409, "conflict", "이미 다른 계정으로 받은 링크예요. 운영팀에 새 링크를 요청해주세요.");
+    if (!invite.acceptedAgentId && invite.expiresAt.getTime() < Date.now()) throw new ApiException(410, "conflict", "만료된 링크예요. 운영팀에 새 링크를 요청해주세요.");
+    if (invite.request.status === "closed") throw new ApiException(409, "conflict", "고객이 취소한 요청이에요.");
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.requestAssignment.findUnique({ where: { requestId_agentId: { requestId: invite.requestId, agentId } } });
+      const zoneKeys = [...new Set([...(existing?.zoneKeys ?? []), ...invite.zoneKeys])];
+      const assignment = existing
+        ? await tx.requestAssignment.update({ where: { id: existing.id }, data: { zoneKeys } })
+        : await tx.requestAssignment.create({ data: { requestId: invite.requestId, agentId, zoneKeys, note: null } });
+      if (!invite.acceptedAgentId) await tx.agentInvite.update({ where: { id: invite.id }, data: { acceptedAgentId: agentId, acceptedAt: new Date() } });
+      if (invite.officeId) {
+        await tx.agent.updateMany({ where: { id: agentId, officeId: null }, data: { officeId: invite.officeId } });
+      }
+      if (invite.contactId) {
+        await tx.brokerContact.updateMany({ where: { id: invite.contactId, status: { not: "has_listing" } }, data: { status: "joined" } });
+      }
+      return { assignmentId: assignment.id };
+    });
+  }
+
+  private async findInvite(token: string) {
+    const invite = await this.prisma.agentInvite.findUnique({
+      where: { tokenHash: inviteTokenHash(token) },
+      include: { request: true, office: { select: { name: true, address: true } } },
+    });
+    if (!invite) throw new ApiException(404, "not_found", "링크를 찾을 수 없어요. 주소를 다시 확인해주세요.");
+    return invite;
   }
 
   // ───── 배정 ─────
@@ -223,6 +285,11 @@ export class AgentService {
         data: { requestId: request.id, listingId, commute: commute as unknown as Prisma.InputJsonValue, rank: 0, status: "proposed", agentNote: input.agentNote },
       });
       await tx.requestAssignment.update({ where: { id: assignment.id }, data: { status: "proposed" } });
+      // 운영팀이 연락했던 사무소면 연락 기록을 "매물 등록"으로 바꾼다
+      const agentOffice = await tx.agent.findUnique({ where: { id: agentId }, select: { officeId: true } });
+      if (agentOffice?.officeId) {
+        await tx.brokerContact.updateMany({ where: { requestId: request.id, officeId: agentOffice.officeId }, data: { status: "has_listing" } });
+      }
       await tx.housingRequest.update({ where: { id: request.id }, data: { status: "proposed" } });
       await this.notifications.create(
         {

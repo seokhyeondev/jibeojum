@@ -171,3 +171,39 @@ describe("매물 통근 요약", () => {
     expect(listingTags({ transactionType: "rent", security: ["women_only"], options: ["elevator", "parking"] })).toEqual(["여성 전용 건물", "엘리베이터", "주차 가능"]);
   });
 });
+
+describe("부동산 연락 목록", () => {
+  it("네이버 결과와 우리 목록을 합치고, 가입·매물 준 곳을 먼저, 거절한 곳을 마지막에 둔다", async () => {
+    const { mergeOffices } = await import("../src/admin/broker-search.js");
+    const origin = { latitude: 37.5, longitude: 127.0 };
+    const naver = [
+      { name: "가까운부동산", address: "서울 A로 1", category: "부동산>중개업", link: null, phone: null, keyword: "q", distanceM: 100, latitude: 37.5009, longitude: 127.0 },
+      { name: "거절한부동산", address: "서울 B로 2", category: "부동산>중개업", link: null, phone: null, keyword: "q", distanceM: 50, latitude: 37.5004, longitude: 127.0 },
+    ];
+    const at = new Date("2026-10-01T00:00:00Z");
+    const saved = [
+      { id: "o-declined", name: "거절한부동산", address: "서울 B로 2", phone: "02-1", link: null, latitude: 37.5004, longitude: 127.0, contacts: [{ id: "c1", requestId: "r-old", status: "declined", contactedAt: at }], agents: [] },
+      { id: "o-good", name: "단골부동산", address: "서울 C로 3", phone: null, link: null, latitude: 37.505, longitude: 127.0, contacts: [{ id: "c2", requestId: "r-now", status: "has_listing", contactedAt: at }], agents: [] },
+      { id: "o-far", name: "먼부동산", address: "서울 D로 4", phone: null, link: null, latitude: 37.6, longitude: 127.0, contacts: [], agents: [] },
+    ];
+    const views = mergeOffices(naver, saved, "r-now", origin);
+    expect(views.map((v) => v.name)).toEqual(["단골부동산", "가까운부동산", "거절한부동산"]);
+    expect(views[0]).toMatchObject({ officeId: "o-good", keyword: null, contactStatus: "has_listing", history: { contacts: 1, listings: 1 } });
+    expect(views[2]).toMatchObject({ officeId: "o-declined", phone: "02-1", contactStatus: null, history: { lastStatus: "declined" } });
+  });
+
+  it("초대 문구에는 조건과 링크만 넣는다", async () => {
+    const { inviteMessage } = await import("../src/admin/outreach.service.js");
+    const request = {
+      id: "r", status: "matching" as const, submittedAt: "2026-10-05T00:00:00Z",
+      commuteDestination: { label: "강남역" }, maxCommuteMinutes: 60 as const, noTransferExtraMinutes: 10 as const, transactionPreference: "rent" as const,
+      depositMax: 1000, monthlyRentMax: 60, jeonseMax: null, budgetFlexibility: "fixed" as const, housingTypes: ["studio" as const],
+      moveInDate: "2026-11-01", moveInFlexibility: "negotiable" as const, requiredOptions: [], floorPreference: "any" as const, floorExclusions: [],
+      buildingAge: "any" as const, safetyOptions: [], infrastructure: [],
+    };
+    const text = inviteMessage(request, "서원동 · 신림역권", "https://x/agent/invite/t");
+    expect(text).toContain("강남역 출근하시는 분이 서원동 근처에서 원룸 매물을 찾고 있어요.");
+    expect(text).toContain("보증금 1,000만 · 월세 60만 이하");
+    expect(text.endsWith("https://x/agent/invite/t")).toBe(true);
+  });
+});

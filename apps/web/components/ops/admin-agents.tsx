@@ -1,7 +1,7 @@
 "use client";
 
 import type { AgentSummary } from "@zipazum/shared";
-import { adminCreateAgentSchema } from "@zipazum/shared";
+import { REPORT_SUSPEND_THRESHOLD, adminCreateAgentSchema } from "@zipazum/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { KeyRound, UserRound } from "lucide-react";
 import { useState } from "react";
@@ -25,13 +25,13 @@ export function AdminAgents() {
           {error && <p className="ops-error">{errorText(error)}</p>}
           {data && data.length === 0 && <p className="ops-muted">아직 공인중개사가 없어요.</p>}
           {data && data.length > 0 && (
-            <table className="ops-table">
+            <table className="ops-table agents">
               <thead>
                 <tr>
                   <th>공인중개사</th>
                   <th>전화번호 · 사무소</th>
                   <th>가입</th>
-                  <th>배정</th>
+                  <th>실적</th>
                   <th>상태</th>
                   <th />
                 </tr>
@@ -73,7 +73,10 @@ function AgentRow({ agent }: { agent: AgentSummary }) {
         <span className="ops-person">
           <AgentAvatar photoUrl={agent.photoUrl} />
           <span>
-            <b>{agent.name}</b>
+            <b>
+              {agent.name}
+              {agent.launchPartnerAt && <span className="ops-badge partner">런칭 파트너</span>}
+            </b>
             <small>{agent.loginId}</small>
           </span>
         </span>
@@ -86,11 +89,29 @@ function AgentRow({ agent }: { agent: AgentSummary }) {
         {agent.createdBy === "self" ? "직접 가입" : "운영자"}
         <small>{new Date(agent.createdAt).toLocaleDateString("ko-KR")}</small>
       </td>
-      <td>{agent.assignmentCount}건</td>
+      <td>
+        <AgentStatsCell agent={agent} />
+      </td>
       <td>
         <span className={`ops-badge ${active ? "on" : "warn"}`}>{active ? "활성" : "중지"}</span>
       </td>
       <td className="ops-actions">
+        <button
+          type="button"
+          className="ops-btn ghost"
+          onClick={async () => {
+            const on = !agent.launchPartnerAt;
+            if (on && !window.confirm(`${agent.name}님을 런칭 파트너로 지정할까요? 유료화 후 평생 30% 할인 대상이 돼요.`)) return;
+            try {
+              await adminApi.setLaunchPartner(agent.id, on);
+              await refresh();
+            } catch (err) {
+              toast.error(errorText(err));
+            }
+          }}
+        >
+          {agent.launchPartnerAt ? "파트너 해제" : "런칭 파트너"}
+        </button>
         <button
           type="button"
           className="ops-btn ghost"
@@ -195,5 +216,27 @@ function CreateAgentForm() {
         </p>
       )}
     </form>
+  );
+}
+
+const pct = (part: number, total: number) => (total ? `${Math.round((part / total) * 100)}%` : "-");
+
+/** 제안 · 열람률 · 찜 · 문의 · 신고 (확인된 신고가 3회면 정지 검토) */
+function AgentStatsCell({ agent }: { agent: AgentSummary }) {
+  const { stats } = agent;
+  return (
+    <span className="ops-stats">
+      <b>
+        제안 {stats.proposals} · 열람 {pct(stats.viewed, stats.proposals)}
+      </b>
+      <small>
+        찜 {stats.favorited} · 문의 {stats.inquired} · 배정 {agent.assignmentCount}
+      </small>
+      {(stats.reportsOpen > 0 || stats.reportsConfirmed > 0) && (
+        <span className={`ops-badge ${stats.reportsConfirmed >= REPORT_SUSPEND_THRESHOLD ? "danger" : "warn"}`}>
+          신고 {stats.reportsConfirmed}건 확인{stats.reportsOpen ? ` · ${stats.reportsOpen}건 대기` : ""}
+        </span>
+      )}
+    </span>
   );
 }

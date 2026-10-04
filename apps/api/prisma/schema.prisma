@@ -27,6 +27,7 @@ model User {
   requests         HousingRequest[]
   notifications    Notification[]
   sessions         UserSession[]
+  listingReports   ListingReport[]
 
   @@map("users")
 }
@@ -44,40 +45,100 @@ model UserSession {
   @@map("user_sessions")
 }
 
+/// 중개사무소. 운영팀이 네이버에서 찾아 연락한 곳이 쌓이고, 가입한 공인중개사가 붙는다
 model BrokerOffice {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name           String
-  registrationNo String?  @map("registration_no")
+  registrationNo String?         @map("registration_no")
   address        String?
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  phone          String?
+  /// 네이버 검색 결과의 링크 (홈페이지·블로그)
+  link           String?
+  latitude       Float?
+  longitude      Float?
+  /// naver | manual
+  source         String          @default("manual")
+  memo           String?
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   agents         Agent[]
+  contacts       BrokerContact[]
+  invites        AgentInvite[]
 
+  @@unique([name, address], map: "broker_offices_name_address_uq")
+  @@index([latitude, longitude], map: "broker_offices_coord_idx")
   @@map("broker_offices")
 }
 
+/// 요청마다 운영팀이 부동산에 연락한 기록
+model BrokerContact {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId   String         @map("request_id") @db.Uuid
+  officeId    String         @map("office_id") @db.Uuid
+  /// 어느 생활권 때문에 연락했는지
+  zoneKey     String?        @map("zone_key")
+  /// contacted | no_answer | interested | no_listing | declined | joined | has_listing
+  status      String         @default("contacted")
+  note        String?
+  contactedAt DateTime       @default(now()) @map("contacted_at") @db.Timestamptz(6)
+  updatedAt   DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  request     HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "broker_contacts_request_id_fk")
+  office      BrokerOffice   @relation(fields: [officeId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "broker_contacts_office_id_fk")
+  invites     AgentInvite[]
+
+  @@unique([requestId, officeId], map: "broker_contacts_request_office_uq")
+  @@index([officeId], map: "broker_contacts_office_idx")
+  @@map("broker_contacts")
+}
+
+/// 공인중개사 초대 링크. 링크로 들어와 가입·로그인하면 그 요청이 배정된다
+model AgentInvite {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// 링크의 토큰 해시 (원문은 링크에만)
+  tokenHash       String         @unique(map: "agent_invites_token_hash_uq") @map("token_hash")
+  requestId       String         @map("request_id") @db.Uuid
+  officeId        String?        @map("office_id") @db.Uuid
+  contactId       String?        @map("contact_id") @db.Uuid
+  zoneKeys        String[]       @map("zone_keys")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt       DateTime       @map("expires_at") @db.Timestamptz(6)
+  acceptedAgentId String?        @map("accepted_agent_id") @db.Uuid
+  acceptedAt      DateTime?      @map("accepted_at") @db.Timestamptz(6)
+  request         HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "agent_invites_request_id_fk")
+  office          BrokerOffice?  @relation(fields: [officeId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "agent_invites_office_id_fk")
+  contact         BrokerContact? @relation(fields: [contactId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "agent_invites_contact_id_fk")
+  acceptedAgent   Agent?         @relation(fields: [acceptedAgentId], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "agent_invites_agent_id_fk")
+
+  @@index([requestId], map: "agent_invites_request_idx")
+  @@map("agent_invites")
+}
+
 model Agent {
-  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// 중개사무소 (선택). 샘플 중개사는 사무소가 있다
-  officeId     String?             @map("office_id") @db.Uuid
+  officeId        String?             @map("office_id") @db.Uuid
   /// 로그인 아이디 (샘플 중개사는 null)
-  loginId      String?             @unique @map("login_id")
+  loginId         String?             @unique @map("login_id")
   /// scrypt 해시 "salt:hash"
-  passwordHash String?             @map("password_hash")
-  name         String
+  passwordHash    String?             @map("password_hash")
+  name            String
   /// 사용자 문의 동의 이후에만 공개한다
-  phone        String?
+  phone           String?
   /// 사무소 주소 (도로명 또는 지번)
-  address      String?
+  address         String?
   /// 프로필 사진. 저장소가 생기기 전까지 작은 data URL
-  photoUrl     String?             @map("photo_url")
+  photoUrl        String?             @map("photo_url")
   /// active | inactive
-  status       String              @default("active")
+  status          String              @default("active")
   /// self(직접 가입) | admin(운영자가 만듦) | seed(샘플)
-  createdBy    String              @default("seed") @map("created_by")
-  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  office       BrokerOffice?       @relation(fields: [officeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "agents_office_id_broker_offices_id_fk")
-  listings     Listing[]
-  assignments  RequestAssignment[]
+  createdBy       String              @default("seed") @map("created_by")
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  /// 런칭 파트너로 등록한 시각 (유료화 후 평생 30% 할인 대상). null이면 일반
+  launchPartnerAt DateTime?           @map("launch_partner_at") @db.Timestamptz(6)
+  office          BrokerOffice?       @relation(fields: [officeId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "agents_office_id_broker_offices_id_fk")
+  listings        Listing[]
+  assignments     RequestAssignment[]
+  invites         AgentInvite[]
 
   @@index([officeId], map: "agents_office_idx")
   @@map("agents")
@@ -120,6 +181,8 @@ model HousingRequest {
   proposals              Proposal[]
   areaRecommendation     RequestAreaRecommendation?
   assignments            RequestAssignment[]
+  brokerContacts         BrokerContact[]
+  agentInvites           AgentInvite[]
 
   @@unique([userId, clientKey], map: "housing_requests_user_client_key_uq")
   @@index([userId, submittedAt], map: "housing_requests_user_idx")
@@ -128,26 +191,26 @@ model HousingRequest {
 
 /// 중개사가 확인한 매물
 model Listing {
-  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  agentId            String     @map("agent_id") @db.Uuid
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  agentId            String          @map("agent_id") @db.Uuid
   title              String
-  housingType        String     @map("housing_type")
-  transactionType    String     @map("transaction_type")
+  housingType        String          @map("housing_type")
+  transactionType    String          @map("transaction_type")
   deposit            Int
-  monthlyRent        Int        @map("monthly_rent")
-  maintenanceFee     Int        @default(0) @map("maintenance_fee")
+  monthlyRent        Int             @map("monthly_rent")
+  maintenanceFee     Int             @default(0) @map("maintenance_fee")
   address            String
   latitude           Float?
   longitude          Float?
-  stationName        String     @map("station_name")
-  stationWalkMinutes Int        @map("station_walk_minutes")
-  exclusiveAreaM2    Float      @map("exclusive_area_m2")
+  stationName        String          @map("station_name")
+  stationWalkMinutes Int             @map("station_walk_minutes")
+  exclusiveAreaM2    Float           @map("exclusive_area_m2")
   floor              Int
-  totalFloors        Int        @map("total_floors")
-  floorType          String     @default("normal") @map("floor_type")
-  builtYear          Int        @map("built_year")
-  availableFrom      DateTime?  @map("available_from") @db.Date
-  moveInNote         String?    @map("move_in_note")
+  totalFloors        Int             @map("total_floors")
+  floorType          String          @default("normal") @map("floor_type")
+  builtYear          Int             @map("built_year")
+  availableFrom      DateTime?       @map("available_from") @db.Date
+  moveInNote         String?         @map("move_in_note")
   options            String[]
   security           String[]
   /// NearbyFacility[]
@@ -156,14 +219,15 @@ model Listing {
   description        String
   /// ListingImage[]
   images             Json
-  status             String     @default("available")
+  status             String          @default("available")
   /// 프로토타입 샘플 매물. 실서비스에서는 테스트 계정에만 노출한다.
-  isSample           Boolean    @default(false) @map("is_sample")
-  verifiedAt         DateTime   @map("verified_at") @db.Timestamptz(6)
-  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  agent              Agent      @relation(fields: [agentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "listings_agent_id_agents_id_fk")
+  isSample           Boolean         @default(false) @map("is_sample")
+  verifiedAt         DateTime        @map("verified_at") @db.Timestamptz(6)
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  agent              Agent           @relation(fields: [agentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "listings_agent_id_agents_id_fk")
   proposals          Proposal[]
+  reports            ListingReport[]
 
   @@index([agentId], map: "listings_agent_idx")
   @@map("listings")
@@ -171,17 +235,23 @@ model Listing {
 
 /// 요청에 전달된 매물. 통근 정보는 요청의 출근지에 따라 달라서 여기 둔다.
 model Proposal {
-  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  requestId String         @map("request_id") @db.Uuid
-  listingId String         @map("listing_id") @db.Uuid
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId   String         @map("request_id") @db.Uuid
+  listingId   String         @map("listing_id") @db.Uuid
   /// CommuteSummary
-  commute   Json
-  rank      Int?
-  status    String         @default("proposed")
-  agentNote String?        @map("agent_note")
-  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  listing   Listing        @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposals_listing_id_listings_id_fk")
-  request   HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "proposals_request_id_housing_requests_id_fk")
+  commute     Json
+  rank        Int?
+  status      String         @default("proposed")
+  agentNote   String?        @map("agent_note")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  /// 사용자가 처음 연 시각 (24시간 미열람 환급, 열람률 계산에 쓴다)
+  viewedAt    DateTime?      @map("viewed_at") @db.Timestamptz(6)
+  /// 사용자가 처음 찜한 시각
+  favoritedAt DateTime?      @map("favorited_at") @db.Timestamptz(6)
+  /// 사용자가 처음 문의한 시각
+  inquiredAt  DateTime?      @map("inquired_at") @db.Timestamptz(6)
+  listing     Listing        @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposals_listing_id_listings_id_fk")
+  request     HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "proposals_request_id_housing_requests_id_fk")
 
   @@unique([requestId, listingId], map: "proposals_request_listing_uq")
   @@index([requestId], map: "proposals_request_idx")
@@ -447,4 +517,24 @@ model Notification {
 
   @@index([userId, createdAt], map: "notifications_user_idx")
   @@map("notifications")
+}
+
+/// 사용자가 신고한 매물 (이미 나간 매물·정보 다름·허위). 운영자가 확인하면 공인중개사 제재 근거가 된다
+model ListingReport {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId  String    @map("listing_id") @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  /// gone | wrong_info | fake
+  reason     String
+  note       String?
+  /// open | confirmed | rejected
+  status     String    @default("open")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  reviewedAt DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  listing    Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "listing_reports_listing_id_fk")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "listing_reports_user_id_fk")
+
+  @@unique([listingId, userId], map: "listing_reports_listing_user_uq")
+  @@index([status], map: "listing_reports_status_idx")
+  @@map("listing_reports")
 }

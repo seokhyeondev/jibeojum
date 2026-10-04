@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { AppShell } from "@/components/navigation/app-shell";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
+import "./landing.css";
 
 export const metadata: Metadata = {
   title: "집어줌 | 출근 조건으로 찾는 집",

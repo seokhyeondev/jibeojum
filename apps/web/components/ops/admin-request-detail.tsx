@@ -2,13 +2,14 @@
 
 import type { AdminRequestDetail, AgentSummary, AreaRecommendation, AssignmentSummary } from "@zipazum/shared";
 import { HOUSING_TYPE_CHOICES, choiceLabel, formatManwon, requestConditionLabels, summarizeRequest } from "@zipazum/shared";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, MapPin, RefreshCw, Search, Trash2, UserPlus, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { MapPin, RefreshCw, Search, Trash2, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { adminApi, naverMapUrl, naverSearchUrl } from "@/lib/api/ops";
+import { adminApi } from "@/lib/api/ops";
 import { OpsShell } from "./ops-shell";
+import { BrokerPanel, OutreachCard } from "./outreach";
 import { errorText, useOpsQuery } from "./use-ops-query";
 
 const money = (v: number | null) => (v === null ? "-" : formatManwon(v));
@@ -95,6 +96,7 @@ function Detail({ detail, onChanged }: { detail: AdminRequestDetail; onChanged: 
       </section>
 
       <aside className="ops-col side">
+        <OutreachCard contacts={detail.contacts} onChanged={onChanged} />
         <AssignmentSummaryCard areas={areas} assignments={detail.assignments} hasAgents={agents.some((a) => a.status === "active")} onChanged={onChanged} />
         <div className="ops-card">
           <h2>들어온 매물 {detail.proposals.length > 0 && <small>{detail.proposals.length}건</small>}</h2>
@@ -181,7 +183,7 @@ function ZoneRow({
           ))}
         </ul>
       )}
-      {panel === "brokers" && <BrokerPanel zoneKey={area.zoneKey} />}
+      {panel === "brokers" && <BrokerPanel requestId={requestId} zoneKey={area.zoneKey} onChanged={onChanged} />}
       {panel === "assign" && (
         <AssignForm
           requestId={requestId}
@@ -195,53 +197,6 @@ function ZoneRow({
         />
       )}
     </li>
-  );
-}
-
-function BrokerPanel({ zoneKey }: { zoneKey: string }) {
-  const { data, isPending, error } = useQuery({ queryKey: ["admin", "brokers", zoneKey], queryFn: () => adminApi.brokers(zoneKey), staleTime: 30 * 60_000 });
-  if (isPending) return <p className="ops-muted">검색 중…</p>;
-  if (error) return <p className="ops-error">{errorText(error)}</p>;
-  return (
-    <div className="ops-brokers">
-      <div className="ops-keywords">
-        {data.keywords.map((k) => (
-          <span key={k.query} title={k.reason}>
-            <b>{k.query}</b>
-            <a href={naverSearchUrl(k.query)} target="_blank" rel="noreferrer">
-              검색 <ExternalLink aria-hidden />
-            </a>
-            <a href={naverMapUrl(k.query)} target="_blank" rel="noreferrer">
-              지도 <ExternalLink aria-hidden />
-            </a>
-          </span>
-        ))}
-      </div>
-      {data.offices.length > 0 ? (
-        <ul className="ops-list">
-          {data.offices.map((o) => (
-            <li key={`${o.name}-${o.address}`}>
-              <b>
-                <a href={naverMapUrl(o.name)} target="_blank" rel="noreferrer">
-                  {o.name}
-                </a>
-                {o.link && (
-                  <a href={o.link} target="_blank" rel="noreferrer" className="ops-sub-link">
-                    홈페이지
-                  </a>
-                )}
-              </b>
-              <small>
-                {o.distanceM !== null && `${o.distanceM < 1000 ? `${o.distanceM}m` : `${(o.distanceM / 1000).toFixed(1)}km`} · `}
-                {o.address ?? ""} · 검색어 &ldquo;{o.keyword}&rdquo;
-              </small>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="ops-muted">1.5km 안에서 찾은 중개사무소가 없어요. 위 검색어 링크로 찾아보세요.</p>
-      )}
-    </div>
   );
 }
 

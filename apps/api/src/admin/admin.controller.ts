@@ -1,6 +1,13 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Res, UseGuards } from "@nestjs/common";
 import type { Response } from "express";
-import { adminCreateAgentSchema, type AdminCreateAgentInput } from "@zipazum/shared";
+import {
+  adminCreateAgentSchema,
+  brokerContactCreateSchema,
+  brokerContactUpdateSchema,
+  type AdminCreateAgentInput,
+  type BrokerContactCreateInput,
+  type BrokerContactUpdateInput,
+} from "@zipazum/shared";
 import { z } from "zod";
 import { ADMIN_COOKIE, AdminGuard, setAdminCookie } from "../auth/guards.js";
 import { safeEqual } from "../auth/signed-cookie.js";
@@ -10,6 +17,7 @@ import { UuidParamPipe } from "../common/uuid-param.pipe.js";
 import { ZodValidationPipe } from "../common/zod-validation.pipe.js";
 import { AdminService } from "./admin.service.js";
 import { BrokerSearchService } from "./broker-search.service.js";
+import { OutreachService } from "./outreach.service.js";
 
 const loginSchema = z.object({ password: z.string().min(1).max(200) });
 
@@ -38,6 +46,7 @@ export class AdminController {
   constructor(
     private readonly admin: AdminService,
     private readonly brokers: BrokerSearchService,
+    private readonly outreach: OutreachService,
     private readonly areas: AreaRecommendationsService,
   ) {}
 
@@ -98,9 +107,70 @@ export class AdminController {
   /** 생활권 근처 부동산 검색어와 네이버 지역 검색 결과 */
   @Get("brokers")
   @UseGuards(AdminGuard)
-  async brokersNear(@Query("zoneKey") zoneKey?: string) {
+  async brokersNear(@Query("zoneKey") zoneKey?: string, @Query("requestId") requestId?: string) {
     if (!zoneKey) throw new ApiException(400, "invalid_input", "zoneKey가 필요해요");
-    return await this.brokers.forZone(zoneKey);
+    const request = requestId && /^[0-9a-f-]{36}$/i.test(requestId) ? requestId : null;
+    return await this.brokers.forZone(zoneKey, request);
+  }
+
+  /** 런칭 파트너 지정·해제 */
+  @Post("agents/:id/launch-partner")
+  @HttpCode(200)
+  @UseGuards(AdminGuard)
+  async launchPartner(@Param("id", UuidParamPipe) id: string, @Body(new ZodValidationPipe<{ on: boolean }>(z.object({ on: z.boolean() }))) body: { on: boolean }) {
+    await this.admin.setLaunchPartner(id, body.on);
+    return { ok: true };
+  }
+
+  /** 사용자 매물 신고 목록 */
+  @Get("reports")
+  @UseGuards(AdminGuard)
+  async reports(@Query("status") status?: string) {
+    const s = status === "confirmed" || status === "rejected" || status === "all" ? status : "open";
+    return { reports: await this.admin.listReports(s) };
+  }
+
+  @Post("reports/:id/review")
+  @HttpCode(200)
+  @UseGuards(AdminGuard)
+  async reviewReport(
+    @Param("id", UuidParamPipe) id: string,
+    @Body(new ZodValidationPipe<{ status: "confirmed" | "rejected" }>(z.object({ status: z.enum(["confirmed", "rejected"]) }))) body: { status: "confirmed" | "rejected" },
+  ) {
+    await this.admin.reviewReport(id, body.status);
+    return { ok: true };
+  }
+
+  /** 부동산 연락 기록 남기기 (처음 보는 부동산이면 우리 목록에도 넣는다) */
+  @Post("requests/:id/contacts")
+  @UseGuards(AdminGuard)
+  async recordContact(
+    @Param("id", UuidParamPipe) id: string,
+    @Body(new ZodValidationPipe<BrokerContactCreateInput>(brokerContactCreateSchema)) body: BrokerContactCreateInput,
+  ) {
+    return { contacts: await this.outreach.record(id, body) };
+  }
+
+  @Patch("contacts/:id")
+  @UseGuards(AdminGuard)
+  async updateContact(
+    @Param("id", UuidParamPipe) id: string,
+    @Body(new ZodValidationPipe<BrokerContactUpdateInput>(brokerContactUpdateSchema)) body: BrokerContactUpdateInput,
+  ) {
+    return { contacts: await this.outreach.update(id, body) };
+  }
+
+  @Delete("contacts/:id")
+  @UseGuards(AdminGuard)
+  async removeContact(@Param("id", UuidParamPipe) id: string) {
+    return { contacts: await this.outreach.remove(id) };
+  }
+
+  /** 이 부동산에 보낼 초대 링크와 문구 */
+  @Post("contacts/:id/invite")
+  @UseGuards(AdminGuard)
+  async invite(@Param("id", UuidParamPipe) id: string) {
+    return { invite: await this.outreach.createInvite(id) };
   }
 
   @Get("agents")

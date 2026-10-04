@@ -1,5 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import type {
+  AgentStats,
+  ListingReportStatus,
+  ListingReportView,
   AdminRequestDetail,
   AdminRequestSummary,
   AgentSummary,
@@ -15,12 +18,15 @@ import { ProposalsService } from "../listings/proposals.service.js";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { UploadsService, uploadPrefix } from "../uploads/uploads.service.js";
 import { toHousingRequest } from "../requests/request-mapper.js";
+import { OutreachService } from "./outreach.service.js";
 
 type AreaStatus = AdminRequestSummary["areaStatus"];
 
 const areaFit = (result: unknown) => (result as AreaRecommendationResult | null)?.funnel?.fit ?? null;
 
-function toAgentSummary(a: Agent & { _count: { assignments: number } }): AgentSummary {
+const EMPTY_STATS: AgentStats = { proposals: 0, viewed: 0, favorited: 0, inquired: 0, reportsOpen: 0, reportsConfirmed: 0 };
+
+function toAgentSummary(a: Agent & { _count: { assignments: number } }, stats: AgentStats = EMPTY_STATS): AgentSummary {
   return {
     id: a.id,
     loginId: a.loginId ?? "",
@@ -32,6 +38,8 @@ function toAgentSummary(a: Agent & { _count: { assignments: number } }): AgentSu
     createdBy: a.createdBy === "self" ? "self" : "admin",
     assignmentCount: a._count.assignments,
     createdAt: a.createdAt.toISOString(),
+    launchPartnerAt: a.launchPartnerAt?.toISOString() ?? null,
+    stats,
   };
 }
 
@@ -41,6 +49,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly proposals: ProposalsService,
     private readonly uploads: UploadsService,
+    private readonly outreach: OutreachService,
   ) {}
 
   async listRequests(): Promise<AdminRequestSummary[]> {
@@ -49,7 +58,7 @@ export class AdminService {
       take: 100,
       include: {
         areaRecommendation: { select: { status: true, result: true } },
-        _count: { select: { assignments: true, proposals: { where: { listing: { isSample: false } } } } },
+        _count: { select: { assignments: true, brokerContacts: true, proposals: { where: { listing: { isSample: false } } } } },
       },
     });
     return rows.map((row) => {
@@ -65,6 +74,7 @@ export class AdminService {
         fitZoneCount: areaFit(row.areaRecommendation?.result),
         assignmentCount: row._count.assignments,
         proposalCount: row._count.proposals,
+        contactCount: row._count.brokerContacts,
       };
     });
   }
@@ -72,7 +82,11 @@ export class AdminService {
   async requestDetail(id: string): Promise<AdminRequestDetail> {
     const row = await this.prisma.housingRequest.findUnique({ where: { id }, include: { areaRecommendation: true } });
     if (!row) throw notFound();
-    const [assignments, proposals] = await Promise.all([this.assignmentsFor(id), this.proposals.listRealForRequest(id)]);
+    const [assignments, proposals, contacts] = await Promise.all([
+      this.assignmentsFor(id),
+      this.proposals.listRealForRequest(id),
+      this.outreach.contactsFor(id),
+    ]);
     return {
       request: toHousingRequest(row),
       area: {
@@ -82,6 +96,7 @@ export class AdminService {
       },
       assignments,
       proposals,
+      contacts,
     };
   }
 
@@ -91,7 +106,79 @@ export class AdminService {
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { assignments: true } } },
     });
-    return rows.map(toAgentSummary);
+    const stats = await this.agentStats(rows.map((r) => r.id));
+    return rows.map((r) => toAgentSummary(r, stats.get(r.id)));
+  }
+
+  /** 공인중개사별 제안·열람·찜·문의·신고 수 */
+  private async agentStats(agentIds: string[]): Promise<Map<string, AgentStats>> {
+    if (!agentIds.length) return new Map();
+    const [proposals, reports] = await Promise.all([
+      this.prisma.$queryRaw<{ agent_id: string; proposals: number; viewed: number; favorited: number; inquired: number }[]>`
+        SELECT l.agent_id, COUNT(*)::int AS proposals, COUNT(p.viewed_at)::int AS viewed,
+               COUNT(p.favorited_at)::int AS favorited, COUNT(p.inquired_at)::int AS inquired
+        FROM proposals p JOIN listings l ON l.id = p.listing_id
+        WHERE l.agent_id = ANY(${agentIds}::uuid[]) GROUP BY l.agent_id`,
+      this.prisma.$queryRaw<{ agent_id: string; open: number; confirmed: number }[]>`
+        SELECT l.agent_id, COUNT(*) FILTER (WHERE r.status = 'open')::int AS open, COUNT(*) FILTER (WHERE r.status = 'confirmed')::int AS confirmed
+        FROM listing_reports r JOIN listings l ON l.id = r.listing_id
+        WHERE l.agent_id = ANY(${agentIds}::uuid[]) GROUP BY l.agent_id`,
+    ]);
+    const map = new Map<string, AgentStats>();
+    for (const id of agentIds) map.set(id, { ...EMPTY_STATS });
+    for (const p of proposals) Object.assign(map.get(p.agent_id)!, { proposals: p.proposals, viewed: p.viewed, favorited: p.favorited, inquired: p.inquired });
+    for (const r of reports) Object.assign(map.get(r.agent_id)!, { reportsOpen: r.open, reportsConfirmed: r.confirmed });
+    return map;
+  }
+
+  /** 런칭 파트너 지정·해제 */
+  async setLaunchPartner(agentId: string, on: boolean) {
+    const updated = await this.prisma.agent.updateMany({
+      where: { id: agentId, loginId: { not: null } },
+      data: { launchPartnerAt: on ? new Date() : null },
+    });
+    if (!updated.count) throw notFound();
+  }
+
+  async listReports(status: ListingReportStatus | "all"): Promise<ListingReportView[]> {
+    const rows = await this.prisma.listingReport.findMany({
+      where: status === "all" ? {} : { status },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: { listing: { select: { id: true, title: true, agent: { select: { id: true, name: true } } } } },
+    });
+    const confirmed = await this.prisma.listingReport.groupBy({
+      by: ["listingId"],
+      where: { status: "confirmed", listing: { agentId: { in: [...new Set(rows.map((r) => r.listing.agent.id))] } } },
+      _count: true,
+    });
+    const listingAgents = await this.prisma.listing.findMany({ where: { id: { in: confirmed.map((c) => c.listingId) } }, select: { id: true, agentId: true } });
+    const perAgent = new Map<string, number>();
+    for (const c of confirmed) {
+      const agentId = listingAgents.find((l) => l.id === c.listingId)?.agentId;
+      if (agentId) perAgent.set(agentId, (perAgent.get(agentId) ?? 0) + c._count);
+    }
+    return rows.map((r) => ({
+      id: r.id,
+      listingId: r.listingId,
+      listingTitle: r.listing.title,
+      agent: r.listing.agent,
+      reason: r.reason as ListingReportView["reason"],
+      note: r.note,
+      status: r.status as ListingReportStatus,
+      createdAt: r.createdAt.toISOString(),
+      agentConfirmedCount: perAgent.get(r.listing.agent.id) ?? 0,
+    }));
+  }
+
+  /** 신고 확인(허위·거래완료 맞음) 또는 반려. 확인되면 그 매물은 사용자 목록에서 숨긴다 */
+  async reviewReport(reportId: string, status: "confirmed" | "rejected") {
+    const report = await this.prisma.listingReport.findUnique({ where: { id: reportId }, select: { listingId: true } });
+    if (!report) throw notFound();
+    await this.prisma.$transaction(async (tx) => {
+      await tx.listingReport.update({ where: { id: reportId }, data: { status, reviewedAt: new Date() } });
+      if (status === "confirmed") await tx.listing.update({ where: { id: report.listingId }, data: { status: "expired" } });
+    });
   }
 
   /** 운영자가 중개사 계정을 만든다. 비밀번호를 비우면 임시 비밀번호를 만들어 한 번만 돌려준다 */

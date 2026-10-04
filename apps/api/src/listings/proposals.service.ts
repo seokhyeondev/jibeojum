@@ -79,6 +79,30 @@ export class ProposalsService {
   }
 
   /** 사용자가 제안받은 매물만 상세를 볼 수 있다. */
+  /**
+   * 사용자 반응을 처음 한 번만 기록한다 (열람·찜·문의). 유료화 후 "24시간 미열람 환급"과 열람률 계산에 쓴다.
+   * 내 요청에 제안된 매물이 아니면 아무것도 하지 않는다.
+   */
+  async markReaction(userId: string, listingId: string, type: "view" | "favorite" | "inquire") {
+    const field = type === "view" ? "viewedAt" : type === "favorite" ? "favoritedAt" : "inquiredAt";
+    await this.prisma.proposal.updateMany({
+      where: { listingId, request: { userId }, [field]: null },
+      data: { [field]: new Date() },
+    });
+  }
+
+  /** 매물 신고. 내게 제안된 매물만, 같은 매물은 한 번만 (다시 하면 이유를 고친다) */
+  async report(userId: string, listingId: string, input: { reason: string; note: string | null }): Promise<boolean> {
+    const mine = await this.prisma.proposal.findFirst({ where: { listingId, request: { userId } }, select: { id: true } });
+    if (!mine) return false;
+    await this.prisma.listingReport.upsert({
+      where: { listingId_userId: { listingId, userId } },
+      create: { listingId, userId, reason: input.reason, note: input.note },
+      update: { reason: input.reason, note: input.note, status: "open", reviewedAt: null },
+    });
+    return true;
+  }
+
   async findForUser(userId: string, listingId: string): Promise<ProposedListing | null> {
     const row = await this.prisma.proposal.findFirst({
       where: { listingId, request: { userId }, status: { not: "hidden" } },

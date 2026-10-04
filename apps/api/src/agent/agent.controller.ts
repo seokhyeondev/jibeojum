@@ -48,6 +48,20 @@ export class AgentController {
     return { agent: await this.agents.me(agentId) };
   }
 
+  /** 초대 링크로 들어온 요청 미리보기 (로그인 전에도 본다) */
+  @Get("invites/:token")
+  async previewInvite(@Param("token") token: string) {
+    return { invite: await this.agents.previewInvite(token.slice(0, 100)) };
+  }
+
+  /** 로그인한 공인중개사가 초대를 받는다 → 이 요청이 배정된다 */
+  @Post("invites/:token/accept")
+  @HttpCode(200)
+  @UseGuards(AgentGuard)
+  async acceptInvite(@CurrentAgentId() agentId: string, @Param("token") token: string) {
+    return await this.agents.acceptInvite(agentId, token.slice(0, 100));
+  }
+
   /** 나에게 배정된 요청 */
   @Get("assignments")
   @UseGuards(AgentGuard)

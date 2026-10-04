@@ -68,6 +68,7 @@ export function AdminRequests() {
               <th>접수</th>
               <th>출근지 · 조건</th>
               <th>추천 생활권</th>
+              <th>연락</th>
               <th>배정</th>
               <th>제안</th>
             </tr>
@@ -86,6 +87,7 @@ export function AdminRequests() {
                   <span className={`ops-badge area-${r.areaStatus}`}>{AREA_LABEL[r.areaStatus]}</span>
                   {r.fitZoneCount !== null && <small>{r.fitZoneCount}곳</small>}
                 </td>
+                <td>{r.contactCount ? <b>{r.contactCount}곳</b> : <span className="ops-muted">-</span>}</td>
                 <td>{r.assignmentCount ? <span className="ops-badge on">{r.assignmentCount}명</span> : <span className="ops-badge warn">미배정</span>}</td>
                 <td>{r.proposalCount ? <b>{r.proposalCount}건</b> : <span className="ops-muted">-</span>}</td>
               </tr>

@@ -1,5 +1,5 @@
 import type { RequestInput } from "@zipazum/shared";
-import type { NotificationItem, PlaceCandidate, ProposedListing, UploadRequest, UploadTicket } from "@zipazum/shared";
+import type { ListingReaction, ListingReportInput, NotificationItem, PlaceCandidate, ProposedListing, UploadRequest, UploadTicket } from "@zipazum/shared";
 import type { HousingRequest } from "@zipazum/shared";
 
 // 브라우저에서 쓰는 API 클라이언트. 화면은 이 함수들로만 서버 데이터를 읽고 쓴다.
@@ -103,4 +103,14 @@ export const kakaoLoginHref = (returnTo: string) => `/api/auth/kakao?${new URLSe
 /** 요청 취소 */
 export function cancelRequest(id: string): Promise<HousingRequest> {
   return apiRequest<{ request: HousingRequest }>(`/api/requests/${id}/cancel`, { method: "POST" }).then((b) => b.request);
+}
+
+/** 찜·문의 같은 반응을 서버에 남긴다 (처음 한 번만 기록된다). 실패해도 화면은 그대로 둔다 */
+export function reactToListing(listingId: string, type: ListingReaction): void {
+  void apiRequest(`/api/listings/${listingId}/reactions`, { method: "POST", body: JSON.stringify({ type }) }).catch(() => undefined);
+}
+
+/** 매물 신고 */
+export function reportListing(listingId: string, body: ListingReportInput): Promise<{ ok: true }> {
+  return apiRequest(`/api/listings/${listingId}/report`, { method: "POST", body: JSON.stringify(body) });
 }

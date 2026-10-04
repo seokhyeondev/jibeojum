@@ -1,0 +1,143 @@
+{
+ "family": "zipazum-api",
+ "networkMode": "awsvpc",
+ "requiresCompatibilities": [
+  "FARGATE"
+ ],
+ "cpu": "256",
+ "memory": "512",
+ "runtimePlatform": {
+  "cpuArchitecture": "ARM64",
+  "operatingSystemFamily": "LINUX"
+ },
+ "executionRoleArn": "arn:aws:iam::893918474407:role/zipazum-ecs-execution",
+ "taskRoleArn": "arn:aws:iam::893918474407:role/zipazum-api-task",
+ "containerDefinitions": [
+  {
+   "name": "api",
+   "image": "893918474407.dkr.ecr.ap-northeast-2.amazonaws.com/zipazum-api:latest",
+   "essential": true,
+   "portMappings": [
+    {
+     "containerPort": 4000,
+     "protocol": "tcp"
+    }
+   ],
+   "environment": [
+    {
+     "name": "NODE_ENV",
+     "value": "production"
+    },
+    {
+     "name": "PORT",
+     "value": "4000"
+    },
+    {
+     "name": "DATABASE_SCHEMA",
+     "value": "zipazum"
+    },
+    {
+     "name": "DATABASE_POOL_MAX",
+     "value": "5"
+    },
+    {
+     "name": "TMAP_TRANSIT_API_URL",
+     "value": "https://apis.openapi.sk.com/transit/routes/sub"
+    },
+    {
+     "name": "DEBUG_TOOLS",
+     "value": "false"
+    },
+    {
+     "name": "AREA_RECOMMENDATIONS_ON_SUBMIT",
+     "value": "true"
+    },
+    {
+     "name": "S3_BUCKET",
+     "value": "zipazum-assets-893918474407"
+    },
+    {
+     "name": "S3_REGION",
+     "value": "ap-northeast-2"
+    },
+    {
+     "name": "ASSET_BASE_URL",
+     "value": "https://d1lgf9m8snr8ud.cloudfront.net"
+    },
+    {
+     "name": "KAKAO_REDIRECT_URI",
+     "value": "https://jibeojum.vercel.app/api/auth/kakao/callback"
+    },
+    {
+     "name": "TRUST_PROXY_HOPS",
+     "value": "3"
+    },
+    {
+     "name": "WEB_ORIGIN",
+     "value": "https://jibeojum.vercel.app"
+    }
+   ],
+   "secrets": [
+    {
+     "name": "DATABASE_URL",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/DATABASE_URL"
+    },
+    {
+     "name": "TMAP_APP_KEY",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/TMAP_APP_KEY"
+    },
+    {
+     "name": "VWORLD_API_KEY",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/VWORLD_API_KEY"
+    },
+    {
+     "name": "NAVER_MAP_CLIENT_ID",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/NAVER_MAP_CLIENT_ID"
+    },
+    {
+     "name": "NAVER_MAP_CLIENT_SECRET",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/NAVER_MAP_CLIENT_SECRET"
+    },
+    {
+     "name": "NAVER_API_HUB_CLIENT_ID",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/NAVER_API_HUB_CLIENT_ID"
+    },
+    {
+     "name": "NAVER_API_HUB_CLIENT_SECRET",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/NAVER_API_HUB_CLIENT_SECRET"
+    },
+    {
+     "name": "KAKAO_REST_API_KEY",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/KAKAO_REST_API_KEY"
+    },
+    {
+     "name": "KAKAO_CLIENT_SECRET",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/KAKAO_CLIENT_SECRET"
+    },
+    {
+     "name": "AUTH_SECRET",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/AUTH_SECRET"
+    },
+    {
+     "name": "ADMIN_PASSWORD",
+     "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/ADMIN_PASSWORD"
+    }
+   ],
+   "logConfiguration": {
+    "logDriver": "awslogs",
+    "options": {
+     "awslogs-group": "/ecs/zipazum-api",
+     "awslogs-region": "ap-northeast-2",
+     "awslogs-stream-prefix": "api"
+    }
+   },
+   "stopTimeout": 30
+  }
+ ],
+ "tags": [
+  {
+   "key": "Service",
+   "value": "zipazum"
+  }
+ ]
+}

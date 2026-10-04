@@ -15,6 +15,7 @@ import { useTrackNavigation } from "./back-navigation";
 /** 하단 탭을 숨기는 화면: 입력 흐름, 상세, 비교, 상담 */
 function hidesBottomNav(pathname: string): boolean {
   return (
+    pathname === "/" ||
     pathname === "/request" ||
     /^\/listings\/[^/]+$/.test(pathname) ||
     pathname === "/compare" ||
@@ -24,8 +25,8 @@ function hidesBottomNav(pathname: string): boolean {
   );
 }
 
-/** 내부 운영 웹과 공인중개사 웹은 사용자 화면 틀 없이 OpsShell로 그린다 */
-const isOps = (pathname: string) => /^\/(admin|agent)(\/|$)/.test(pathname);
+/** 내부 운영 웹·공인중개사 웹·공인중개사 소개 페이지는 사용자 화면 틀 없이 그린다 */
+const isOps = (pathname: string) => /^\/(admin|agent|partners)(\/|$)/.test(pathname);
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -45,7 +46,7 @@ function UserShell({ pathname, children }: { pathname: string; children: ReactNo
   return (
     <div className="app">
       <header className="top">
-        <Link className="brand" href="/request?step=1">
+        <Link className="brand" href="/">
           <i>
             <Home size={18} />
           </i>

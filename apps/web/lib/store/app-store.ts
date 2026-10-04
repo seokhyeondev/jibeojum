@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { DEFAULT_DRAFT, housingRequestSchema, requestDraftSchema } from "@zipazum/shared";
 import type { HousingRequest, RequestDraft } from "@zipazum/shared";
+import { reactToListing } from "@/lib/api/client";
 import { createPersistentStore, usePersistentStore } from "./persistent-store";
 
 
@@ -61,8 +62,10 @@ export function useSubmittedRequest() {
 
 export function useFavorites() {
   const [favorites, setFavorites] = usePersistentStore(favoritesStore);
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    if (!favorites.includes(id)) reactToListing(id, "favorite");
     setFavorites((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
   return { favorites, toggle };
 }
 
@@ -87,11 +90,13 @@ export function useCompare() {
 
 export function useMessages(listingId: string) {
   const [all, setAll] = usePersistentStore(messagesStore);
-  const send = (body: string) =>
+  const send = (body: string) => {
+    reactToListing(listingId, "inquire");
     setAll((prev) => ({
       ...prev,
       [listingId]: [...(prev[listingId] ?? []), { id: createId("msg"), body, sentAt: new Date().toISOString() }],
     }));
+  };
   return { messages: all[listingId] ?? [], send };
 }
 

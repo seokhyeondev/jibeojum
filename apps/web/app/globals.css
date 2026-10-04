@@ -206,7 +206,7 @@ img {
 }
 
 /* 하단 탭 */
-nav {
+.app > nav {
   position: fixed;
   left: 50%;
   bottom: 0;
@@ -221,7 +221,7 @@ nav {
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);
 }
-nav a {
+.app > nav a {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -231,14 +231,14 @@ nav a {
   font-size: 11px;
   font-weight: 600;
 }
-nav a svg {
+.app > nav a svg {
   width: 22px;
   height: 22px;
 }
-nav a.on {
+.app > nav a.on {
   color: var(--g);
 }
-nav small {
+.app > nav small {
   font-size: 11px;
 }
 
@@ -2542,10 +2542,13 @@ textarea.ops-input {
 .nowrap {
   white-space: nowrap;
 }
+/* 표 칸(td)에 flex를 주면 행이 어긋나므로 줄바꿈 없이 오른쪽 정렬만 한다 */
 .ops-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
+  white-space: nowrap;
+  text-align: right;
+}
+.ops-actions .ops-btn + .ops-btn {
+  margin-left: 6px;
 }
 .ops-person {
   display: flex;
@@ -3186,4 +3189,256 @@ textarea.ops-input {
 }
 .request-card.closed {
   opacity: 0.7;
+}
+
+/* ───────── 부동산 연락 기록 · 초대 ───────── */
+.ops-offices {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ops-offices > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.ops-offices > li.done {
+  background: #f7fcf9;
+  box-shadow: inset 0 0 0 1px var(--g-line);
+}
+.ops-offices > li > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.ops-offices b a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.ops-offices b a:hover {
+  text-decoration: underline;
+}
+.ops-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ops-tags:empty {
+  display: none;
+}
+.ops-badge svg {
+  width: 12px;
+  height: 12px;
+  vertical-align: -2px;
+}
+.ops-contacts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ops-contacts > li {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.ops-contact-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ops-contact-head b {
+  flex: 1;
+  min-width: 0;
+}
+.ops-contact-head select.ops-input {
+  width: auto;
+  min-height: 34px;
+  padding: 4px 8px;
+}
+.ops-contact-fields {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 6px;
+}
+.ops-contact-fields .ops-input {
+  min-height: 34px;
+  padding: 6px 10px;
+}
+.ops-contacts .ops-btn {
+  justify-self: start;
+  min-height: 32px;
+}
+.ops-invite {
+  display: grid;
+  gap: 6px;
+}
+.ops-invite textarea {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ops-invite > div {
+  display: flex;
+  gap: 6px;
+}
+.ops-invite .ops-btn.primary {
+  margin: 0;
+  min-height: 34px;
+}
+.ops-ok {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  color: var(--gd) !important;
+  font-weight: 700;
+}
+.ops-invite-banner {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border-radius: var(--r-sm);
+  background: var(--gs);
+  color: var(--gd);
+}
+.ops-invite-banner small {
+  color: var(--gd);
+}
+.ops-invite-page {
+  max-width: 520px;
+}
+.ops-invite-page h1 {
+  font-size: 20px;
+  line-height: 1.4;
+}
+.ops a.ops-btn {
+  text-decoration: none;
+}
+.ops a.ops-btn.primary {
+  color: #fff;
+}
+.ops a.ops-btn.ghost {
+  color: var(--ink-2);
+}
+
+/* ───────── 매물 신고 ───────── */
+.report-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px var(--gutter) 0;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.report-link svg {
+  width: 14px;
+  height: 14px;
+}
+.report-sheet {
+  text-align: left !important;
+}
+.report-reasons {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.report-reasons button {
+  padding: 14px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.report-reasons button.on {
+  border-color: var(--g);
+  background: var(--gs);
+  color: var(--gd);
+}
+.report-sheet textarea {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font: inherit;
+  resize: vertical;
+}
+.report-submit {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ink);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.report-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ops-badge.partner {
+  margin-left: 6px;
+  background: #eef0ff;
+  color: #3b46b5;
+}
+.ops-badge.danger {
+  background: #fdecee;
+  color: var(--danger);
+}
+.ops-stats {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+}
+.ops-stats b {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ops-table.agents td:nth-child(3) {
+  white-space: nowrap;
+}
+.ops-filter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.ops-filter button {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ops-filter button.on {
+  border-color: var(--g);
+  background: var(--gs);
+  color: var(--gd);
+}
+.ops-table small .ops-badge {
+  margin-left: 6px;
 }

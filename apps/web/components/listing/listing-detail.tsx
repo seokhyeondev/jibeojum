@@ -25,6 +25,7 @@ import { LoadingBlock } from "@/components/common/hydrated";
 import { SearchX } from "lucide-react";
 import { useCriteria, useNow, useRecommendations } from "./use-recommendations";
 import { isExternal, listingImages } from "./listing-photo";
+import { ReportListing } from "./report-listing";
 
 export function ListingDetail({ id }: { id: string }) {
   const criteria = useCriteria();
@@ -217,6 +218,7 @@ export function ListingDetail({ id }: { id: string }) {
           <em>확인</em>
         </div>
       </div>
+      <ReportListing listingId={listing.id} />
       <div className="detail-cta">
         <button type="button" onClick={() => toggle(listing.id)} aria-pressed={favorite}>
           <Heart fill={favorite ? "currentColor" : "none"} aria-hidden />
