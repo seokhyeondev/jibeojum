@@ -1,3 +1,4 @@
+import { DemoProposalsService } from "../demo/demo-proposals.service.js";
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import type {
   AreaCriteria,
@@ -76,6 +77,7 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly routes: TransitRouteCacheService,
+    private readonly demo: DemoProposalsService,
   ) {}
 
   /** 서버가 꺼져 있는 동안 남은 계산을 다시 넣는다 */
@@ -271,6 +273,8 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
         data: { status: "done", destination: place as unknown as Prisma.InputJsonValue, result: result as unknown as Prisma.InputJsonValue, error: null },
       });
       this.logger.log(`request ${requestId}: ${result.funnel.fit} zones fit (of ${result.funnel.zonesInRadius} in radius)`);
+      // 시범 운영: 실거래로 만든 예시 매물을 붙인다 (DEMO_PROPOSALS=true일 때만)
+      await this.demo.generate(requestId, result).catch((err: unknown) => this.logger.warn(`demo proposals failed: ${err instanceof Error ? err.message : err}`));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(`request ${requestId} failed: ${message}`);

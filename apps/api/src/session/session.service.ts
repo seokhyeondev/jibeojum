@@ -13,11 +13,15 @@ const hashToken = (token: string) => createHash("sha256").update(token).digest("
 export interface SessionUser {
   id: string;
   kakaoId: string | null;
+  appleSub: string | null;
   nickname: string | null;
   profileImageUrl: string | null;
 }
 
-const USER_SELECT = { id: true, kakaoId: true, nickname: true, profileImageUrl: true } as const;
+const USER_SELECT = { id: true, kakaoId: true, appleSub: true, nickname: true, profileImageUrl: true } as const;
+
+/** 카카오나 Apple로 로그인한 회원인지 (예전 익명 세션은 아니다) */
+export const isMember = (user: SessionUser | null): user is SessionUser => Boolean(user && (user.kakaoId || user.appleSub));
 
 @Injectable()
 export class SessionService {

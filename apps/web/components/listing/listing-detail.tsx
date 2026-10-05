@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Heart, MapPin, Minus, TrainFront } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Heart, Info, MapPin, Minus, TrainFront } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -26,6 +26,7 @@ import { SearchX } from "lucide-react";
 import { useCriteria, useNow, useRecommendations } from "./use-recommendations";
 import { isExternal, listingImages } from "./listing-photo";
 import { ReportListing } from "./report-listing";
+import { DIRECTION_CHOICES } from "@zipazum/shared";
 
 export function ListingDetail({ id }: { id: string }) {
   const criteria = useCriteria();
@@ -89,6 +90,7 @@ export function ListingDetail({ id }: { id: string }) {
     ["관리비", `${formatManwon(listing.maintenanceFee)}원`],
     ["입주 가능일", formatMoveIn(listing)],
     ["건물", formatBuilding(listing.builtYear, now)],
+    ["방향", listing.direction ? choiceLabel(DIRECTION_CHOICES, listing.direction) : "확인 중"],
     ["주차", listing.options.includes("parking") ? "가능" : "불가·협의"],
   ];
 
@@ -121,6 +123,12 @@ export function ListingDetail({ id }: { id: string }) {
           {imageIndex + 1} / {imageCount}
         </span>
       </div>
+      {listing.sample && (
+        <p className="sample-note">
+          <Info aria-hidden />
+          실거래를 바탕으로 만든 시범 매물이에요. 실제 매물이 아니라 문의할 수 없어요.
+        </p>
+      )}
       <div className="detail-body">
         <small className="green">
           {choiceLabel(HOUSING_TYPE_CHOICES, listing.housingType)} · 추천 {index + 1}위
@@ -221,18 +229,22 @@ export function ListingDetail({ id }: { id: string }) {
               )}
             </small>
           </span>
-          <em>확인</em>
+          <em>{listing.sample ? "시범" : "확인"}</em>
         </div>
       </div>
-      <ReportListing listingId={listing.id} />
+      {!listing.sample && <ReportListing listingId={listing.id} />}
       <div className="detail-cta">
         <button type="button" onClick={() => toggle(listing.id)} aria-pressed={favorite}>
           <Heart fill={favorite ? "currentColor" : "none"} aria-hidden />
           <small>찜</small>
         </button>
-        <Button asChild>
-          <Link href={`/messages?listing=${listing.id}`}>문의·방문 요청</Link>
-        </Button>
+        {listing.sample ? (
+          <span className="cta-off">시범 매물은 문의할 수 없어요</span>
+        ) : (
+          <Button asChild>
+            <Link href={`/messages?listing=${listing.id}`}>문의·방문 요청</Link>
+          </Button>
+        )}
       </div>
     </section>
   );

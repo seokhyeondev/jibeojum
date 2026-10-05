@@ -11,6 +11,7 @@ import type {
   NoTransferExtraMinutes,
   RequiredOptionId,
   SafetyOptionId, MinPyeong,
+  Direction,
 } from "./types/request";
 
 export interface Choice<T extends string | number> {
@@ -90,6 +91,13 @@ export const pyeongToM2 = (pyeong: number) => Math.round(pyeong * PYEONG_M2);
 export const MIN_PYEONG_CHOICES: Choice<MinPyeong>[] = [
   { value: 0, label: "상관없어요" },
   ...([5, 7, 10, 15] as const).map((p) => ({ value: p, label: `${p}평 이상`, description: `전용 ${pyeongToM2(p)}㎡ 이상` })),
+];
+
+export const DIRECTION_CHOICES: Choice<Direction>[] = [
+  { value: "south", label: "남향" },
+  { value: "east", label: "동향" },
+  { value: "west", label: "서향" },
+  { value: "north", label: "북향" },
 ];
 
 export const SAFETY_CHOICES: Choice<SafetyOptionId>[] = [

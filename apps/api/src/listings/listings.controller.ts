@@ -4,7 +4,7 @@ import type { Request } from "express";
 import { ApiException, notFound } from "../common/api-exception.js";
 import { ZodValidationPipe } from "../common/zod-validation.pipe.js";
 import { UuidParamPipe } from "../common/uuid-param.pipe.js";
-import { SessionService } from "../session/session.service.js";
+import { SessionService, isMember } from "../session/session.service.js";
 import { ProposalsService } from "./proposals.service.js";
 
 @Controller("listings")
@@ -46,7 +46,7 @@ export class ListingsController {
     @Req() req: Request,
   ) {
     const user = await this.session.getUser(req);
-    if (!user?.kakaoId) throw new ApiException(401, "unauthorized", "로그인한 뒤 신고할 수 있어요.");
+    if (!isMember(user)) throw new ApiException(401, "unauthorized", "로그인한 뒤 신고할 수 있어요.");
     if (!(await this.proposals.report(user.id, id, body))) throw notFound();
     return { ok: true };
   }

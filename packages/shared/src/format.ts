@@ -76,6 +76,7 @@ export function formatDate(isoDate: string): string {
 export function commuteSourceNote(commute: Pick<CommuteSummary, "provider" | "routeSummary">): string {
   if (commute.provider === "tmap" || commute.provider === "odsay") return "평일 오전 8시 출발 기준 대중교통 경로예요. 교통 상황에 따라 달라질 수 있어요.";
   if (commute.routeSummary.startsWith("걸어서")) return "출근지와 가까워 걸어서 가는 시간이에요.";
+  if (commute.routeSummary.includes("동네 기준")) return "이 동네에서 출근지까지의 대표 경로 시간이에요.";
   if (commute.routeSummary.includes("추정")) return "직선거리로 추정한 시간이에요. 정확한 경로는 중개사에게 확인해주세요.";
   return "샘플 매물의 예시 경로예요.";
 }

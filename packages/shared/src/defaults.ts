@@ -19,6 +19,7 @@ export const DEFAULT_DRAFT: RequestDraft = {
   buildingAge: "any",
   minPyeong: 0,
   safetyOptions: [],
+  directions: [],
   infrastructure: [],
   privacyAgreed: false,
 };

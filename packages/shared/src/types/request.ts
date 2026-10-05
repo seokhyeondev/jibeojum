@@ -25,6 +25,8 @@ export type FloorPreference = "any" | "2_plus" | "5_plus";
 export type FloorExclusion = "semi_basement" | "rooftop";
 
 export type BuildingAgePreference = "any" | "new" | "value";
+/** 집이 바라보는 방향 */
+export type Direction = "south" | "east" | "west" | "north";
 /** 최소 넓이(평). 0이면 상관없음 */
 export type MinPyeong = 0 | 5 | 7 | 10 | 15;
 
@@ -74,6 +76,8 @@ export interface RequestDraft {
   buildingAge: BuildingAgePreference;
   minPyeong: MinPyeong;
   safetyOptions: SafetyOptionId[];
+  /** 선호 방향 (비우면 상관없음) */
+  directions: Direction[];
   infrastructure: InfraId[];
   privacyAgreed: boolean;
 }

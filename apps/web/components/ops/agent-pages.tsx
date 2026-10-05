@@ -152,6 +152,17 @@ export function AgentSignup() {
         <span className="ops-field-label">중개사무소 등록증</span>
         <LicenseInput value={form.licenseImageKey} onChange={(licenseImageKey) => set({ licenseImageKey })} />
         <p className="ops-muted">운영팀이 등록증을 확인하면 매물을 올릴 수 있어요. 가입 후 요청은 바로 볼 수 있어요.</p>
+        <p className="ops-muted">
+          가입하면{" "}
+          <a href="/terms" target="_blank" rel="noreferrer">
+            이용약관
+          </a>
+          과{" "}
+          <a href="/privacy" target="_blank" rel="noreferrer">
+            개인정보처리방침
+          </a>
+          에 동의하는 것으로 봐요.
+        </p>
         {error && <p className="ops-error">{error}</p>}
         <button type="submit" className="ops-btn primary" disabled={busy}>
           {busy ? "가입 중…" : "가입하기"}

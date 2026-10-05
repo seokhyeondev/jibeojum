@@ -487,3 +487,17 @@
     font-size: 36px;
   }
 }
+
+/* 시범 매물: 문의 버튼 대신 */
+.detail-cta > .cta-off {
+  flex: 1;
+  height: 54px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--line, #e6ebe8);
+  color: #5b6762;
+  font-size: 15px;
+  font-weight: 600;
+}

@@ -77,7 +77,8 @@ export class ChatService {
 
   private async myProposal(userId: string, listingId: string) {
     const proposal = await this.prisma.proposal.findFirst({
-      where: { listingId, request: { userId } },
+      // 시범 매물은 받는 공인중개사가 없으므로 문의할 수 없다
+      where: { listingId, request: { userId }, listing: { isSample: false } },
       select: { id: true, requestId: true, listing: { select: { agentId: true } } },
     });
     if (!proposal) throw notFound();

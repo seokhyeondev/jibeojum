@@ -319,3 +319,127 @@
   font-size: 13px;
   white-space: nowrap;
 }
+
+/* 로그인 버튼 (카카오 · Apple) */
+.social-logins {
+  display: grid;
+  gap: 8px;
+}
+button.kakao-login {
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+.apple-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.apple-login svg {
+  width: 20px;
+  height: 20px;
+  fill: #fff;
+}
+.apple-alt {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 6px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* 약관·개인정보처리방침 */
+.legal {
+  padding: 8px var(--gutter) 48px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+.legal h1 {
+  margin: 8px 0 4px;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 800;
+}
+.legal-date {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.legal h2 {
+  margin: 26px 0 8px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 800;
+}
+.legal h3 {
+  margin: 14px 0 6px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.legal ul {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+.legal li + li {
+  margin-top: 4px;
+}
+.legal a {
+  color: var(--g);
+}
+
+/* 마이페이지 회원탈퇴 */
+.mypage .menu + .menu {
+  margin-top: 12px;
+}
+.withdraw-link {
+  display: block;
+  margin: 20px auto 0;
+  padding: 8px;
+  border: 0;
+  background: none;
+  color: var(--faint);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.withdraw-list {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.report-submit.danger {
+  background: var(--danger);
+}
+.agree a {
+  color: var(--g);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

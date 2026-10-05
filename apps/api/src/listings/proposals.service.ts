@@ -36,6 +36,8 @@ function toProposedListing(row: ProposalRow): ProposedListing {
     floor: l.floor,
     totalFloors: l.totalFloors,
     floorType: l.floorType as Listing["floorType"],
+    direction: (l.direction as Listing["direction"]) ?? null,
+    sample: l.isSample,
     builtYear: l.builtYear,
     availableFrom: l.availableFrom ? fromDateColumn(l.availableFrom) : null,
     moveInNote: l.moveInNote ?? undefined,
@@ -100,7 +102,7 @@ export class ProposalsService {
 
   /** 매물 신고. 내게 제안된 매물만, 같은 매물은 한 번만 (다시 하면 이유를 고친다) */
   async report(userId: string, listingId: string, input: { reason: string; note: string | null }): Promise<boolean> {
-    const mine = await this.prisma.proposal.findFirst({ where: { listingId, request: { userId } }, select: { id: true } });
+    const mine = await this.prisma.proposal.findFirst({ where: { listingId, request: { userId }, listing: { isSample: false } }, select: { id: true } });
     if (!mine) return false;
     await this.prisma.listingReport.upsert({
       where: { listingId_userId: { listingId, userId } },

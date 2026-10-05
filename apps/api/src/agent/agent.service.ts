@@ -298,6 +298,7 @@ export class AgentService {
           floor: input.floor,
           totalFloors: input.totalFloors,
           floorType: input.floorType,
+          direction: input.direction,
           builtYear: input.builtYear,
           availableFrom: input.availableFrom ? new Date(`${input.availableFrom}T00:00:00.000Z`) : null,
           moveInNote: input.moveInNote,

@@ -6,7 +6,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { fetchMe, kakaoLoginHref } from "@/lib/api/client";
+import { fetchMe } from "@/lib/api/client";
+import { startLogin } from "@/lib/native";
 
 /** 로그인 상태. 카카오로 로그인했으면 user가 있다 */
 export function useMe() {
@@ -31,16 +32,41 @@ export function KakaoSymbol() {
   );
 }
 
-/**
- * 카카오 로그인 버튼. 카카오 화면으로 갔다가 returnTo로 돌아온다.
- * 입력 중인 요청 초안은 브라우저에 저장돼 있어 다녀와도 그대로 남는다.
- */
+function AppleSymbol() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.87-.76-1.47.02-2.83.86-3.59 2.18-1.54 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.24 2.73 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.41 1.2-2.47-.03-.01-2.3-.88-2.33-3.5zM14.2 6.13c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.54 1.31-.56.64-1.05 1.68-.92 2.67.97.08 1.96-.49 2.56-1.22z" />
+    </svg>
+  );
+}
+
+/** 카카오 로그인 버튼. 입력 중인 요청 초안은 브라우저에 저장돼 있어 다녀와도 그대로 남는다 */
 export function KakaoLoginButton({ returnTo, label = "카카오로 시작하기" }: { returnTo: string; label?: string }) {
   return (
-    <a className="kakao-login" href={kakaoLoginHref(returnTo)}>
+    <button type="button" className="kakao-login" onClick={() => void startLogin("kakao", returnTo)}>
       <KakaoSymbol />
       {label}
-    </a>
+    </button>
+  );
+}
+
+export function AppleLoginButton({ returnTo, label = "Apple로 계속하기" }: { returnTo: string; label?: string }) {
+  return (
+    <button type="button" className="apple-login" onClick={() => void startLogin("apple", returnTo)}>
+      <AppleSymbol />
+      {label}
+    </button>
+  );
+}
+
+/** 카카오 + (설정돼 있으면) Apple 로그인 버튼 */
+export function SocialLoginButtons({ returnTo }: { returnTo: string }) {
+  const { data: me } = useMe();
+  return (
+    <div className="social-logins">
+      <KakaoLoginButton returnTo={returnTo} />
+      {me?.appleEnabled && <AppleLoginButton returnTo={returnTo} />}
+    </div>
   );
 }
 
@@ -65,8 +91,8 @@ export function LoginSheet({ open, onClose, returnTo, title }: { open: boolean; 
           <X />
         </button>
         <h2 id="login-sheet-title">{title}</h2>
-        <p>카카오로 3초 만에 시작하고, 매물 제안과 알림을 받아보세요.</p>
-        <KakaoLoginButton returnTo={returnTo} />
+        <p>3초 만에 시작하고, 매물 제안과 알림을 받아보세요.</p>
+        <SocialLoginButtons returnTo={returnTo} />
       </div>
     </div>,
     document.body,
@@ -79,7 +105,7 @@ export function LoginPrompt({ title, description, returnTo }: { title: string; d
     <div className="login-prompt">
       <h2>{title}</h2>
       <p>{description}</p>
-      <KakaoLoginButton returnTo={returnTo} />
+      <SocialLoginButtons returnTo={returnTo} />
     </div>
   );
 }

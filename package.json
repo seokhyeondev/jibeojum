@@ -20,6 +20,9 @@
     "pipeline:transit-sample": "pnpm --filter @zipazum/api pipeline:transit-sample",
     "pipeline:stations": "pnpm --filter @zipazum/api pipeline:stations",
     "pipeline:zones": "pnpm --filter @zipazum/api pipeline:zones",
-    "deploy:api": "node scripts/deploy-api.mjs"
+    "deploy:api": "node scripts/deploy-api.mjs",
+    "mobile:sync": "pnpm --filter @zipazum/mobile sync",
+    "mobile:android": "pnpm --filter @zipazum/mobile android",
+    "mobile:ios": "pnpm --filter @zipazum/mobile ios"
   }
 }

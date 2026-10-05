@@ -138,6 +138,9 @@ export function UserLanding() {
         <small>
           {SITE.name} · 문의 <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>
         </small>
+        <small>
+          <Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보처리방침</Link>
+        </small>
       </footer>
 
       <div className="lp-sticky">

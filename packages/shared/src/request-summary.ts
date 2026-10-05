@@ -1,5 +1,6 @@
 import {
   BUILDING_AGE_CHOICES,
+  DIRECTION_CHOICES,
   FLOOR_EXCLUSION_CHOICES,
   FLOOR_PREFERENCE_CHOICES,
   HOUSING_TYPE_CHOICES,
@@ -52,6 +53,9 @@ export function requestConditionLabels(request: RequestDraft | Omit<RequestDraft
     labels.push(choiceLabel(BUILDING_AGE_CHOICES, request.buildingAge));
   }
   labels.push(...request.safetyOptions.map((option) => choiceLabel(SAFETY_CHOICES, option)));
+  if (request.directions.length) {
+    labels.push(`${request.directions.map((d) => choiceLabel(DIRECTION_CHOICES, d)).join("·")} 선호`);
+  }
   labels.push(...request.infrastructure.map((type) => `${choiceLabel(INFRA_CHOICES, type)} 가까이`));
   return labels;
 }

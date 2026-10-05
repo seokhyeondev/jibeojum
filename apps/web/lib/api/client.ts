@@ -82,11 +82,14 @@ export function requestUpload(body: UploadRequest): Promise<UploadTicket> {
   return apiRequest<{ ticket: UploadTicket }>("/api/uploads", { method: "POST", body: JSON.stringify(body) }).then((b) => b.ticket);
 }
 
+export type LoginProvider = "kakao" | "apple";
+
 export interface MeResponse {
-  /** 카카오로 로그인했으면 프로필, 아니면 null */
-  user: { nickname: string | null; profileImageUrl: string | null } | null;
-  /** 서버에 카카오 키가 설정돼 있는지 */
+  /** 카카오·Apple로 로그인했으면 프로필, 아니면 null */
+  user: { nickname: string | null; profileImageUrl: string | null; provider: LoginProvider } | null;
+  /** 서버에 로그인 키가 설정돼 있는지 */
   kakaoEnabled: boolean;
+  appleEnabled: boolean;
 }
 
 export function fetchMe(): Promise<MeResponse> {
@@ -97,8 +100,27 @@ export function logout(): Promise<{ ok: true }> {
   return apiRequest("/api/auth/logout", { method: "POST" });
 }
 
-/** 카카오 로그인 시작 주소. 로그인 후 returnTo(사이트 안 경로)로 돌아온다 */
-export const kakaoLoginHref = (returnTo: string) => `/api/auth/kakao?${new URLSearchParams({ returnTo })}`;
+/** 소셜 로그인 시작 주소. 로그인 후 returnTo(사이트 안 경로)로 돌아온다. app이면 끝나고 앱으로 돌아간다 */
+export const loginHref = (provider: LoginProvider, returnTo: string, app = false) =>
+  `/api/auth/${provider}?${new URLSearchParams({ returnTo, ...(app ? { app: "1" } : {}) })}`;
+
+/** 앱: 브라우저 로그인 뒤 받은 1회용 코드로 앱 화면에 로그인한다 */
+export function exchangeLoginCode(code: string): Promise<{ ok: true }> {
+  return apiRequest("/api/auth/exchange", { method: "POST", body: JSON.stringify({ code }) });
+}
+
+/** 회원탈퇴 */
+export function withdrawAccount(): Promise<{ ok: true }> {
+  return apiRequest("/api/auth/account", { method: "DELETE" });
+}
+
+/** 앱 푸시 알림 기기 등록·해제 */
+export function registerPushDevice(token: string, platform: "ios" | "android"): Promise<{ ok: true }> {
+  return apiRequest("/api/push/devices", { method: "POST", body: JSON.stringify({ token, platform }) });
+}
+export function unregisterPushDevice(token: string): Promise<{ ok: true }> {
+  return apiRequest("/api/push/devices", { method: "DELETE", body: JSON.stringify({ token }) });
+}
 
 /** 요청 취소 */
 export function cancelRequest(id: string): Promise<HousingRequest> {

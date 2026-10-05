@@ -3,7 +3,7 @@ import type { Listing } from "./types/listing";
 import type { RequestDraft } from "./types/request";
 import { fitsMonthlyBudget } from "./budget";
 import { buildingAge } from "./format";
-import { PYEONG_M2 } from "./options";
+import { DIRECTION_CHOICES, PYEONG_M2 } from "./options";
 import { wantsJeonse, wantsRent } from "./request-schema";
 
 export type RecommendCriteria = Pick<
@@ -22,6 +22,7 @@ export type RecommendCriteria = Pick<
   | "buildingAge"
   | "minPyeong"
   | "safetyOptions"
+  | "directions"
   | "infrastructure"
 >;
 
@@ -130,6 +131,11 @@ export function recommend<L extends Listing>(listing: L, criteria: RecommendCrit
   }
   if (criteria.buildingAge === "new") {
     check(buildingAge(listing.builtYear, now) <= 5, "신축", "신축 아님");
+  }
+  // 향을 모르는 매물은 따지지 않는다
+  if (criteria.directions.length && listing.direction) {
+    const label = choiceLabel(DIRECTION_CHOICES, listing.direction);
+    check(criteria.directions.includes(listing.direction), label, `${label}이에요`);
   }
   if (criteria.minPyeong > 0) {
     check(listing.exclusiveAreaM2 >= criteria.minPyeong * PYEONG_M2, `${criteria.minPyeong}평 이상`, `${criteria.minPyeong}평보다 좁아요`);

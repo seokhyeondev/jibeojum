@@ -14,21 +14,26 @@ datasource db {
 
 /// 사용자 최소 정보. 휴대폰 인증 전에는 브라우저 세션 토큰의 해시로 식별한다.
 model User {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// 예전 단일 세션 토큰 (지금은 user_sessions를 쓴다)
-  sessionTokenHash String?          @unique(map: "users_session_token_hash_unique") @map("session_token_hash")
-  phoneHash        String?          @map("phone_hash")
-  verifiedAt       DateTime?        @map("verified_at") @db.Timestamptz(6)
+  sessionTokenHash  String?          @unique(map: "users_session_token_hash_unique") @map("session_token_hash")
+  phoneHash         String?          @map("phone_hash")
+  verifiedAt        DateTime?        @map("verified_at") @db.Timestamptz(6)
   /// 카카오 회원번호. 로그인 전(요청 입력 중)에는 null
-  kakaoId          String?          @unique(map: "users_kakao_id_unique") @map("kakao_id")
-  nickname         String?
-  profileImageUrl  String?          @map("profile_image_url")
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  requests         HousingRequest[]
-  notifications    Notification[]
-  sessions         UserSession[]
-  chatThreads      ChatThread[]
-  listingReports   ListingReport[]
+  kakaoId           String?          @unique(map: "users_kakao_id_unique") @map("kakao_id")
+  /// Apple 로그인 사용자 식별자(sub)
+  appleSub          String?          @unique(map: "users_apple_sub_unique") @map("apple_sub")
+  /// Apple refresh token (탈퇴할 때 연결 해제에 쓴다). AUTH_SECRET으로 암호화해 둔다
+  appleRefreshToken String?          @map("apple_refresh_token")
+  nickname          String?
+  profileImageUrl   String?          @map("profile_image_url")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  requests          HousingRequest[]
+  notifications     Notification[]
+  sessions          UserSession[]
+  chatThreads       ChatThread[]
+  pushDevices       PushDevice[]
+  listingReports    ListingReport[]
 
   @@map("users")
 }
@@ -185,6 +190,8 @@ model HousingRequest {
   /// 최소 넓이(평). 0이면 상관없음
   minPyeong              Int                        @default(0) @map("min_pyeong")
   safetyOptions          String[]                   @map("safety_options")
+  /// 선호 방향 south | east | west | north
+  directions             String[]                   @default([])
   infrastructure         String[]
   verificationStatus     String                     @map("verification_status")
   status                 String                     @default("matching")
@@ -221,6 +228,8 @@ model Listing {
   floor              Int
   totalFloors        Int             @map("total_floors")
   floorType          String          @default("normal") @map("floor_type")
+  /// 향 south | east | west | north (모르면 null)
+  direction          String?
   builtYear          Int             @map("built_year")
   availableFrom      DateTime?       @map("available_from") @db.Date
   moveInNote         String?         @map("move_in_note")
@@ -587,4 +596,19 @@ model ChatMessage {
 
   @@index([threadId, createdAt], map: "chat_messages_thread_idx")
   @@map("chat_messages")
+}
+
+/// 앱 푸시 알림을 받을 기기 (FCM 토큰)
+model PushDevice {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  token      String   @unique(map: "push_devices_token_uq")
+  /// ios | android
+  platform   String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "push_devices_user_id_fk")
+
+  @@index([userId], map: "push_devices_user_idx")
+  @@map("push_devices")
 }

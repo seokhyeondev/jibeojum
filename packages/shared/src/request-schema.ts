@@ -3,6 +3,7 @@ import type { HousingRequest, RequestDraft, TransactionPreference } from "./type
 
 const housingType = z.enum(["studio", "officetel", "two_room", "apartment"]);
 const requiredOption = z.enum(["station", "elevator", "parking", "pet", "jeonse_loan", "full_option"]);
+const direction = z.enum(["south", "east", "west", "north"]);
 const safetyOption = z.enum([
   "women_only",
   "secure_entrance",
@@ -37,6 +38,8 @@ const draftShape = {
   // 예전에 저장된 초안에는 없으므로 기본값을 둔다
   minPyeong: z.union([z.literal(0), z.literal(5), z.literal(7), z.literal(10), z.literal(15)]).default(0),
   safetyOptions: z.array(safetyOption),
+  // 예전에 저장된 초안에는 없으므로 기본값을 둔다
+  directions: z.array(direction).default([]),
   infrastructure: z.array(infra),
 };
 
@@ -141,6 +144,7 @@ const requestInputShape = z.object({
   buildingAge: draftShape.buildingAge,
   minPyeong: draftShape.minPyeong,
   safetyOptions: unique(safetyOption, 6),
+  directions: unique(direction, 4),
   infrastructure: unique(infra, 7),
   privacyAgreed: z.literal(true),
 });

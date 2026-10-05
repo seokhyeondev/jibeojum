@@ -2,9 +2,11 @@ packages:
   - apps/*
   - packages/*
 allowBuilds:
+  "@firebase/util": false
   "@nestjs/core": false
   "@prisma/engines": true
   esbuild: true
+  protobufjs: false
   prisma: true
   sharp: true
   unrs-resolver: true

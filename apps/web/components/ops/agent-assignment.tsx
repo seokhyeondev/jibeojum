@@ -100,6 +100,7 @@ const blank = (jeonse: boolean, housingType: AgentListingDraft["housingType"] = 
   floor: "",
   totalFloors: "",
   floorType: "normal" as "normal" | "semi_basement" | "rooftop",
+  direction: "" as "" | "south" | "east" | "west" | "north",
   builtYear: "",
   availableFrom: "",
   moveInNote: "",
@@ -127,6 +128,7 @@ function toDraft({ place, ...f }: Form) {
     floor: num(f.floor),
     totalFloors: num(f.totalFloors),
     builtYear: num(f.builtYear),
+    direction: f.direction || null,
     availableFrom: f.availableFrom || null,
     moveInNote: f.moveInNote.trim() || null,
     agentNote: f.agentNote.trim() || null,
@@ -233,6 +235,16 @@ function ListingForm({ assignmentId, defaultType, jeonse, onCreated }: { assignm
             <option value="normal">일반</option>
             <option value="semi_basement">반지하</option>
             <option value="rooftop">옥탑</option>
+          </select>
+        </span>
+        <span>
+          <label htmlFor="l-direction">방향</label>
+          <select id="l-direction" className="ops-input" value={form.direction} onChange={(e) => set({ direction: e.target.value as Form["direction"] })}>
+            <option value="">모름</option>
+            <option value="south">남향</option>
+            <option value="east">동향</option>
+            <option value="west">서향</option>
+            <option value="north">북향</option>
           </select>
         </span>
         <span>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ApiError, createRequest, updateRequest } from "@/lib/api/client";
 import { REQUEST_STEP_COUNT, firstInvalidStep, toRequestInput, validateStep, type RequestInput } from "@zipazum/shared";
 import { KakaoSymbol, useMe } from "@/components/auth/kakao-login";
-import { kakaoLoginHref } from "@/lib/api/client";
+import { startLogin } from "@/lib/native";
 import { createId, useDraft, useSubmittedRequest } from "@/lib/store/app-store";
 import {
   BudgetStep,
@@ -140,12 +140,12 @@ export function RequestForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSubmit, step, me?.user, error]);
 
-  const loginAndSubmit = () => {
+  const loginAndSubmit = (provider: "kakao" | "apple" = "kakao") => {
     if (error) {
       setAttemptedStep(step);
       return;
     }
-    window.location.href = kakaoLoginHref(`${stepHref(REQUEST_STEP_COUNT)}&submit=1`);
+    void startLogin(provider, `${stepHref(REQUEST_STEP_COUNT)}&submit=1`);
   };
   const nextLabel =
     step === REQUEST_STEP_COUNT
@@ -196,6 +196,11 @@ export function RequestForm() {
             {showError ? error : submitError}
           </p>
         )}
+        {needsLogin && me?.appleEnabled && (
+          <button type="button" className="apple-alt" onClick={() => loginAndSubmit("apple")}>
+            Apple로 로그인하고 요청하기
+          </button>
+        )}
         <div className="actions">
           {step > 1 && (
             <Button type="button" variant="outline" onClick={goBack}>
@@ -203,7 +208,7 @@ export function RequestForm() {
             </Button>
           )}
           {needsLogin ? (
-            <button type="button" className="kakao-submit" onClick={loginAndSubmit}>
+            <button type="button" className="kakao-submit" onClick={() => loginAndSubmit()}>
               <KakaoSymbol />
               카카오로 로그인하고 요청하기
             </button>

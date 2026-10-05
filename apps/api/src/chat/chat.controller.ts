@@ -6,7 +6,7 @@ import { ApiException } from "../common/api-exception.js";
 import { UuidParamPipe } from "../common/uuid-param.pipe.js";
 import { ZodValidationPipe } from "../common/zod-validation.pipe.js";
 import { RateLimiter } from "../places/rate-limit.js";
-import { SessionService } from "../session/session.service.js";
+import { SessionService, isMember } from "../session/session.service.js";
 import { ChatService } from "./chat.service.js";
 
 /** 보내는 사람마다 1분에 30개까지 */
@@ -23,7 +23,7 @@ export class UserChatController {
 
   private async userId(req: Request) {
     const user = await this.session.getUser(req);
-    if (!user?.kakaoId) throw new ApiException(401, "unauthorized", "카카오로 로그인한 뒤 문의할 수 있어요.");
+    if (!isMember(user)) throw new ApiException(401, "unauthorized", "로그인한 뒤 문의할 수 있어요.");
     return user.id;
   }
 

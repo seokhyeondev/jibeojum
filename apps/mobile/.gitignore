@@ -1,0 +1,3 @@
+# Firebase 앱 설정 (키가 들어 있어 저장소에 넣지 않는다. docs/mobile.md 참고)
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist

@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import {
   BUDGET_FLEXIBILITY_CHOICES,
   BUILDING_AGE_CHOICES,
+  DIRECTION_CHOICES,
   MIN_PYEONG_CHOICES,
   pyeongToM2,
   COMMUTE_CHOICES,
@@ -379,6 +380,16 @@ function PreferenceFields({ draft, update }: StepProps) {
         </div>
       </section>
       <section>
+        <h3>방향</h3>
+        <p>원하는 방향을 모두 골라주세요. 고르지 않으면 상관없이 찾아요.</p>
+        <MultiChips
+          label="방향"
+          choices={DIRECTION_CHOICES}
+          values={draft.directions}
+          onChange={(directions) => update({ directions })}
+        />
+      </section>
+      <section>
         <h3>건물 연식</h3>
         <SingleChips
           label="건물 연식"
@@ -409,6 +420,7 @@ function PreferenceFields({ draft, update }: StepProps) {
 function countPreferences(draft: RequestDraft): number {
   return (
     draft.safetyOptions.length +
+    draft.directions.length +
     draft.floorExclusions.length +
     draft.infrastructure.length +
     (draft.floorPreference !== "any" ? 1 : 0) +
@@ -496,7 +508,10 @@ export function ReviewStep({
           onCheckedChange={(v) => update({ privacyAgreed: v === true })}
         />
         <span>
-          개인정보 수집 및 공인중개사에게 조건 전달에 동의합니다. (필수)
+          <a href="/privacy" target="_blank" rel="noreferrer">
+            개인정보 수집
+          </a>{" "}
+          및 공인중개사에게 조건 전달에 동의합니다. (필수)
         </span>
       </label>
     </div>

@@ -44,6 +44,8 @@ pnpm dev                                       # 웹 http://localhost:3000, API 
 
 웹은 Vercel(`apps/web`, 환경 변수 `API_URL`), API는 AWS ECS Fargate. `pnpm deploy:api`로 배포한다. 자세한 구성과 리소스는 [docs/deploy.md](docs/deploy.md).
 
+앱(iOS·안드로이드)은 `apps/mobile`(Capacitor)에서 배포된 웹을 감싼다. 설정·출시 절차는 [docs/mobile.md](docs/mobile.md).
+
 ## 데이터베이스 (Prisma)
 
 - 전용 RDS의 `zipazum` DB 안 **`zipazum` 스키마**를 씁니다. `DATABASE_URL`에 `schema=zipazum`을 붙입니다. 개발 PC IP만 보안 그룹(`zipazum-rds`)에 열려 있어 IP가 바뀌면 인바운드 규칙을 고쳐야 합니다.

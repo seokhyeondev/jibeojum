@@ -1,6 +1,7 @@
 import type { Agent } from "./agent";
 import type { CommuteSummary } from "./commute";
 import type {
+  Direction,
   FloorExclusion,
   HousingType,
   InfraId,
@@ -35,6 +36,10 @@ export interface Listing {
   floor: number;
   totalFloors: number;
   floorType: "normal" | FloorExclusion;
+  /** 향 (모르면 null) */
+  direction?: Direction | null;
+  /** 시범 운영용 예시 매물 (실거래를 바탕으로 만든 것. 문의·신고 불가) */
+  sample?: boolean;
   builtYear: number;
   /** null이면 즉시 입주 */
   availableFrom: string | null;

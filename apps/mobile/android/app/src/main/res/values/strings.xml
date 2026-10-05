@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">집어줌</string>
+    <string name="title_activity_main">집어줌</string>
+    <string name="package_name">com.zipazum.app</string>
+    <string name="custom_url_scheme">com.zipazum.app</string>
+</resources>

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { LoginResultToast, LoginSheet, useMe } from "@/components/auth/kakao-login";
+import { NativeBridge } from "@/components/native/native-bridge";
 import { RequestSync } from "@/components/providers/request-sync";
 import { Toaster } from "@/components/ui/sonner";
 import { fetchNotifications } from "@/lib/api/client";
@@ -21,6 +22,8 @@ function hidesBottomNav(pathname: string): boolean {
     pathname === "/compare" ||
     pathname === "/messages" ||
     pathname === "/notifications" ||
+    pathname === "/terms" ||
+    pathname === "/privacy" ||
     pathname.startsWith("/debug")
   );
 }
@@ -58,6 +61,7 @@ function UserShell({ pathname, children }: { pathname: string; children: ReactNo
       {!hidesBottomNav(pathname) && <BottomNav pathname={pathname} />}
       <Toaster position="top-center" theme="light" />
       <RequestSync />
+      <NativeBridge />
       <Suspense fallback={null}>
         <LoginResultToast />
       </Suspense>

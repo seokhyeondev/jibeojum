@@ -1,12 +1,13 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, ChevronRight, ClipboardList, LogOut, UserRound } from "lucide-react";
+import { Bell, ChevronRight, ClipboardList, FileText, LogOut, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LoadingBlock } from "@/components/common/hydrated";
 import { logout } from "@/lib/api/client";
 import { useSubmittedRequest } from "@/lib/store/app-store";
+import { WithdrawButton } from "./withdraw";
 import { LoginPrompt, useMe } from "./kakao-login";
 
 export function MyPage() {
@@ -34,7 +35,7 @@ export function MyPage() {
         </span>
         <span>
           <b>{nickname ?? "집어줌 회원"}님</b>
-          <small>카카오 계정으로 로그인했어요</small>
+          <small>{me.user.provider === "apple" ? "Apple" : "카카오"} 계정으로 로그인했어요</small>
         </span>
       </div>
       <ul className="menu">
@@ -63,6 +64,19 @@ export function MyPage() {
           </button>
         </li>
       </ul>
+      <ul className="menu">
+        <li>
+          <Link href="/terms">
+            <FileText aria-hidden /> 이용약관 <ChevronRight aria-hidden />
+          </Link>
+        </li>
+        <li>
+          <Link href="/privacy">
+            <ShieldCheck aria-hidden /> 개인정보처리방침 <ChevronRight aria-hidden />
+          </Link>
+        </li>
+      </ul>
+      <WithdrawButton />
     </section>
   );
 }

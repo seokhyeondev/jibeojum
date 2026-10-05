@@ -27,6 +27,7 @@ export function toRequestColumns(input: RequestInput) {
     buildingAge: input.buildingAge,
     minPyeong: input.minPyeong,
     safetyOptions: input.safetyOptions,
+    directions: input.directions,
     infrastructure: input.infrastructure,
     // 휴대폰 인증 대신 카카오 로그인으로 확인한다 (요청 제출은 로그인한 사용자만)
     verificationStatus: "kakao",
@@ -59,6 +60,7 @@ export function toHousingRequest(row: HousingRequestRow): HousingRequest {
     buildingAge: row.buildingAge,
     minPyeong: row.minPyeong,
     safetyOptions: row.safetyOptions,
+    directions: row.directions,
     infrastructure: row.infrastructure,
     status: row.status,
     submittedAt: row.submittedAt.toISOString(),

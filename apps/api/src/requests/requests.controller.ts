@@ -6,7 +6,7 @@ import { ApiException, notFound } from "../common/api-exception.js";
 import { UuidParamPipe } from "../common/uuid-param.pipe.js";
 import { ZodValidationPipe } from "../common/zod-validation.pipe.js";
 import { ProposalsService } from "../listings/proposals.service.js";
-import { SessionService } from "../session/session.service.js";
+import { SessionService, isMember } from "../session/session.service.js";
 import { toHousingRequest } from "./request-mapper.js";
 import { RequestsService } from "./requests.service.js";
 
@@ -38,7 +38,7 @@ export class RequestsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const user = await this.session.getUser(req);
-    if (!user?.kakaoId) throw new ApiException(401, "unauthorized", "카카오로 로그인한 뒤 요청을 보낼 수 있어요.");
+    if (!isMember(user)) throw new ApiException(401, "unauthorized", "로그인한 뒤 요청을 보낼 수 있어요.");
     const { clientKey, ...input } = body;
     const result = await this.requests.create(user.id, clientKey, input);
     if (result.created) this.scheduleAreas(result.request.id);

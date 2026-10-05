@@ -43,6 +43,8 @@ export const agentListingInputSchema = z
     floor: int("층").min(-5, "층을 확인해주세요").max(120, "층을 확인해주세요"),
     totalFloors: int("건물 층수").min(1, "건물 층수를 확인해주세요").max(120, "건물 층수를 확인해주세요"),
     floorType: z.enum(["normal", "semi_basement", "rooftop"], { errorMap: () => ({ message: "층 구분을 골라주세요" }) }).default("normal"),
+    /** 향. 모르면 null */
+    direction: z.enum(["south", "east", "west", "north"]).nullable().default(null),
     builtYear: int("준공연도").min(1950, "준공연도를 확인해주세요 (예: 2018)").max(2035, "준공연도를 확인해주세요 (예: 2018)"),
     /** "YYYY-MM-DD", 비우면 즉시 입주 */
     availableFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "입주 가능일을 확인해주세요").nullable().default(null),
