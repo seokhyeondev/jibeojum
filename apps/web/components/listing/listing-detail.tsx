@@ -30,7 +30,7 @@ import { SearchX } from "lucide-react";
 import { useCriteria, useNow, useRecommendations } from "./use-recommendations";
 import { isExternal, listingImages } from "./listing-photo";
 import { ReportListing } from "./report-listing";
-import { DIRECTION_CHOICES } from "@zipazum/shared";
+import { DIRECTION_CHOICES, secondPlaceText } from "@zipazum/shared";
 
 export function ListingDetail({ id }: { id: string }) {
   const criteria = useCriteria();
@@ -92,7 +92,8 @@ export function ListingDetail({ id }: { id: string }) {
   const { commute } = listing;
   const partnerActive = who === "partner" && listing.partnerCommute;
   const activeCommute = partnerActive ? listing.partnerCommute! : commute;
-  const activeLabel = partnerActive ? criteria.partner?.destination.label.trim() || "같이 사는 분 출근지" : destination;
+  const secondName = criteria.partner ? secondPlaceText(criteria.partner.kind).name : "함께 고려할 곳";
+  const activeLabel = partnerActive ? criteria.partner?.destination.label.trim() || secondName : destination;
   const imageCount = images.length;
   const nearby = [...listing.nearby].sort((x, y) => x.walkMinutes - y.walkMinutes);
 
@@ -164,12 +165,12 @@ export function ListingDetail({ id }: { id: string }) {
           {listing.address}
         </p>
         {listing.partnerCommute && (
-          <div className="route-tabs" role="tablist" aria-label="누구의 출근 경로">
+          <div className="route-tabs" role="tablist" aria-label="어디까지의 경로">
             <button type="button" role="tab" aria-selected={who === "me"} className={who === "me" ? "on" : ""} onClick={() => setWho("me")}>
               나 · {commute.totalMinutes}분
             </button>
             <button type="button" role="tab" aria-selected={who === "partner"} className={who === "partner" ? "on" : ""} onClick={() => setWho("partner")}>
-              같이 사는 분 · {listing.partnerCommute.totalMinutes}분
+              {secondName} · {listing.partnerCommute.totalMinutes}분
             </button>
           </div>
         )}

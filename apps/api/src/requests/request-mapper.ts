@@ -17,6 +17,7 @@ export function toRequestColumns(input: RequestInput) {
     partnerDestinationLatitude: input.partner?.destination.latitude ?? null,
     partnerDestinationLongitude: input.partner?.destination.longitude ?? null,
     partnerMaxCommuteMinutes: input.partner?.maxCommuteMinutes ?? null,
+    partnerKind: input.partner?.kind ?? null,
     noTransferExtraMinutes: input.noTransferExtraMinutes,
     transactionPreference: input.transactionPreference,
     depositMax: input.depositMax,
@@ -53,6 +54,7 @@ export function toHousingRequest(row: HousingRequestRow): HousingRequest {
     partner:
       row.partnerDestinationLabel && row.partnerMaxCommuteMinutes
         ? {
+            kind: row.partnerKind ?? "partner_work",
             destination: {
               label: row.partnerDestinationLabel,
               address: row.partnerDestinationAddress,

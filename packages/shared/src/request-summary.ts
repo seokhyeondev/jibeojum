@@ -1,3 +1,4 @@
+import { secondPlacePublicLabel, secondPlaceText } from "./second-place";
 import {
   BUILDING_AGE_CHOICES,
   DIRECTION_CHOICES,
@@ -27,10 +28,13 @@ type SummarySource = Pick<
 const manwonText = (value: number | null) => (value === null ? "-" : `${formatManwon(value)}원`);
 
 /** "강남역 · 60분 이내 · 보증금 5,000만원 · 월세 130만원 · 전세 2억원" */
-export function summarizeRequest(request: SummarySource): string {
+export function summarizeRequest(request: SummarySource, audience: "user" | "agent" = "user"): string {
   const parts = [request.commuteDestination.label.trim() || "출근지 미입력", `${request.maxCommuteMinutes}분 이내`];
   // 같이 사는 사람 출근지는 바로 뒤에 붙인다
-  if (request.partner) parts.push(`같이 사는 분 ${request.partner.destination.label.trim()} ${request.partner.maxCommuteMinutes}분 이내`);
+  if (request.partner) {
+    const place = audience === "agent" ? secondPlacePublicLabel(request.partner) : request.partner.destination.label.trim();
+    parts.push(`${secondPlaceText(request.partner.kind).name} ${place} ${request.partner.maxCommuteMinutes}분 이내`);
+  }
   if (wantsRent(request.transactionPreference)) {
     parts.push(`보증금 ${manwonText(request.depositMax)}`, `월세 ${manwonText(request.monthlyRentMax)}`);
   }

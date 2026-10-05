@@ -178,6 +178,8 @@ model HousingRequest {
   partnerDestinationLatitude  Float?                     @map("partner_destination_latitude")
   partnerDestinationLongitude Float?                     @map("partner_destination_longitude")
   partnerMaxCommuteMinutes    Int?                       @map("partner_max_commute_minutes")
+  /// 두 번째 장소 종류 partner_work | school | frequent
+  partnerKind                 String?                    @map("partner_kind")
   noTransferExtraMinutes      Int                        @default(0) @map("no_transfer_extra_minutes")
   transactionPreference       String                     @default("rent") @map("transaction_preference")
   /// 월세 예산(만원). 전세만 찾으면 null

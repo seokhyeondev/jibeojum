@@ -126,7 +126,7 @@ export class AgentService {
       : [];
     return {
       destinationLabel: request.commuteDestination.label,
-      summary: summarizeRequest(request),
+      summary: summarizeRequest(request, "agent"),
       conditions: requestConditionLabels(request),
       zoneNames: zones.map((z) => z.name),
       officeName: invite.office?.name ?? null,
@@ -212,7 +212,7 @@ export class AgentService {
       id: row.id,
       requestId: row.requestId,
       destinationLabel: request.commuteDestination.label,
-      summary: summarizeRequest(request),
+      summary: summarizeRequest(request, "agent"),
       conditions: requestConditionLabels(request),
       zoneNames: zones.map((z) => z.name),
       status: row.status as AgentAssignmentSummary["status"],

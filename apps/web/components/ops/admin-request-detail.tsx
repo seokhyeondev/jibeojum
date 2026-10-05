@@ -139,7 +139,7 @@ function ZoneRow({
         <span>
           <b>{area.name}</b>
           <small>
-            {area.sigungu} · 통근 {area.commute.bestMinutes ?? "-"}분{area.partnerCommute ? ` · 같이 사는 분 ${area.partnerCommute.bestMinutes ?? "-"}분` : ""}
+            {area.sigungu} · 통근 {area.commute.bestMinutes ?? "-"}분{area.partnerCommute ? ` · 함께 고려할 곳 ${area.partnerCommute.bestMinutes ?? "-"}분` : ""}
             {area.commute.walkMinutes !== null && ` (도보 ${area.commute.walkMinutes} + 대중교통 ${area.commute.transitMinutes ?? "-"})`} · 환승{" "}
             {area.commute.bestTransferCount ?? "-"}회{area.commute.estimated && " · 추정"}
           </small>

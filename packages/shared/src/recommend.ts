@@ -5,6 +5,7 @@ import { fitsMonthlyBudget } from "./budget";
 import { buildingAge } from "./format";
 import { DIRECTION_CHOICES, PYEONG_M2 } from "./options";
 import { wantsJeonse, wantsRent } from "./request-schema";
+import { secondPlaceText } from "./second-place";
 
 export type RecommendCriteria = Pick<
   RequestDraft,
@@ -53,7 +54,7 @@ function fitOf(totalMinutes: number, transferCount: number, maxMinutes: number, 
 
 const FIT_RANK: Record<CommuteFit, number> = { within: 0, no_transfer_extra: 1, over: 2 };
 
-/** 같이 사는 사람이 있으면 두 사람 중 더 나쁜 쪽 */
+/** 두 번째 장소가 있으면 두 곳 중 더 나쁜 쪽 */
 export function commuteFitOf(listing: Listing, criteria: RecommendCriteria): CommuteFit {
   const mine = fitOf(listing.commute.totalMinutes, listing.commute.transferCount, criteria.maxCommuteMinutes, criteria.noTransferExtraMinutes);
   const p = criteria.partner && listing.partnerCommute;
@@ -87,7 +88,8 @@ export function recommend<L extends Listing>(listing: L, criteria: RecommendCrit
   const partner = criteria.partner;
   const pc = listing.partnerCommute;
   if (partner && pc) {
-    const label = partner.destination.label.trim() || "같이 사는 분 출근지";
+    const name = secondPlaceText(partner.kind).name;
+    const label = partner.destination.label.trim() || name;
     const theirFit = fitOf(pc.totalMinutes, pc.transferCount, partner.maxCommuteMinutes, criteria.noTransferExtraMinutes);
     let theirScore = 0;
     if (theirFit === "within") {
@@ -97,7 +99,7 @@ export function recommend<L extends Listing>(listing: L, criteria: RecommendCrit
       theirScore = WEIGHTS.commute * 0.5;
       reasons.push(`${label} 환승 없이 ${pc.totalMinutes}분`);
     } else {
-      warnings.push(`같이 사는 분 통근 ${pc.totalMinutes}분으로 희망 시간 초과`);
+      warnings.push(`${name} ${pc.totalMinutes}분으로 희망 시간 초과`);
     }
     commuteScore = (commuteScore + theirScore) / 2;
   }

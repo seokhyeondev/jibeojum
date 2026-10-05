@@ -1,8 +1,8 @@
 import type { AreaRecommendationResult } from "./types/area";
 import type { RequestMatching } from "./types/request";
 
-/** "두 분 모두 45분" / "각각 45분·60분" */
-const limitText = (mine: number, partner: number) => (mine === partner ? `두 분 모두 ${mine}분` : `각각 ${mine}분·${partner}분`);
+/** "두 곳 모두 45분" / "각각 45분·60분" */
+const limitText = (mine: number, partner: number) => (mine === partner ? `두 곳 모두 ${mine}분` : `각각 ${mine}분·${partner}분`);
 
 /**
  * 추천 동네 계산 결과 → 사용자에게 보여줄 상태.
@@ -19,7 +19,7 @@ export function requestMatchingOf(area: { status: string; result: AreaRecommenda
     return {
       state: "none",
       reason: partner
-        ? `두 분 출근지가 멀어서 ${limitText(maxCommuteMinutes, partner.maxCommuteMinutes)} 안에 갈 수 있는 동네가 없어요. 최대 통근시간을 늘려보세요.`
+        ? `출근지와 ${partner.name} 위치가 멀어서 ${limitText(maxCommuteMinutes, partner.maxCommuteMinutes)} 안에 갈 수 있는 동네가 없어요. 최대 시간을 늘려보세요.`
         : "출근지 근처에서 찾을 수 있는 동네가 없어요.",
     };
   }
@@ -29,7 +29,7 @@ export function requestMatchingOf(area: { status: string; result: AreaRecommenda
   return {
     state: "none",
     reason: partner
-      ? "두 분 모두 최대 통근시간 안에 갈 수 있는 동네가 없어요. 최대 통근시간을 늘려보세요."
+      ? `출근지와 ${partner.name} 모두 최대 시간 안에 갈 수 있는 동네가 없어요. 최대 시간을 늘려보세요.`
       : `${maxCommuteMinutes}분 안에 갈 수 있는 동네가 없어요. 최대 통근시간을 늘려보세요.`,
   };
 }

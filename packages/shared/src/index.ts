@@ -15,6 +15,7 @@ export * from "./listing-report";
 export * from "./chat";
 export * from "./format";
 export * from "./service-area";
+export * from "./second-place";
 export * from "./request-matching";
 export * from "./request-schema";
 export * from "./request-summary";

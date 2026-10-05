@@ -118,11 +118,27 @@ describe("같이 사는 사람 출근지", () => {
   const GANGNAM = { label: "강남역", address: "서울 강남구 강남대로 396", latitude: 37.4979, longitude: 127.0276 };
   const base = { ...DEFAULT_DRAFT, depositMax: 5000, monthlyRentMax: 130, commuteDestination: GANGNAM };
   it("추가했으면 목록에서 골라야 하고 수도권이어야 한다", () => {
-    expect(validateStep({ ...base, partner: { destination: { label: "" }, maxCommuteMinutes: 60 } }, 1)).toBe("같이 사는 분 출근지를 검색해주세요.");
-    expect(validateStep({ ...base, partner: { destination: { label: "판교역" }, maxCommuteMinutes: 60 } }, 1)).toBe("같이 사는 분 출근지도 검색 목록에서 골라주세요.");
+    expect(validateStep({ ...base, partner: { kind: "partner_work", destination: { label: "" }, maxCommuteMinutes: 60 } }, 1)).toBe("같이 사는 분 위치를 검색해주세요.");
+    expect(validateStep({ ...base, partner: { kind: "partner_work", destination: { label: "판교역" }, maxCommuteMinutes: 60 } }, 1)).toBe("같이 사는 분 위치도 검색 목록에서 골라주세요.");
     const pangyo = { label: "판교역", address: "경기도 성남시 분당구 판교역로 160", latitude: 37.3948, longitude: 127.1111 };
-    expect(validateStep({ ...base, partner: { destination: pangyo, maxCommuteMinutes: 45 } }, 1)).toBeNull();
-    expect(toRequestInput({ ...base, privacyAgreed: true, partner: { destination: pangyo, maxCommuteMinutes: 45 } })?.partner?.maxCommuteMinutes).toBe(45);
+    expect(validateStep({ ...base, partner: { kind: "partner_work", destination: pangyo, maxCommuteMinutes: 45 } }, 1)).toBeNull();
+    expect(toRequestInput({ ...base, privacyAgreed: true, partner: { kind: "partner_work", destination: pangyo, maxCommuteMinutes: 45 } })?.partner?.maxCommuteMinutes).toBe(45);
     expect(toRequestInput({ ...base, privacyAgreed: true })?.partner).toBeNull();
+  });
+});
+
+describe("두 번째 장소 공개 범위", () => {
+  it("중개사에게 자주 가는 곳은 구 단위까지만", async () => {
+    const { summarizeRequest } = await import("../src/request-summary");
+    const req = {
+      ...DEFAULT_DRAFT,
+      commuteDestination: { label: "강남역" },
+      partner: { kind: "frequent" as const, destination: { label: "계양구청", address: "인천광역시 계양구 계산새로 88", latitude: 37.53, longitude: 126.73 }, maxCommuteMinutes: 45 as const },
+    };
+    expect(summarizeRequest(req)).toContain("자주 가는 곳 계양구청 45분 이내");
+    expect(summarizeRequest(req, "agent")).toContain("자주 가는 곳 계양구 45분 이내");
+    expect(summarizeRequest(req, "agent")).not.toContain("계양구청");
+    const work = { ...req, partner: { ...req.partner, kind: "partner_work" as const } };
+    expect(summarizeRequest(work, "agent")).toContain("같이 사는 분 계양구청");
   });
 });

@@ -118,7 +118,7 @@ export class ChatService {
     return {
       id: thread.id,
       listing: listingOf(thread.proposal.listing),
-      request: { destinationLabel: request.commuteDestination.label, summary: summarizeRequest(request) },
+      request: { destinationLabel: request.commuteDestination.label, summary: summarizeRequest(request, "agent") },
       messages,
       counterpartReadAt: thread.userReadAt?.toISOString() ?? null,
     };

@@ -4,10 +4,12 @@ import { Heart, TrainFront } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
+import { secondPlaceText } from "@zipazum/shared";
 import { HOUSING_TYPE_CHOICES, choiceLabel } from "@zipazum/shared";
 import { formatFloor, formatPrice, formatTransfers } from "@zipazum/shared";
 import type { Recommendation } from "@zipazum/shared";
 import { ReasonList } from "./reason-list";
+import { useCriteria } from "./use-recommendations";
 import { isExternal, listingImages } from "./listing-photo";
 
 interface Props {
@@ -22,6 +24,8 @@ interface Props {
 
 export function ListingCard({ recommendation, rank, destination, favorite, onToggleFavorite, picked, onTogglePick }: Props) {
   const { listing, commuteFit } = recommendation;
+  const partner = useCriteria().partner;
+  const secondName = partner ? secondPlaceText(partner.kind).name : "함께 고려할 곳";
   const href = `/listings/${listing.id}`;
   const cover = listingImages(listing.images)[0];
   return (
@@ -56,7 +60,7 @@ export function ListingCard({ recommendation, rank, destination, favorite, onTog
           {listing.partnerCommute && (
             <span>
               <TrainFront aria-hidden />
-              같이 사는 분 {listing.partnerCommute.totalMinutes}분 · {formatTransfers(listing.partnerCommute.transferCount)}
+              {secondName} {listing.partnerCommute.totalMinutes}분 · {formatTransfers(listing.partnerCommute.transferCount)}
             </span>
           )}
           <span>

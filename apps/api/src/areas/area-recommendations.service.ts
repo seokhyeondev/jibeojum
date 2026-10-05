@@ -1,5 +1,6 @@
 import { DemoProposalsService } from "../demo/demo-proposals.service.js";
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { secondPlaceText, type SecondPlaceKind } from "@zipazum/shared";
 import type {
   AreaCommute,
   AreaCriteria,
@@ -33,8 +34,8 @@ export interface AreaRecommendationInput {
   destination: Destination;
   maxCommuteMinutes: number;
   noTransferExtraMinutes: number;
-  /** 같이 사는 사람 출근지 (있으면 두 사람 모두 갈 수 있는 곳만) */
-  partner?: { destination: Destination; maxCommuteMinutes: number } | null;
+  /** 두 번째 장소 (있으면 두 곳 모두 갈 수 있는 곳만) */
+  partner?: { name: string; destination: Destination; maxCommuteMinutes: number } | null;
   criteria?: AreaCriteria | null;
 }
 
@@ -235,7 +236,7 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
       destination,
       maxCommuteMinutes,
       noTransferExtraMinutes,
-      partner: partner ? { destination: partner.destination, maxCommuteMinutes: partner.maxCommuteMinutes } : null,
+      partner: partner ? { name: partner.name, destination: partner.destination, maxCommuteMinutes: partner.maxCommuteMinutes } : null,
       criteria,
       provider: this.routes.providerName,
       computedAt: new Date().toISOString(),
@@ -337,20 +338,22 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
     }
   }
 
-  /** 같이 사는 사람 출근지. 좌표가 없으면 이름으로 찾는다 (못 찾으면 혼자 기준으로 계산) */
+  /** 두 번째 장소. 좌표가 없으면 이름으로 찾는다 (못 찾으면 혼자 기준으로 계산) */
   private async partnerOf(request: {
     partnerDestinationLabel: string | null;
     partnerDestinationLatitude: number | null;
     partnerDestinationLongitude: number | null;
     partnerMaxCommuteMinutes: number | null;
+    partnerKind: string | null;
   }): Promise<AreaRecommendationInput["partner"]> {
+    const name = secondPlaceText((request.partnerKind as SecondPlaceKind | null) ?? "partner_work").name;
     const label = request.partnerDestinationLabel;
     if (!label || !request.partnerMaxCommuteMinutes) return null;
     if (request.partnerDestinationLatitude !== null && request.partnerDestinationLongitude !== null) {
-      return { destination: { label, latitude: request.partnerDestinationLatitude, longitude: request.partnerDestinationLongitude }, maxCommuteMinutes: request.partnerMaxCommuteMinutes };
+      return { name, destination: { label, latitude: request.partnerDestinationLatitude, longitude: request.partnerDestinationLongitude }, maxCommuteMinutes: request.partnerMaxCommuteMinutes };
     }
     const [place] = await this.places.search(label, 1);
-    return place ? { destination: { label, latitude: place.latitude, longitude: place.longitude }, maxCommuteMinutes: request.partnerMaxCommuteMinutes } : null;
+    return place ? { name, destination: { label, latitude: place.latitude, longitude: place.longitude }, maxCommuteMinutes: request.partnerMaxCommuteMinutes } : null;
   }
 
   private async zonesAround(destination: { latitude: number; longitude: number }, radiusKm: number): Promise<ZoneCandidate[]> {

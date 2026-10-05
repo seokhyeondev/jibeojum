@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, CalendarDays, Check, ChevronDown, Plus, ShieldCheck, Sparkles, TrainFront, Users, X } from "lucide-react";
+import { Building2, CalendarDays, Check, ChevronDown, MapPinned, Plus, ShieldCheck, Sparkles, TrainFront, X } from "lucide-react";
 import { useId, useState } from "react";
 import { MultiChips, SingleChips } from "@/components/common/chip-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,7 +24,7 @@ import {
   SAFETY_CHOICES,
   TRANSACTION_CHOICES,
 } from "@zipazum/shared";
-import { formatManwon, formatNumber, parseManwon } from "@zipazum/shared";
+import { SECOND_PLACE_CHOICES, formatManwon, formatNumber, parseManwon, secondPlaceText } from "@zipazum/shared";
 import { DestinationSearch } from "./destination-search";
 import {
   choiceLabel,
@@ -33,7 +33,7 @@ import {
   wantsJeonse,
   wantsRent,
 } from "@zipazum/shared";
-import type { RequestDraft } from "@zipazum/shared";
+import type { PartnerCommute, RequestDraft } from "@zipazum/shared";
 
 export interface StepProps {
   draft: RequestDraft;
@@ -57,6 +57,43 @@ export const STEP_COPY = [
   },
 ];
 
+/** 두 번째 장소 (같이 사는 분 직장·자주 가는 곳·학교·학원). 출근지와 함께 두 곳 모두 가기 좋은 동네를 찾는다 */
+function SecondPlaceFields({ partner, onChange }: { partner: PartnerCommute; onChange: (partner: PartnerCommute | null) => void }) {
+  const text = secondPlaceText(partner.kind);
+  return (
+    <div className="partner-box">
+      <div className="partner-head">
+        <b>
+          <MapPinned aria-hidden /> 함께 고려할 곳
+        </b>
+        <button type="button" onClick={() => onChange(null)}>
+          <X aria-hidden /> 빼기
+        </button>
+      </div>
+      <div className="second-kind">
+        <SingleChips label="어떤 곳인가요" choices={SECOND_PLACE_CHOICES} value={partner.kind} onChange={(kind) => onChange({ ...partner, kind })} />
+      </div>
+      <label htmlFor="partner-destination" className="mt">
+        {text.name === "같이 사는 분" ? "같이 사는 분 출근지" : `${text.name} ${text.placeLabel}`}
+      </label>
+      <DestinationSearch
+        id="partner-destination"
+        placeholder={text.placeholder}
+        value={partner.destination}
+        onChange={(destination) => onChange({ ...partner, destination })}
+      />
+      <label className="mt">{text.maxLabel}</label>
+      <SingleChips
+        label={`${text.name} ${text.maxLabel}`}
+        choices={COMMUTE_CHOICES}
+        value={partner.maxCommuteMinutes}
+        onChange={(maxCommuteMinutes) => onChange({ ...partner, maxCommuteMinutes })}
+      />
+      <p className="partner-note">출근지와 {text.name} 모두 가기 좋은 동네를 찾아드려요.</p>
+    </div>
+  );
+}
+
 export function CommuteStep({ draft, update }: StepProps) {
   return (
     <>
@@ -73,34 +110,17 @@ export function CommuteStep({ draft, update }: StepProps) {
         onChange={(maxCommuteMinutes) => update({ maxCommuteMinutes })}
       />
       {draft.partner ? (
-        <div className="partner-box">
-          <div className="partner-head">
-            <b>
-              <Users aria-hidden /> 같이 사는 분
-            </b>
-            <button type="button" onClick={() => update({ partner: null })}>
-              <X aria-hidden /> 빼기
-            </button>
-          </div>
-          <label htmlFor="partner-destination">출근지</label>
-          <DestinationSearch
-            id="partner-destination"
-            placeholder="같이 사는 분의 회사·역·주소"
-            value={draft.partner.destination}
-            onChange={(destination) => update({ partner: { maxCommuteMinutes: draft.partner?.maxCommuteMinutes ?? 60, destination } })}
-          />
-          <label className="mt">최대 통근시간</label>
-          <SingleChips
-            label="같이 사는 분 최대 통근시간"
-            choices={COMMUTE_CHOICES}
-            value={draft.partner.maxCommuteMinutes}
-            onChange={(maxCommuteMinutes) => update({ partner: { destination: draft.partner?.destination ?? { label: "" }, maxCommuteMinutes } })}
-          />
-          <p className="partner-note">두 분 모두 출근하기 좋은 동네를 찾아드려요.</p>
-        </div>
+        <SecondPlaceFields partner={draft.partner} onChange={(partner) => update({ partner })} />
       ) : (
-        <button type="button" className="add-partner" onClick={() => update({ partner: { destination: { label: "" }, maxCommuteMinutes: 60 } })}>
-          <Plus aria-hidden /> 같이 사는 분 출근지도 추가
+        <button
+          type="button"
+          className="add-partner"
+          onClick={() => update({ partner: { kind: "partner_work", destination: { label: "" }, maxCommuteMinutes: 60 } })}
+        >
+          <span>
+            <Plus aria-hidden /> 함께 고려할 곳 추가
+          </span>
+          <small>같이 사는 분 직장 · 자주 가는 곳 · 학교·학원</small>
         </button>
       )}
       <label className="mt">환승 없이 갈 수 있다면 더 걸려도 괜찮나요?</label>
@@ -500,7 +520,7 @@ export function ReviewStep({
       sub: `최대 ${draft.maxCommuteMinutes}분${draft.noTransferExtraMinutes ? ` · 환승 없으면 +${draft.noTransferExtraMinutes}분까지` : ""}`,
     },
     ...(draft.partner
-      ? [{ step: 1, label: "같이 사는 분", value: draft.partner.destination.label, sub: `최대 ${draft.partner.maxCommuteMinutes}분` }]
+      ? [{ step: 1, label: secondPlaceText(draft.partner.kind).name, value: draft.partner.destination.label, sub: `최대 ${draft.partner.maxCommuteMinutes}분` }]
       : []),
     {
       step: 2,

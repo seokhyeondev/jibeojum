@@ -65,7 +65,7 @@ export interface AreaRecommendation {
   residentialScore: number;
   /** 요청한 사람의 출근지까지 */
   commute: AreaCommute;
-  /** 같이 사는 사람 출근지까지 (요청에 있을 때만) */
+  /** 두 번째 장소까지 (요청에 있을 때만) */
   partnerCommute?: AreaCommute | null;
   /** 조건에 맞은 유형과 그 시세 */
   matchedTypes: { type: HousingType; stats: ZoneTypeStats; budgetFit: AreaBudgetFit }[];
@@ -85,8 +85,8 @@ export interface AreaRecommendationResult {
   destination: { label: string; latitude: number; longitude: number };
   maxCommuteMinutes: number;
   noTransferExtraMinutes: number;
-  /** 같이 사는 사람 출근지 (있을 때만) */
-  partner?: { destination: { label: string; latitude: number; longitude: number }; maxCommuteMinutes: number } | null;
+  /** 두 번째 장소 (있을 때만). name은 "같이 사는 분"·"학교·학원"·"자주 가는 곳" */
+  partner?: { name: string; destination: { label: string; latitude: number; longitude: number }; maxCommuteMinutes: number } | null;
   criteria: AreaCriteria | null;
   provider: string;
   computedAt: string;

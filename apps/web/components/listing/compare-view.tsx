@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { LoadingBlock } from "@/components/common/hydrated";
 import { SimpleHead } from "@/components/navigation/simple-head";
 import { Button } from "@/components/ui/button";
+import { secondPlaceText } from "@zipazum/shared";
 import { INFRA_CHOICES, SAFETY_CHOICES, choiceLabel } from "@zipazum/shared";
 import {
   formatBuilding,
@@ -54,7 +55,7 @@ export function CompareView() {
     ["출근시간", (x) => `${destination} ${x.commute.totalMinutes}분`],
     ["환승", (x) => formatTransfers(x.commute.transferCount)],
     ...(criteria.partner
-      ? ([["같이 사는 분", (x) => (x.partnerCommute ? `${x.partnerCommute.totalMinutes}분 · ${formatTransfers(x.partnerCommute.transferCount)}` : "-")]] as [string, (listing: Listing) => string][])
+      ? ([[secondPlaceText(criteria.partner.kind).name, (x) => (x.partnerCommute ? `${x.partnerCommute.totalMinutes}분 · ${formatTransfers(x.partnerCommute.transferCount)}` : "-")]] as [string, (listing: Listing) => string][])
       : []),
     ["면적", (x) => `${x.exclusiveAreaM2}㎡`],
     ["층수", formatFloor],

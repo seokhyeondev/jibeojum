@@ -918,11 +918,13 @@
 .add-partner {
   width: 100%;
   margin-top: 16px;
-  min-height: 48px;
+  min-height: 56px;
+  padding: 10px 12px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 2px;
   border: 1.5px dashed var(--g-line);
   border-radius: var(--r-md);
   background: #fff;
@@ -1035,4 +1037,25 @@
 .success.warn {
   background: var(--warn-bg);
   color: #b07a12;
+}
+.add-partner span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-partner small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 함께 고려할 곳 종류: "같이 사는 분 직장"이 한 줄에 들어가게 첫 칸을 넓힌다 */
+.second-kind .choices {
+  grid-template-columns: 1.45fr 1fr 1fr;
+  gap: 6px;
+}
+.second-kind .choices button {
+  padding: 0 6px;
+  font-size: 14px;
+  white-space: nowrap;
 }

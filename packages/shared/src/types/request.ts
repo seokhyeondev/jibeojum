@@ -56,8 +56,12 @@ export interface Place {
   longitude?: number | null;
 }
 
-/** 같이 사는 사람의 출근지와 최대 통근시간 (선택) */
+/** 두 번째 장소 종류: 같이 사는 분 직장 / 학교·학원 / 자주 가는 곳 */
+export type SecondPlaceKind = "partner_work" | "school" | "frequent";
+
+/** 두 번째 장소와 최대 이동시간 (선택). 출근지와 함께 두 곳 모두 가기 좋은 동네를 찾는다 */
 export interface PartnerCommute {
+  kind: SecondPlaceKind;
   destination: Place;
   maxCommuteMinutes: MaxCommuteMinutes;
 }
@@ -66,7 +70,7 @@ export interface PartnerCommute {
 export interface RequestDraft {
   commuteDestination: Place;
   maxCommuteMinutes: MaxCommuteMinutes;
-  /** 같이 사는 사람 출근지. 없으면 null (두 사람 모두 갈 수 있는 동네를 찾는다) */
+  /** 두 번째 장소 (같이 사는 분 직장·학교·자주 가는 곳). 없으면 null */
   partner: PartnerCommute | null;
   noTransferExtraMinutes: NoTransferExtraMinutes;
   transactionPreference: TransactionPreference;
