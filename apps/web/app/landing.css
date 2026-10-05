@@ -687,3 +687,14 @@
 .money input:focus-visible {
   outline: none !important;
 }
+
+/* 출근지가 서비스 지역 밖일 때 */
+.place-outside {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  color: #7a5310;
+  font-size: 13px;
+  font-weight: 600;
+}

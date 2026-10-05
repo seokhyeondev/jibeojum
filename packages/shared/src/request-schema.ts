@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SERVICE_AREA_MESSAGE, isInServiceArea } from "./service-area";
 import type { HousingRequest, RequestDraft, TransactionPreference } from "./types/request";
 
 const housingType = z.enum(["studio", "officetel", "two_room", "apartment"]);
@@ -80,7 +81,8 @@ export function validateStep(draft: RequestDraft, step: number): string | null {
       // 검색 목록에서 골라 좌표가 있어야 출근 경로를 정확히 계산할 수 있다
       const { label, latitude, longitude } = draft.commuteDestination;
       if (label.trim().length < 2) return "출근지를 검색해주세요.";
-      return latitude != null && longitude != null ? null : "검색 목록에서 출근지를 골라주세요.";
+      if (latitude == null || longitude == null) return "검색 목록에서 출근지를 골라주세요.";
+      return isInServiceArea(draft.commuteDestination) ? null : SERVICE_AREA_MESSAGE;
     }
     case 2:
       if (wantsRent(draft.transactionPreference)) {

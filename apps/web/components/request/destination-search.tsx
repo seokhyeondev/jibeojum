@@ -1,6 +1,7 @@
 "use client";
 
 import type { PlaceCandidate, Place } from "@zipazum/shared";
+import { SERVICE_AREA_MESSAGE, isInServiceArea } from "@zipazum/shared";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Loader2, MapPin, Search } from "lucide-react";
 import { useEffect, useId, useState } from "react";
@@ -85,7 +86,7 @@ export function DestinationSearch({ value, onChange }: Props) {
           placeholder="회사·빌딩 이름, 역, 도로명 주소"
           autoComplete="off"
         />
-        {isFetching ? <Loader2 className="spin" aria-hidden /> : selected ? <Check aria-hidden /> : <Search aria-hidden />}
+        {isFetching ? <Loader2 className="spin" aria-hidden /> : selected && isInServiceArea(value) ? <Check aria-hidden /> : <Search aria-hidden />}
       </div>
 
       {showList && (
@@ -115,9 +116,15 @@ export function DestinationSearch({ value, onChange }: Props) {
       )}
 
       {selected ? (
-        <p className="place-picked">
-          <Check aria-hidden /> {value.address ?? value.label}
-        </p>
+        isInServiceArea(value) ? (
+          <p className="place-picked">
+            <Check aria-hidden /> {value.address ?? value.label}
+          </p>
+        ) : (
+          <p className="place-outside" role="alert">
+            {SERVICE_AREA_MESSAGE} 다른 출근지를 검색해주세요.
+          </p>
+        )
       ) : (
         text.trim().length >= MIN_QUERY && !showList && <p className="place-hint">검색 목록에서 출근지를 골라주세요.</p>
       )}

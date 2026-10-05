@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Logger, Param, Patch, Post, Req, Res } from "@nestjs/common";
-import { createRequestBodySchema, requestInputSchema, type RequestInput } from "@zipazum/shared";
+import { SERVICE_AREA_MESSAGE, createRequestBodySchema, isInServiceArea, requestInputSchema, type RequestInput } from "@zipazum/shared";
 import type { Request, Response } from "express";
 import { AreaRecommendationsService } from "../areas/area-recommendations.service.js";
 import { ApiException, notFound } from "../common/api-exception.js";
@@ -11,6 +11,11 @@ import { toHousingRequest } from "./request-mapper.js";
 import { RequestsService } from "./requests.service.js";
 
 type CreateBody = RequestInput & { clientKey: string };
+
+/** 서비스 지역(서울·경기·인천) 밖 출근지는 받지 않는다 */
+function assertServiceArea(input: RequestInput) {
+  if (!isInServiceArea(input.commuteDestination)) throw new ApiException(400, "invalid_input", SERVICE_AREA_MESSAGE);
+}
 
 @Controller("requests")
 export class RequestsController {
@@ -40,6 +45,7 @@ export class RequestsController {
     const user = await this.session.getUser(req);
     if (!isMember(user)) throw new ApiException(401, "unauthorized", "로그인한 뒤 요청을 보낼 수 있어요.");
     const { clientKey, ...input } = body;
+    assertServiceArea(input);
     const result = await this.requests.create(user.id, clientKey, input);
     if (result.created) this.scheduleAreas(result.request.id);
     res.status(result.created ? HttpStatus.CREATED : HttpStatus.OK);
@@ -62,6 +68,7 @@ export class RequestsController {
   ) {
     const row = await this.findOwnOrThrow(req, id);
     if (row.status === "closed") throw new ApiException(409, "conflict", "종료된 요청은 수정할 수 없어요.");
+    assertServiceArea(input);
     const updated = await this.requests.update(id, input);
     this.scheduleAreas(id);
     return { request: updated };

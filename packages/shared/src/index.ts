@@ -14,6 +14,7 @@ export * from "./broker-contact";
 export * from "./listing-report";
 export * from "./chat";
 export * from "./format";
+export * from "./service-area";
 export * from "./request-schema";
 export * from "./request-summary";
 export * from "./recommend";

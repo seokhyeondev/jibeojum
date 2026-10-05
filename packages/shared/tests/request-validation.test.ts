@@ -21,6 +21,12 @@ describe("단계별 검증", () => {
     // 글자만 넣고 목록에서 고르지 않으면 다음으로 갈 수 없다
     expect(validateStep(draft({ commuteDestination: { label: "강남" } }), 1)).toBe("검색 목록에서 출근지를 골라주세요.");
     expect(validateStep(draft({ commuteDestination: GANGNAM }), 1)).toBeNull();
+    // 수도권 밖 출근지는 아직 찾을 동네 데이터가 없다
+    const busan = { label: "롯데백화점 부산본점", address: "부산광역시 부산진구 가야대로 772", latitude: 35.1568, longitude: 129.0564 };
+    expect(validateStep(draft({ commuteDestination: busan }), 1)).toBe("지금은 서울·경기·인천 출근지만 찾아드려요.");
+    // 좌표 범위 안이어도 주소가 충남이면 막는다 (천안)
+    expect(validateStep(draft({ commuteDestination: { ...busan, address: "충청남도 천안시 동남구 대흥로 255", latitude: 36.81, longitude: 127.15 } }), 1)).not.toBeNull();
+    expect(validateStep(draft({ commuteDestination: { ...GANGNAM, address: "인천광역시 남동구 구월동" } }), 1)).toBeNull();
   });
 
   it("예산이 비어 있으면 넘어갈 수 없다", () => {
