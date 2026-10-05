@@ -1,12 +1,13 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, ChevronRight, ClipboardList, FileText, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { Bell, ChevronRight, ClipboardList, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LoadingBlock } from "@/components/common/hydrated";
 import { logout } from "@/lib/api/client";
 import { useSubmittedRequest } from "@/lib/store/app-store";
+import { SiteFooter } from "@/components/common/site-footer";
 import { WithdrawButton } from "./withdraw";
 import { LoginPrompt, useMe } from "./kakao-login";
 
@@ -21,6 +22,7 @@ export function MyPage() {
     return (
       <section className="mypage">
         <LoginPrompt title="로그인이 필요해요" description="카카오로 로그인하면 내 요청과 도착한 매물을 언제든 확인할 수 있어요." returnTo="/mypage" />
+        <SiteFooter />
       </section>
     );
   }
@@ -64,19 +66,8 @@ export function MyPage() {
           </button>
         </li>
       </ul>
-      <ul className="menu">
-        <li>
-          <Link href="/terms">
-            <FileText aria-hidden /> 이용약관 <ChevronRight aria-hidden />
-          </Link>
-        </li>
-        <li>
-          <Link href="/privacy">
-            <ShieldCheck aria-hidden /> 개인정보처리방침 <ChevronRight aria-hidden />
-          </Link>
-        </li>
-      </ul>
       <WithdrawButton />
+      <SiteFooter />
     </section>
   );
 }

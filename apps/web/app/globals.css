@@ -216,7 +216,9 @@ img {
   height: calc(var(--nav-h) + var(--safe-b));
   padding-bottom: var(--safe-b);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* 탭 수만큼 같은 너비로 나눈다 */
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   background: rgb(255 255 255 / 96%);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);

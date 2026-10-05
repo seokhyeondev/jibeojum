@@ -67,7 +67,7 @@ export function RequestComplete() {
       </div>
       <RequestTimeline />
       <Button asChild className="primary wide">
-        <Link href="/listings">{proposals ? `도착한 매물 ${proposals.length}개 보기` : "도착한 매물 보기"}</Link>
+        <Link href={`/listings?request=${request.id}`}>{proposals ? `도착한 매물 ${proposals.length}개 보기` : "도착한 매물 보기"}</Link>
       </Button>
     </section>
   );

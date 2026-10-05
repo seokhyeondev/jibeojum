@@ -1,7 +1,7 @@
 import { BellRing, Building2, MapPinned, Search, ShieldCheck, TrainFront, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { SITE } from "@/lib/site";
+import { SiteFooter } from "@/components/common/site-footer";
 
 const START = "/request?step=1";
 
@@ -131,17 +131,11 @@ export function UserLanding() {
         </div>
       </section>
 
-      <footer className="lp-footer">
+      <SiteFooter>
         <Link href="/partners" className="lp-partner-link">
           <Building2 aria-hidden /> 공인중개사이신가요? 집어줌과 함께하기
         </Link>
-        <small>
-          {SITE.name} · 문의 <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>
-        </small>
-        <small>
-          <Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보처리방침</Link>
-        </small>
-      </footer>
+      </SiteFooter>
 
       <div className="lp-sticky">
         <Link href={START} className="lp-cta">

@@ -24,7 +24,7 @@ const PROGRESS: Record<HousingRequest["status"], number> = { submitted: 25, matc
 
 export function MyRequests() {
   const [current] = useSubmittedRequest();
-  // 요청은 여러 개일 수 있다. 서버 목록(최신순)을 보여주고, 고른 요청의 제안을 매물 탭에서 본다
+  // 요청은 여러 개일 수 있다. 서버 목록(최신순)을 보여주고, 카드를 누르면 그 요청의 매물로 간다
   const { data: requests = current ? [current] : [] } = useQuery({ queryKey: ["my-requests"], queryFn: fetchMyRequests, retry: false });
   return (
     <section className="requests">
@@ -87,7 +87,7 @@ function RequestCard({ request, current }: { request: HousingRequest; current: b
         className="primary wide"
         onClick={() => {
           setCurrent(request);
-          router.push("/listings");
+          router.push(`/listings?request=${request.id}`);
         }}
       >
         제안 확인하기

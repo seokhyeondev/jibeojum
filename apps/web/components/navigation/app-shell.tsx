@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Clock3, Home, MessageCircle, Search, UserRound } from "lucide-react";
+import { Bell, Clock3, Home, MessageCircle, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
@@ -109,14 +109,14 @@ function BottomNav({ pathname }: { pathname: string }) {
   const [request] = useSubmittedRequest();
   const items = [
     { href: request ? "/request/complete" : "/request", match: "/request/complete", label: "홈", icon: <Home /> },
-    { href: "/listings", match: "/listings", label: "매물", icon: <Search /> },
-    { href: "/requests", match: "/requests", label: "내 요청", icon: <Clock3 /> },
+    // 매물은 요청에 딸린 화면이라 내 요청 → 요청 카드 → 매물 순서로 들어간다
+    { href: "/requests", match: "/requests", also: "/listings", label: "내 요청", icon: <Clock3 /> },
     { href: "/messages", match: "/messages", label: "상담", icon: <MessageCircle /> },
   ];
   return (
     <nav aria-label="주요 메뉴">
       {items.map((item) => {
-        const on = pathname === item.match;
+        const on = pathname === item.match || ("also" in item && pathname === item.also);
         return (
           <Link key={item.label} href={item.href} className={on ? "on" : ""} aria-current={on ? "page" : undefined}>
             {item.icon}

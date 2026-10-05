@@ -1,5 +1,6 @@
 import { BellRing, Building2, Check, FileCheck2, MapPin, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
+import { SiteFooter } from "@/components/common/site-footer";
 import { SITE } from "@/lib/site";
 
 const SIGNUP = "/agent/signup";
@@ -158,15 +159,11 @@ export function PartnerLanding() {
         </div>
       </section>
 
-      <footer className="lp-footer">
-        <small>
-          제휴·문의 <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>
-        </small>
-        <small>
-          {SITE.name} · <Link href="/">고객용 서비스 보기</Link> · <Link href="/terms">이용약관</Link> ·{" "}
-          <Link href="/privacy">개인정보처리방침</Link>
-        </small>
-      </footer>
+      <SiteFooter>
+        <Link href="/" className="lp-partner-link">
+          집을 찾고 계신가요? 고객용 서비스 보기
+        </Link>
+      </SiteFooter>
 
       <div className="lp-sticky">
         <Link href={SIGNUP} className="lp-cta">

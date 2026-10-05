@@ -437,17 +437,52 @@
   word-break: keep-all;
 }
 
-.lp-footer {
+/* 공통 푸터: 약관 링크 + 사업자 정보 */
+.site-footer {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   margin-top: 28px;
-  padding: 24px var(--gutter);
+  padding: 24px var(--gutter) 32px;
   border-top: 1px solid var(--line);
   color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.site-footer > nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   font-size: 13px;
 }
-.lp-footer a {
+.site-footer > nav a {
   color: var(--ink-2);
+}
+.site-footer > nav b {
+  font-weight: 700;
+}
+.site-footer dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 0;
+}
+.site-footer dl > div {
+  display: flex;
+  gap: 6px;
+}
+.site-footer dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+.site-footer dd a {
+  color: inherit;
+}
+.site-footer > small {
+  color: var(--faint);
+  font-size: 12px;
+}
+.mypage .site-footer {
+  margin: 32px calc(-1 * var(--gutter)) 0;
 }
 .lp-partner-link {
   display: flex;

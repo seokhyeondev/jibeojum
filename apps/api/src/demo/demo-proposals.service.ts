@@ -47,6 +47,8 @@ const pick = <T>(list: readonly T[]) => list[Math.floor(Math.random() * list.len
 const chance = (p: number) => Math.random() < p;
 const between = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1));
 
+type Db = Prisma.TransactionClient;
+
 interface Tx {
   id: string;
   source: RentSource;
@@ -78,17 +80,39 @@ export class DemoProposalsService {
   /** 추천 생활권 계산이 끝난 요청에 시범 매물을 붙인다. 이미 붙어 있으면 다시 만들지 않는다 */
   async generate(requestId: string, result: AreaRecommendationResult): Promise<number> {
     if (!this.enabled) return 0;
-    const row = await this.prisma.housingRequest.findUnique({ where: { id: requestId } });
-    if (!row || row.status === "closed") return 0;
-    const existing = await this.prisma.proposal.count({ where: { requestId, listing: { isSample: true } } });
-    if (existing > 0) return 0;
+    // 같은 요청을 여러 서버가 동시에 계산해도 한 번만 만들도록, 확인과 생성을 잠금 안에서 한다
+    const created = await this.prisma.$transaction(
+      async (db) => {
+        await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('zipazum:demo-proposals'))`;
+        return this.build(db, requestId, result);
+      },
+      { maxWait: 60_000, timeout: 60_000 },
+    );
+    if (!created) return 0;
+    // 알림은 커밋 뒤에 보낸다 (푸시는 알림 행이 있는지 확인한다)
+    await this.notifications.create({
+      userId: created.userId,
+      type: "proposal_arrived",
+      title: "시범 매물이 도착했어요",
+      body: `출근 조건에 맞는 동네의 예시 매물 ${created.count}개를 먼저 보여드려요.`,
+      link: `/listings?request=${requestId}`,
+    });
+    this.logger.log(`request ${requestId}: ${created.count} demo listings`);
+    return created.count;
+  }
+
+  private async build(db: Db, requestId: string, result: AreaRecommendationResult): Promise<{ userId: string; count: number } | null> {
+    const row = await db.housingRequest.findUnique({ where: { id: requestId } });
+    if (!row || row.status === "closed") return null;
+    const existing = await db.proposal.count({ where: { requestId, listing: { isSample: true } } });
+    if (existing > 0) return null;
     const request = toHousingRequest(row);
 
     const picks: { area: AreaRecommendation; tx: Tx }[] = [];
     // 생활권끼리 겹칠 수 있어 같은 주소는 한 번만 쓴다
     const seen = new Set<string>();
     for (const area of result.areas.slice(0, ZONES)) {
-      const candidates = (await this.transactionsNear(area)).filter((tx) => this.fits(tx, request));
+      const candidates = (await this.transactionsNear(db, area)).filter((tx) => this.fits(tx, request));
       let taken = 0;
       for (const tx of candidates) {
         const key = tx.address ?? `${tx.umd_nm}:${tx.building_name}`;
@@ -99,12 +123,12 @@ export class DemoProposalsService {
       }
       if (picks.length >= MAX_LISTINGS) break;
     }
-    if (!picks.length) return 0;
+    if (!picks.length) return null;
 
     let rank = 1;
     for (const { area, tx } of picks.slice(0, MAX_LISTINGS)) {
-      const agentId = await this.demoAgent(area, tx.umd_nm);
-      const station = await this.nearestStation(tx.latitude, tx.longitude);
+      const agentId = await this.demoAgent(db, area, tx.umd_nm);
+      const station = await this.nearestStation(db, tx.latitude, tx.longitude);
       const listingId = randomUUID();
       const type = housingTypeOf(tx.source, tx.area_m2) ?? request.housingTypes[0] ?? "studio";
       const area_m2 = Math.round((tx.area_m2 ?? 20) * 10) / 10;
@@ -118,54 +142,44 @@ export class DemoProposalsService {
       const commute = this.commuteOf(area, station);
       const building = tx.building_name?.replace(/\(.*?\)/g, "").replace(typeLabel, "").trim();
       const title = `${tx.umd_nm} ${building ? `${building} ` : ""}${pyeong}평 ${typeLabel}`.slice(0, 60);
-      await this.prisma.$transaction(async (tx2) => {
-        await tx2.listing.create({
-          data: {
-            id: listingId,
-            agentId,
-            title,
-            housingType: type,
-            transactionType: tx.monthly_rent > 0 ? "rent" : "jeonse",
-            deposit: tx.deposit,
-            monthlyRent: tx.monthly_rent,
-            maintenanceFee: type === "apartment" ? between(15, 30) : between(5, 12),
-            address: tx.address ?? `${tx.umd_nm}`,
-            latitude: tx.latitude,
-            longitude: tx.longitude,
-            stationName: station?.name ?? "역 정보 없음",
-            stationWalkMinutes: station?.walk ?? 0,
-            exclusiveAreaM2: area_m2,
-            floor,
-            totalFloors,
-            floorType: "normal",
-            direction,
-            builtYear: tx.build_year ?? between(2005, 2022),
-            availableFrom: new Date(`${request.moveInDate}T00:00:00.000Z`),
-            moveInNote: "날짜 협의 가능",
-            options,
-            security,
-            nearby: NEARBY.filter(() => chance(0.6)).map((f) => ({ ...f, walkMinutes: between(2, 10) })) as unknown as Prisma.InputJsonValue,
-            tags: [],
-            description: `${tx.umd_nm}의 ${typeLabel}이에요. 실거래 정보를 바탕으로 만든 시범 매물로, 실제 매물과 다를 수 있어요.`,
-            images: [{ src: pick(IMAGES), alt: `${title} 예시 사진` }],
-            isSample: true,
-            verifiedAt: new Date(),
-          },
-        });
-        await tx2.proposal.create({
-          data: { requestId, listingId, commute: commute as unknown as Prisma.InputJsonValue, rank: rank++, status: "proposed", agentNote: null },
-        });
+      await db.listing.create({
+        data: {
+          id: listingId,
+          agentId,
+          title,
+          housingType: type,
+          transactionType: tx.monthly_rent > 0 ? "rent" : "jeonse",
+          deposit: tx.deposit,
+          monthlyRent: tx.monthly_rent,
+          maintenanceFee: type === "apartment" ? between(15, 30) : between(5, 12),
+          address: tx.address ?? `${tx.umd_nm}`,
+          latitude: tx.latitude,
+          longitude: tx.longitude,
+          stationName: station?.name ?? "역 정보 없음",
+          stationWalkMinutes: station?.walk ?? 0,
+          exclusiveAreaM2: area_m2,
+          floor,
+          totalFloors,
+          floorType: "normal",
+          direction,
+          builtYear: tx.build_year ?? between(2005, 2022),
+          availableFrom: new Date(`${request.moveInDate}T00:00:00.000Z`),
+          moveInNote: "날짜 협의 가능",
+          options,
+          security,
+          nearby: NEARBY.filter(() => chance(0.6)).map((f) => ({ ...f, walkMinutes: between(2, 10) })) as unknown as Prisma.InputJsonValue,
+          tags: [],
+          description: `${tx.umd_nm}의 ${typeLabel}이에요. 실거래 정보를 바탕으로 만든 시범 매물로, 실제 매물과 다를 수 있어요.`,
+          images: [{ src: pick(IMAGES), alt: `${title} 예시 사진` }],
+          isSample: true,
+          verifiedAt: new Date(),
+        },
+      });
+      await db.proposal.create({
+        data: { requestId, listingId, commute: commute as unknown as Prisma.InputJsonValue, rank: rank++, status: "proposed", agentNote: null },
       });
     }
-    await this.notifications.create({
-      userId: row.userId,
-      type: "proposal_arrived",
-      title: "시범 매물이 도착했어요",
-      body: `출근 조건에 맞는 동네의 예시 매물 ${Math.min(picks.length, MAX_LISTINGS)}개를 먼저 보여드려요.`,
-      link: "/listings",
-    });
-    this.logger.log(`request ${requestId}: ${Math.min(picks.length, MAX_LISTINGS)} demo listings`);
-    return Math.min(picks.length, MAX_LISTINGS);
+    return { userId: row.userId, count: rank - 1 };
   }
 
   /** 요청의 유형·예산·넓이에 맞는 거래인지 */
@@ -181,10 +195,10 @@ export class DemoProposalsService {
   }
 
   /** 생활권 대표 좌표 근처의 최근 거래 (주소·좌표가 확인된 것만, 최근 거래부터) */
-  private transactionsNear(area: AreaRecommendation): Promise<Tx[]> {
+  private transactionsNear(db: Db, area: AreaRecommendation): Promise<Tx[]> {
     const since = new Date();
     since.setFullYear(since.getFullYear() - RECENT_YEARS);
-    return this.prisma.$queryRaw<Tx[]>`
+    return db.$queryRaw<Tx[]>`
       SELECT t.id, t.source, t.umd_nm, t.building_name, t.deposit, t.monthly_rent, t.area_m2, t.floor, t.build_year,
              g.refined_address AS address, g.latitude, g.longitude
       FROM rent_transactions t
@@ -197,23 +211,23 @@ export class DemoProposalsService {
   }
 
   /** 그 동네 시범 공인중개사 (없으면 만든다). 로그인할 수 없는 계정이다 */
-  private async demoAgent(area: AreaRecommendation, dong: string): Promise<string> {
+  private async demoAgent(db: Db, area: AreaRecommendation, dong: string): Promise<string> {
     const officeName = `${dong} 시범부동산`;
     const office =
-      (await this.prisma.brokerOffice.findFirst({ where: { name: officeName, source: "demo" }, include: { agents: { select: { id: true } } } })) ??
-      (await this.prisma.brokerOffice.create({
+      (await db.brokerOffice.findFirst({ where: { name: officeName, source: "demo" }, include: { agents: { select: { id: true } } } })) ??
+      (await db.brokerOffice.create({
         data: { name: officeName, address: `${area.sigungu} ${dong}`, latitude: area.latitude, longitude: area.longitude, source: "demo" },
         include: { agents: { select: { id: true } } },
       }));
     if (office.agents[0]) return office.agents[0].id;
-    const agent = await this.prisma.agent.create({
+    const agent = await db.agent.create({
       data: { officeId: office.id, name: `${pick(SURNAMES)}${pick(GIVEN)}`, createdBy: "demo", verificationStatus: "verified", verifiedAt: new Date() },
     });
     return agent.id;
   }
 
-  private async nearestStation(lat: number, lng: number): Promise<{ name: string; walk: number } | null> {
-    const stations = await this.prisma.station.findMany({
+  private async nearestStation(db: Db, lat: number, lng: number): Promise<{ name: string; walk: number } | null> {
+    const stations = await db.station.findMany({
       where: { latitude: { gte: lat - STATION_SEARCH_DEG, lte: lat + STATION_SEARCH_DEG }, longitude: { gte: lng - STATION_SEARCH_DEG, lte: lng + STATION_SEARCH_DEG } },
       select: { name: true, latitude: true, longitude: true },
     });

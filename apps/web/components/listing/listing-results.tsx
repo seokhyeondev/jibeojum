@@ -1,16 +1,19 @@
 "use client";
 
 import { ClipboardList, MapPin, SearchX, SlidersHorizontal } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
 import { ErrorState } from "@/components/common/error-state";
 import { LoadingBlock } from "@/components/common/hydrated";
+import { SimpleHead } from "@/components/navigation/simple-head";
 import { Button } from "@/components/ui/button";
 import type { Recommendation } from "@zipazum/shared";
-import { useCompare, useFavorites } from "@/lib/store/app-store";
+import { fetchMyRequests } from "@/lib/api/client";
+import { useCompare, useFavorites, useSubmittedRequest } from "@/lib/store/app-store";
 import { ListingCard } from "./listing-card";
 import { useCriteria, useRecommendations } from "./use-recommendations";
 
@@ -29,7 +32,31 @@ function sortRecommendations<T extends Recommendation>(items: T[], key: SortKey)
   return [...items].sort((a, b) => value(a) - value(b));
 }
 
+/** ?request=<id>로 들어오면 그 요청을 현재 요청으로 바꾼다. 바꾸는 중이면 true */
+function useRequestFromQuery(): boolean {
+  const requestId = useSearchParams().get("request");
+  const [current, setCurrent] = useSubmittedRequest();
+  const needsSwitch = Boolean(requestId && requestId !== current?.id);
+  const { data: mine, isFetched } = useQuery({ queryKey: ["my-requests"], queryFn: fetchMyRequests, enabled: needsSwitch, retry: false });
+  const found = needsSwitch ? mine?.find((r) => r.id === requestId) : undefined;
+  useEffect(() => {
+    if (found) setCurrent(found);
+  }, [found, setCurrent]);
+  // 내 요청이 아니면 지금 요청 그대로 보여준다
+  return needsSwitch && (!isFetched || Boolean(found));
+}
+
 export function ListingResults() {
+  const switching = useRequestFromQuery();
+  return (
+    <>
+      <SimpleHead title="요청한 매물" fallbackHref="/requests" />
+      {switching ? <LoadingBlock /> : <Results />}
+    </>
+  );
+}
+
+function Results() {
   const router = useRouter();
   const criteria = useCriteria();
   const { hasRequest, isPending, error, refetch, recommendations } = useRecommendations();
