@@ -21,7 +21,7 @@
 
 ## Vercel (웹)
 
-웹은 두 프로젝트로 따로 배포한다. 사용자 앱(Capacitor)은 사용자 웹만 감싸므로 운영·중개사 화면이 앱에 들어가지 않는다.
+웹은 세 프로젝트로 따로 배포한다(사용자·공인중개사·운영). 사용자 앱(Capacitor)은 사용자 웹만 감싸므로 운영·중개사 화면이 앱에 들어가지 않는다.
 
 **사용자 웹** (`zipazum.com`, `www.zipazum.com`)
 
@@ -30,23 +30,31 @@
 | Root Directory | `apps/web` |
 | Install / Build | `apps/web/vercel.json` |
 | 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
-| 환경 변수 `NEXT_PUBLIC_PARTNERS_URL` | 운영·중개사 웹 주소. 랜딩의 공인중개사 링크와 예전 `/admin`·`/agent`·`/partners` 주소 리다이렉트에 쓴다 |
+| 환경 변수 `NEXT_PUBLIC_PARTNERS_URL` | `https://partner.zipazum.com` (랜딩의 공인중개사 링크, 예전 주소 리다이렉트) |
+| 환경 변수 `ADMIN_URL` | `https://admin.zipazum.com` (예전 `/admin` 주소 리다이렉트) |
 
-**운영·중개사 웹** (`partner.zipazum.com`, `apps/ops`: `/partners` 공인중개사 소개, `/agent` 공인중개사, `/admin` 내부 운영)
+**공인중개사 웹** (`partner.zipazum.com`, `apps/partner`: `/partners` 소개, `/agent` 공인중개사)
 
 | 설정 | 값 |
 | --- | --- |
-| Root Directory | `apps/ops` |
-| Install / Build | `apps/ops/vercel.json` |
+| Root Directory | `apps/partner` |
+| Install / Build | `apps/partner/vercel.json` |
 | 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
-| 환경 변수 `NEXT_PUBLIC_WEB_URL` | 사용자 웹 주소 (약관·개인정보처리방침·고객용 서비스 링크) |
+| 환경 변수 `NEXT_PUBLIC_WEB_URL` | `https://zipazum.com` (약관·개인정보처리방침·고객용 서비스 링크) |
 
-DNS는 Route 53 `zipazum.com` 호스팅 영역에 있다: `zipazum.com` A 76.76.21.21, `www`·`partner` CNAME `cname.vercel-dns.com` (Vercel).
+**운영 웹** (`admin.zipazum.com`, `apps/admin`: `/admin`)
 
-API의 `OPS_ORIGIN`(ECS 태스크 정의)에 운영·중개사 웹 주소를 넣어야 초대 링크가 그쪽으로 나간다.
+| 설정 | 값 |
+| --- | --- |
+| Root Directory | `apps/admin` |
+| Install / Build | `apps/admin/vercel.json` |
+| 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
 
-`API_URL`은 빌드할 때 rewrites에 들어간다. 바꾸면 다시 배포해야 한다.
-웹에는 다른 비밀값이 없다. 나머지 키는 전부 API 쪽(SSM)에 있다.
+사용자 웹에는 `NEXT_PUBLIC_PARTNERS_URL`(공인중개사 웹), `ADMIN_URL`(운영 웹)을 넣는다. 예전 `/agent`·`/partners`·`/admin` 주소를 그쪽으로 보낸다.
+
+DNS는 Route 53 `zipazum.com` 호스팅 영역에 있다: `zipazum.com` A 76.76.21.21, `www`·`partner`·`admin` CNAME `cname.vercel-dns.com` (Vercel).
+
+API의 `PARTNER_ORIGIN`(ECS 태스크 정의)에 공인중개사 웹 주소를 넣는다. 초대 링크가 그쪽으로 나간다.
 
 ## API 배포
 

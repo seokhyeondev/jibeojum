@@ -41,7 +41,7 @@ function InviteBanner({ preview }: { preview: NonNullable<ReturnType<typeof useI
     </div>
   );
 }
-import { AgentAvatar } from "./admin-agents";
+import { AgentAvatar } from "./agent-avatar";
 import { OpsShell } from "./ops-shell";
 import { LicenseInput } from "./license-input";
 import { VerificationNotice } from "./verification-notice";

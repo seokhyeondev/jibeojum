@@ -75,7 +75,7 @@
           "value": "https://zipazum.com"
         },
         { "name": "DEMO_PROPOSALS", "value": "true" },
-        { "name": "OPS_ORIGIN", "value": "https://partner.zipazum.com" }
+        { "name": "PARTNER_ORIGIN", "value": "https://partner.zipazum.com" }
       ],
       "secrets": [
         {

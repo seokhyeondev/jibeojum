@@ -118,8 +118,8 @@ export class OutreachService {
       data: { tokenHash: inviteTokenHash(token), requestId: contact.requestId, officeId: contact.officeId, contactId, zoneKeys, expiresAt },
     });
     const zone = contact.zoneKey ? await this.prisma.commuteZone.findUnique({ where: { zoneKey: contact.zoneKey }, select: { name: true } }) : null;
-    // 공인중개사 웹은 사용자 웹과 따로 배포한다 (OPS_ORIGIN)
-    const url = `${(process.env.OPS_ORIGIN ?? "https://partner.zipazum.com").replace(/\/$/, "")}/agent/invite/${token}`;
+    // 공인중개사 웹은 사용자 웹과 따로 배포한다 (PARTNER_ORIGIN)
+    const url = `${(process.env.PARTNER_ORIGIN ?? "https://partner.zipazum.com").replace(/\/$/, "")}/agent/invite/${token}`;
     return { url, message: inviteMessage(toHousingRequest(contact.request), zone?.name ?? null, url), expiresAt: expiresAt.toISOString() };
   }
 }

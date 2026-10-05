@@ -10,14 +10,18 @@ const nextConfig: NextConfig = {
     // /api 프록시 대기 시간. 기본 30초면 추천 동네 계산(TMAP 약 30회, 1초 간격)이 끊긴다
     proxyTimeout: 120_000,
   },
-  // 운영·중개사 웹은 apps/ops로 옮겼다. 예전 주소(초대 링크·즐겨찾기)는 그쪽으로 보낸다
+  // 공인중개사 웹(apps/partner)·운영 웹(apps/admin)은 따로 배포한다. 예전 주소(초대 링크·즐겨찾기)는 그쪽으로 보낸다
   async redirects() {
-    const ops = process.env.NEXT_PUBLIC_PARTNERS_URL?.replace(/\/$/, "");
-    if (!ops) return [];
+    const partner = process.env.NEXT_PUBLIC_PARTNERS_URL?.replace(/\/$/, "");
+    const admin = process.env.ADMIN_URL?.replace(/\/$/, "");
     return [
-      { source: "/admin/:path*", destination: `${ops}/admin/:path*`, permanent: false },
-      { source: "/agent/:path*", destination: `${ops}/agent/:path*`, permanent: false },
-      { source: "/partners", destination: `${ops}/partners`, permanent: false },
+      ...(partner
+        ? [
+            { source: "/agent/:path*", destination: `${partner}/agent/:path*`, permanent: false },
+            { source: "/partners", destination: `${partner}/partners`, permanent: false },
+          ]
+        : []),
+      ...(admin ? [{ source: "/admin/:path*", destination: `${admin}/admin/:path*`, permanent: false }] : []),
     ];
   },
   async rewrites() {

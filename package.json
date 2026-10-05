@@ -8,7 +8,7 @@
   "packageManager": "pnpm@11.25.0",
   "scripts": {
     "build:shared": "pnpm --filter @zipazum/shared build",
-    "dev": "pnpm build:shared && pnpm --parallel --filter @zipazum/shared --filter @zipazum/api --filter @zipazum/web --filter @zipazum/ops dev",
+    "dev": "pnpm build:shared && pnpm --parallel --filter @zipazum/shared --filter @zipazum/api --filter @zipazum/web --filter @zipazum/partner --filter @zipazum/admin dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm build:shared && pnpm -r typecheck",
@@ -24,6 +24,7 @@
     "mobile:sync": "pnpm --filter @zipazum/mobile sync",
     "mobile:android": "pnpm --filter @zipazum/mobile android",
     "mobile:ios": "pnpm --filter @zipazum/mobile ios",
-    "dev:ops": "pnpm --filter @zipazum/ops dev"
+    "dev:partner": "pnpm --filter @zipazum/partner dev",
+    "dev:admin": "pnpm --filter @zipazum/admin dev"
   }
 }

@@ -8,7 +8,7 @@ export const SITE = {
  * 푸터에 보이는 사업자 정보. 값이 있는 항목만 보인다.
  * 통신판매업 신고번호·전화가 생기면 채운다.
  */
-/** 공인중개사 웹 주소 (apps/ops). 설정 전이면 랜딩의 공인중개사 링크를 숨긴다 */
+/** 공인중개사 웹 주소 (apps/partner). 설정 전이면 랜딩의 공인중개사 링크를 숨긴다 */
 export const PARTNERS_URL = process.env.NEXT_PUBLIC_PARTNERS_URL?.replace(/\/$/, "") ?? null;
 
 export const COMPANY_NAME = "에이치코어";

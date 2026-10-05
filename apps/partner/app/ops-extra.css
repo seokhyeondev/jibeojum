@@ -1,0 +1,445 @@
+/* 공인중개사 등록증 확인 */
+.license-input {
+  display: grid;
+  gap: 6px;
+}
+.license-drop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--faint);
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+.license-drop:hover {
+  border-color: var(--g);
+}
+.license-drop.done {
+  border-style: solid;
+  border-color: var(--g-line);
+  background: var(--gs);
+  color: var(--gd);
+}
+.license-drop img {
+  width: 64px;
+  height: 46px;
+  flex: none;
+  border-radius: 6px;
+  object-fit: cover;
+}
+.license-drop > svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  color: var(--muted);
+}
+.license-drop span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.license-drop span svg {
+  width: 16px;
+  height: 16px;
+}
+.ops-verify {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+}
+.ops-verify > svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+.ops-verify > span {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+.ops-verify.pending {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.ops-verify.rejected {
+  background: #fdecee;
+  color: var(--danger);
+}
+.ops-verify small {
+  color: inherit;
+  opacity: 0.85;
+}
+.ops-verify-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--ink);
+}
+.ops-verify-form .ops-btn.primary {
+  margin: 0;
+}
+.ops-verify-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 4px;
+}
+.ops-verify-cell small {
+  display: inline;
+}
+.ops-link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gd);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.ops-link-btn.strong {
+  font-weight: 800;
+}
+
+/* 공인중개사 표: 버튼 셋을 세로로 쌓아 표가 카드 밖으로 넘치지 않게 */
+.ops-table.agents .ops-actions {
+  width: 112px;
+  white-space: normal;
+}
+.ops-table.agents .ops-actions .ops-btn {
+  display: flex;
+  width: 100%;
+  min-height: 32px;
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.ops-table.agents .ops-actions .ops-btn + .ops-btn {
+  margin-left: 0;
+}
+
+/* 공인중개사 문의(채팅) */
+.ops-nav-badge {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ff5f4f;
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+.ops-chat-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+  overflow: hidden;
+}
+.ops-chat-list li + li {
+  border-top: 1px solid var(--line);
+}
+.ops-chat-list a {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  color: var(--ink) !important;
+  text-decoration: none;
+}
+.ops-chat-list a.unread {
+  background: #f7fcf9;
+}
+.ops-chat-list img,
+.ops-chat-list i {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.ops-chat-list i {
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  color: var(--faint);
+}
+.ops-chat-list a > span:nth-of-type(1) {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.ops-chat-list b,
+.ops-chat-list p {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ops-chat-list p {
+  margin: 0;
+  color: var(--ink-2);
+}
+.ops-chat-meta {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  align-self: flex-start;
+}
+.ops-chat-meta em {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #ff5f4f;
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  text-align: center;
+}
+.ops-chat {
+  max-width: 760px;
+}
+.ops-chat-head {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.ops-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 60dvh;
+  min-height: 240px;
+  padding: 8px 2px;
+  overflow-y: auto;
+}
+.ops-bubble {
+  display: grid;
+  gap: 3px;
+  max-width: 80%;
+  justify-items: start;
+}
+.ops-bubble.mine {
+  align-self: flex-end;
+  justify-items: end;
+}
+.ops-bubble p {
+  margin: 0;
+  padding: 10px 13px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--surface);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ops-bubble.mine p {
+  border-radius: 14px 4px 14px 14px;
+  background: var(--g);
+  color: #fff;
+}
+.ops-bubble small b {
+  color: var(--g);
+}
+.ops-chat-input {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.ops-chat-input .ops-btn.primary {
+  margin: 0;
+}
+
+/* 요청 스텝 3: 최소 넓이 (한 줄 5칸, 평 + ㎡) */
+.min-area {
+  margin-top: 24px;
+}
+.min-area label small {
+  margin-left: 4px;
+  color: var(--faint);
+  font-size: 13px;
+  font-weight: 500;
+}
+.area-seg {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.area-seg button {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  min-height: 58px;
+  padding: 6px 2px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink-2);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.area-seg button:hover {
+  border-color: var(--g-line);
+}
+.area-seg b {
+  font-size: 15px;
+  font-weight: 700;
+}
+.area-seg small {
+  color: var(--faint);
+  font-size: 11px;
+}
+.area-seg .on {
+  border-color: var(--g);
+  background: var(--gs);
+  color: var(--gd);
+}
+.area-seg .on small {
+  color: var(--g);
+}
+.area-seg b.any {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* 로그인 버튼 (카카오 · Apple) */
+.social-logins {
+  display: grid;
+  gap: 8px;
+}
+button.kakao-login {
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+.apple-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.apple-login svg {
+  width: 20px;
+  height: 20px;
+  fill: #fff;
+}
+.apple-alt {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 6px;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* 약관·개인정보처리방침 */
+.legal {
+  padding: 8px var(--gutter) 48px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+.legal h1 {
+  margin: 8px 0 4px;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 800;
+}
+.legal-date {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.legal h2 {
+  margin: 26px 0 8px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 800;
+}
+.legal h3 {
+  margin: 14px 0 6px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.legal ul {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+.legal li + li {
+  margin-top: 4px;
+}
+.legal a {
+  color: var(--g);
+}
+
+/* 마이페이지 회원탈퇴 */
+.mypage .menu + .menu {
+  margin-top: 12px;
+}
+.withdraw-link {
+  display: block;
+  margin: 20px auto 0;
+  padding: 8px;
+  border: 0;
+  background: none;
+  color: var(--faint);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.withdraw-list {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.report-submit.danger {
+  background: var(--danger);
+}
+.agree a {
+  color: var(--g);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

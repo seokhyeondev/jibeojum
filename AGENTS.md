@@ -17,7 +17,8 @@
 
 - `apps/web/app/(user)/` 라우트: `request`(입력 5단계, `?step=`), `request/complete`, `listings`, `listings/[id]`, `compare`, `requests`, `messages?listing=`
 - `apps/web/components/` 화면 컴포넌트, `apps/web/lib/store/` localStorage 상태(초안, 요청 사본, 찜, 비교, 문의)
-- `apps/ops/` 운영·중개사 웹 (사용자 웹과 따로 배포): `/partners` 공인중개사 소개, `/agent` 공인중개사, `/admin` 내부 운영
+- `apps/partner/` 공인중개사 웹 (partner.zipazum.com): `/partners` 소개, `/agent` 공인중개사
+- `apps/admin/` 내부 운영 웹 (admin.zipazum.com): `/admin`
 - `apps/mobile/` Capacitor 앱 (사용자 웹만 감싼다)
 - `apps/api/src/` Nest 모듈: `requests`, `listings`(제안), `session`, `prisma`, `common`(오류 형식, zod 파이프)
 - `apps/api/prisma/` 스키마, 마이그레이션, 시드

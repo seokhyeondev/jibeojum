@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// 운영·중개사 웹. API는 NestJS 서버가 처리하고, 브라우저는 같은 도메인의 /api로 부른다.
+// 내부 운영 웹 (admin.zipazum.com). API는 NestJS 서버가 처리하고, 브라우저는 같은 도메인의 /api로 부른다.
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
 const nextConfig: NextConfig = {

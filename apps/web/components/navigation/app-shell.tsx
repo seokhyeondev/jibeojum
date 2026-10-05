@@ -28,7 +28,7 @@ function hidesBottomNav(pathname: string): boolean {
   );
 }
 
-/** 사용자 화면 틀. 운영·중개사 웹은 apps/ops로 따로 배포한다 */
+/** 사용자 화면 틀. 공인중개사 웹(apps/partner)·운영 웹(apps/admin)은 따로 배포한다 */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   return <UserShell pathname={pathname}>{children}</UserShell>;

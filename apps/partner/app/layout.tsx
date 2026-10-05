@@ -7,7 +7,7 @@ import "./ops-extra.css";
 
 export const metadata: Metadata = {
   title: "집어줌 파트너",
-  description: "집어줌 공인중개사·운영 웹",
+  description: "집어줌 공인중개사 웹",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 const PRETENDARD_CSS =
   "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css";
 
-/** 공인중개사 웹(/agent)·공인중개사 소개(/partners)·내부 운영 웹(/admin). 사용자 앱과 따로 배포한다 */
+/** 공인중개사 웹(/agent)·공인중개사 소개(/partners). 사용자 웹·운영 웹과 따로 배포한다 */
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
