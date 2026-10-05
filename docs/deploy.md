@@ -6,7 +6,7 @@
 브라우저 ──https──▶ Vercel (Next.js)
                      │  /api/* 를 그대로 넘김 (next.config.ts rewrites, API_URL)
                      ▼
-              CloudFront d2ax97ny1avlxk.cloudfront.net  (HTTPS, 캐시 안 함)
+              CloudFront api.zipazum.com (= d2ax97ny1avlxk.cloudfront.net, HTTPS, 캐시 안 함)
                      │  X-Origin-Verify 헤더를 붙여 HTTP로 전달
                      ▼
               ALB zipazum-api  (CloudFront IP만 허용, 헤더가 맞을 때만 전달)
@@ -29,7 +29,7 @@
 | --- | --- |
 | Root Directory | `apps/web` |
 | Install / Build | `apps/web/vercel.json` |
-| 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
+| 환경 변수 `API_URL` | `https://api.zipazum.com` |
 | 환경 변수 `NEXT_PUBLIC_PARTNERS_URL` | `https://partner.zipazum.com` (랜딩의 공인중개사 링크, 예전 주소 리다이렉트) |
 | 환경 변수 `ADMIN_URL` | `https://admin.zipazum.com` (예전 `/admin` 주소 리다이렉트) |
 
@@ -39,7 +39,7 @@
 | --- | --- |
 | Root Directory | `apps/partner` |
 | Install / Build | `apps/partner/vercel.json` |
-| 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
+| 환경 변수 `API_URL` | `https://api.zipazum.com` |
 | 환경 변수 `NEXT_PUBLIC_WEB_URL` | `https://zipazum.com` (약관·개인정보처리방침·고객용 서비스 링크) |
 
 **운영 웹** (`admin.zipazum.com`, `apps/admin`: `/admin`)
@@ -48,7 +48,7 @@
 | --- | --- |
 | Root Directory | `apps/admin` |
 | Install / Build | `apps/admin/vercel.json` |
-| 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
+| 환경 변수 `API_URL` | `https://api.zipazum.com` |
 
 사용자 웹에는 `NEXT_PUBLIC_PARTNERS_URL`(공인중개사 웹), `ADMIN_URL`(운영 웹)을 넣는다. 예전 `/agent`·`/partners`·`/admin` 주소를 그쪽으로 보낸다.
 
