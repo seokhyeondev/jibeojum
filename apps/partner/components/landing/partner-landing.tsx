@@ -1,5 +1,6 @@
-import { BellRing, Building2, Check, FileCheck2, MapPin, ShieldCheck, X } from "lucide-react";
+import { BellRing, Check, FileCheck2, MapPin, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
+import { LogoMark } from "@/components/common/logo-mark";
 import { SiteFooter } from "@/components/common/site-footer";
 import { SITE, WEB_URL } from "@/lib/site";
 
@@ -24,7 +25,7 @@ export function PartnerLanding() {
       <header className="lp-top">
         <Link href="/partners" className="lp-brand">
           <i>
-            <Building2 aria-hidden />
+            <LogoMark />
           </i>
           {SITE.name} <span>공인중개사</span>
         </Link>

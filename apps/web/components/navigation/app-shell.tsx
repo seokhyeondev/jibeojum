@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { LoginResultToast, LoginSheet, useMe } from "@/components/auth/kakao-login";
+import { LogoMark } from "@/components/common/logo-mark";
 import { NativeBridge } from "@/components/native/native-bridge";
 import { RequestSync } from "@/components/providers/request-sync";
 import { Toaster } from "@/components/ui/sonner";
@@ -41,7 +42,7 @@ function UserShell({ pathname, children }: { pathname: string; children: ReactNo
       <header className="top">
         <Link className="brand" href="/">
           <i>
-            <Home size={18} />
+            <LogoMark />
           </i>
           집어줌
         </Link>

@@ -16,6 +16,9 @@ importers:
       '@zipazum/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@zipazum/styles':
+        specifier: workspace:*
+        version: link:../../packages/styles
       clsx:
         specifier: 2.1.1
         version: 2.1.1
@@ -193,6 +196,9 @@ importers:
       '@zipazum/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@zipazum/styles':
+        specifier: workspace:*
+        version: link:../../packages/styles
       clsx:
         specifier: 2.1.1
         version: 2.1.1
@@ -278,6 +284,9 @@ importers:
       '@zipazum/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@zipazum/styles':
+        specifier: workspace:*
+        version: link:../../packages/styles
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -388,6 +397,8 @@ importers:
       vitest:
         specifier: ^5.0.3
         version: 5.0.3(@types/node@22.19.19)(vite@8.3.2(@types/node@22.19.19)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/styles: {}
 
 packages:
 

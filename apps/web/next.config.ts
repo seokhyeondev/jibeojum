@@ -27,8 +27,6 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${API_URL}/api/:path*` },
-      // 브라우저가 기본으로 찾는 /favicon.ico를 SVG 아이콘으로 돌린다.
-      { source: "/favicon.ico", destination: "/favicon.svg" },
     ];
   },
 };

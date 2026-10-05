@@ -1,0 +1,6 @@
+{
+  "name": "@zipazum/styles",
+  "version": "0.1.0",
+  "private": true,
+  "description": "집어줌 공용 CSS (사용자 웹·공인중개사 웹·운영 웹)"
+}

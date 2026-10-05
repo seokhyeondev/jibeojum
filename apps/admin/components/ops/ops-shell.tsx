@@ -1,10 +1,11 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { LogoMark } from "@/components/common/logo-mark";
 import { adminApi } from "@/lib/api/ops";
 
 export type OpsKind = "admin";
@@ -36,7 +37,7 @@ export function OpsShell({ kind, children, signedIn = true }: { kind: OpsKind; c
       <header className="ops-top">
         <Link href={`/${kind}`} className="ops-brand">
           <i>
-            <Building2 aria-hidden />
+            <LogoMark size={18} />
           </i>
           집어줌 <span>{TITLE[kind]}</span>
         </Link>

@@ -2,13 +2,19 @@ import type { Metadata, Viewport } from "next";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-import "./ops-extra.css";
+import "@zipazum/styles/ops.css";
 
 export const metadata: Metadata = {
   title: "집어줌 운영",
   description: "집어줌 내부 운영 웹",
   robots: { index: false, follow: false },
-  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "48x48" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

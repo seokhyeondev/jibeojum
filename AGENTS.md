@@ -22,6 +22,7 @@
 - `apps/mobile/` Capacitor 앱 (사용자 웹만 감싼다)
 - `apps/api/src/` Nest 모듈: `requests`, `listings`(제안), `session`, `prisma`, `common`(오류 형식, zod 파이프)
 - `apps/api/prisma/` 스키마, 마이그레이션, 시드
+- `packages/styles/` 공용 CSS: `base.css`(토큰·기본·사용자 화면), `landing.css`(랜딩·푸터), `ops.css`(공인중개사·운영 화면). 각 앱 `app/globals.css`는 Tailwind 진입점만 둔다
 - `packages/shared/src/` 타입, `request-schema`(검증), `recommend`(추천 점수), `format`, `options`, `mock-listings`
 
 ## 검증 명령

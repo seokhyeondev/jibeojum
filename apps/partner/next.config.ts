@@ -11,7 +11,6 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${API_URL}/api/:path*` },
-      { source: "/favicon.ico", destination: "/favicon.svg" },
     ];
   },
 };

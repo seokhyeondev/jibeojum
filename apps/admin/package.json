@@ -13,6 +13,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
     "@zipazum/shared": "workspace:*",
+    "@zipazum/styles": "workspace:*",
     "clsx": "2.1.1",
     "lucide-react": "^1.31.0",
     "next": "16.3.4",
