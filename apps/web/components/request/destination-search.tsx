@@ -11,6 +11,9 @@ import { fetchPlaces } from "@/lib/api/client";
 interface Props {
   value: Place;
   onChange: (place: Place) => void;
+  /** 입력칸 id (label htmlFor와 맞춘다) */
+  id?: string;
+  placeholder?: string;
 }
 
 const MIN_QUERY = 2;
@@ -20,7 +23,7 @@ const DEBOUNCE_MS = 250;
  * 출근지 검색 입력. 2글자부터 회사·빌딩·역·주소 후보를 보여주고, 고르면 좌표까지 저장한다.
  * 목록에서 골라야 다음 단계로 갈 수 있다 (출근 경로를 좌표로 계산한다).
  */
-export function DestinationSearch({ value, onChange }: Props) {
+export function DestinationSearch({ value, onChange, id = "destination", placeholder = "회사·빌딩 이름, 역, 도로명 주소" }: Props) {
   const listId = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -52,7 +55,7 @@ export function DestinationSearch({ value, onChange }: Props) {
       <div className="inputbox">
         <MapPin aria-hidden />
         <Input
-          id="destination"
+          id={id}
           role="combobox"
           aria-expanded={showList}
           aria-controls={listId}
@@ -83,7 +86,7 @@ export function DestinationSearch({ value, onChange }: Props) {
               setOpen(false);
             }
           }}
-          placeholder="회사·빌딩 이름, 역, 도로명 주소"
+          placeholder={placeholder}
           autoComplete="off"
         />
         {isFetching ? <Loader2 className="spin" aria-hidden /> : selected && isInServiceArea(value) ? <Check aria-hidden /> : <Search aria-hidden />}

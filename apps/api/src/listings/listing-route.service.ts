@@ -37,28 +37,45 @@ export class ListingRouteService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async forUser(userId: string, listingId: string): Promise<CommuteRoute | null> {
+  /** who: 요청한 사람(me) 또는 같이 사는 사람(partner) 출근지까지 */
+  async forUser(userId: string, listingId: string, who: "me" | "partner" = "me"): Promise<CommuteRoute | null> {
     const proposal = await this.prisma.proposal.findFirst({
       where: { listingId, request: { userId }, status: { not: "hidden" } },
       orderBy: { createdAt: "asc" },
       select: {
         id: true,
         commute: true,
+        partnerCommute: true,
         listing: { select: { latitude: true, longitude: true } },
-        request: { select: { destinationLatitude: true, destinationLongitude: true, areaRecommendation: { select: { result: true } } } },
+        request: {
+          select: {
+            destinationLatitude: true,
+            destinationLongitude: true,
+            partnerDestinationLatitude: true,
+            partnerDestinationLongitude: true,
+            areaRecommendation: { select: { result: true } },
+          },
+        },
       },
     });
     if (!proposal) return null;
     const { latitude, longitude } = proposal.listing;
+    const r = proposal.request;
     const destination =
-      proposal.request.destinationLatitude !== null && proposal.request.destinationLongitude !== null
-        ? { latitude: proposal.request.destinationLatitude, longitude: proposal.request.destinationLongitude }
-        : ((proposal.request.areaRecommendation?.result as AreaRecommendationResult | null)?.destination ?? null);
+      who === "partner"
+        ? r.partnerDestinationLatitude !== null && r.partnerDestinationLongitude !== null
+          ? { latitude: r.partnerDestinationLatitude, longitude: r.partnerDestinationLongitude }
+          : null
+        : r.destinationLatitude !== null && r.destinationLongitude !== null
+          ? { latitude: r.destinationLatitude, longitude: r.destinationLongitude }
+          : ((r.areaRecommendation?.result as AreaRecommendationResult | null)?.destination ?? null);
     if (!destination || latitude === null || longitude === null) return null;
 
     const route = await this.cached(latitude, longitude, destination.latitude, destination.longitude);
-    if (route && (proposal.commute as unknown as CommuteSummary | null)?.provider !== "tmap") {
-      await this.prisma.proposal.update({ where: { id: proposal.id }, data: { commute: summaryOfRoute(route) as unknown as Prisma.InputJsonValue } });
+    const current = (who === "partner" ? proposal.partnerCommute : proposal.commute) as unknown as CommuteSummary | null;
+    if (route && current?.provider !== "tmap") {
+      const summary = summaryOfRoute(route) as unknown as Prisma.InputJsonValue;
+      await this.prisma.proposal.update({ where: { id: proposal.id }, data: who === "partner" ? { partnerCommute: summary } : { commute: summary } });
     }
     return route;
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AreaCriteria, AreaRecommendation, ZoneTypeStats } from "@zipazum/shared";
-import { budgetFitOf, candidateRadiusKm, classifyMinutes, estimateCutoff, matchTypes, rankAreas } from "../src/areas/area-recommend.js";
+import { budgetFitOf, candidateRadiusKm, classifyMinutes, estimateCutoff, matchTypes, rankAreas, rankPairAreas } from "../src/areas/area-recommend.js";
 import { mergePlaces, parseNaverAddresses, parseNaverLocal, parseVworldPlaces } from "../src/places/place-search.js";
 
 const stats = (count: number, dep: number | null, rent: number | null, jeonse: number | null): ZoneTypeStats => ({
@@ -76,6 +76,15 @@ describe("통근 분류와 후보 범위", () => {
       ({ zoneId: id, residentialScore: 1, commute: { fit, bestMinutes: best, noTransferMinutes: noTransfer } }) as AreaRecommendation;
     const ranked = rankAreas([area("nt", "no_transfer_extra", 45, 48), area("w2", "within", 40, null), area("w1", "within", 25, null)]);
     expect(ranked.map((a) => a.zoneId)).toEqual(["w1", "w2", "nt"]);
+  });
+
+  it("같이 사는 사람이 있으면 더 오래 걸리는 사람 기준 → 합계 → 점수", () => {
+    const c = (best: number) => ({ fit: "within" as const, bestMinutes: best, noTransferMinutes: null });
+    const pair = (id: string, mine: number, partner: number, score = 1) =>
+      ({ zoneId: id, residentialScore: score, commute: c(mine), partnerCommute: c(partner) }) as AreaRecommendation;
+    // 10+50(합 60)보다 30+30(합 60)이, 35+30보다 30+30이 앞
+    const ranked = rankPairAreas([pair("lopsided", 10, 50), pair("even", 30, 30), pair("evenish", 35, 30), pair("even-high", 30, 30, 9)]);
+    expect(ranked.map((a) => a.zoneId)).toEqual(["even-high", "even", "evenish", "lopsided"]);
   });
 });
 

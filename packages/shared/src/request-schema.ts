@@ -23,9 +23,13 @@ const placeExtras = {
   longitude: z.number().min(124).max(132).nullable().optional(),
 };
 
+const maxCommuteMinutes = z.union([z.literal(20), z.literal(30), z.literal(45), z.literal(60), z.literal(90), z.literal(120)]);
+
 const draftShape = {
   commuteDestination: z.object({ label: z.string(), ...placeExtras }),
-  maxCommuteMinutes: z.union([z.literal(20), z.literal(30), z.literal(45), z.literal(60), z.literal(90), z.literal(120)]),
+  maxCommuteMinutes,
+  // 예전에 저장된 초안에는 없으므로 기본값을 둔다
+  partner: z.object({ destination: z.object({ label: z.string(), ...placeExtras }), maxCommuteMinutes }).nullable().default(null),
   noTransferExtraMinutes: z.union([z.literal(0), z.literal(10), z.literal(20)]),
   transactionPreference: z.enum(["rent", "jeonse", "both"]),
   budgetFlexibility: z.enum(["fixed", "negotiable", "consultation"]),
@@ -70,6 +74,7 @@ export const housingRequestSchema: z.ZodType<HousingRequest, z.ZodTypeDef, unkno
   moveInDate: isoDate,
   status: z.enum(["submitted", "matching", "proposed", "closed"]),
   submittedAt: z.string(),
+  matching: z.object({ state: z.enum(["checking", "found", "none"]), reason: z.string().nullable() }).optional(),
 });
 
 export const REQUEST_STEP_COUNT = 5;
@@ -82,7 +87,12 @@ export function validateStep(draft: RequestDraft, step: number): string | null {
       const { label, latitude, longitude } = draft.commuteDestination;
       if (label.trim().length < 2) return "출근지를 검색해주세요.";
       if (latitude == null || longitude == null) return "검색 목록에서 출근지를 골라주세요.";
-      return isInServiceArea(draft.commuteDestination) ? null : SERVICE_AREA_MESSAGE;
+      if (!isInServiceArea(draft.commuteDestination)) return SERVICE_AREA_MESSAGE;
+      const partner = draft.partner?.destination;
+      if (!partner) return null;
+      if (partner.label.trim().length < 2) return "같이 사는 분 출근지를 검색해주세요.";
+      if (partner.latitude == null || partner.longitude == null) return "같이 사는 분 출근지도 검색 목록에서 골라주세요.";
+      return isInServiceArea(partner) ? null : SERVICE_AREA_MESSAGE;
     }
     case 2:
       if (wantsRent(draft.transactionPreference)) {
@@ -132,7 +142,11 @@ const optionalManwon = (max: number) => z.number().int().min(0).max(max).nullabl
 /** 요청 제출 입력. 브라우저와 API가 같은 규칙으로 검증한다. */
 const requestInputShape = z.object({
   commuteDestination: z.object({ label: z.string().trim().min(2).max(100), ...placeExtras }),
-  maxCommuteMinutes: draftShape.maxCommuteMinutes,
+  maxCommuteMinutes,
+  partner: z
+    .object({ destination: z.object({ label: z.string().trim().min(2).max(100), ...placeExtras }), maxCommuteMinutes })
+    .nullable()
+    .default(null),
   noTransferExtraMinutes: draftShape.noTransferExtraMinutes,
   transactionPreference: draftShape.transactionPreference,
   depositMax: optionalManwon(MAX_DEPOSIT),

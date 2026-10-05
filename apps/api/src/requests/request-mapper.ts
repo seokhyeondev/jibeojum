@@ -1,4 +1,4 @@
-import { housingRequestSchema, type HousingRequest, type RequestInput } from "@zipazum/shared";
+import { housingRequestSchema, requestMatchingOf, type AreaRecommendationResult, type HousingRequest, type RequestInput } from "@zipazum/shared";
 import type { HousingRequest as HousingRequestRow, Prisma } from "../generated/prisma/client.js";
 
 /** "2026-10-25" ↔ DATE 컬럼. 시간대 영향을 받지 않게 UTC 자정으로 다룬다. */
@@ -12,6 +12,11 @@ export function toRequestColumns(input: RequestInput) {
     destinationLatitude: input.commuteDestination.latitude ?? null,
     destinationLongitude: input.commuteDestination.longitude ?? null,
     maxCommuteMinutes: input.maxCommuteMinutes,
+    partnerDestinationLabel: input.partner?.destination.label ?? null,
+    partnerDestinationAddress: input.partner?.destination.address ?? null,
+    partnerDestinationLatitude: input.partner?.destination.latitude ?? null,
+    partnerDestinationLongitude: input.partner?.destination.longitude ?? null,
+    partnerMaxCommuteMinutes: input.partner?.maxCommuteMinutes ?? null,
     noTransferExtraMinutes: input.noTransferExtraMinutes,
     transactionPreference: input.transactionPreference,
     depositMax: input.depositMax,
@@ -45,6 +50,18 @@ export function toHousingRequest(row: HousingRequestRow): HousingRequest {
       longitude: row.destinationLongitude,
     },
     maxCommuteMinutes: row.maxCommuteMinutes,
+    partner:
+      row.partnerDestinationLabel && row.partnerMaxCommuteMinutes
+        ? {
+            destination: {
+              label: row.partnerDestinationLabel,
+              address: row.partnerDestinationAddress,
+              latitude: row.partnerDestinationLatitude,
+              longitude: row.partnerDestinationLongitude,
+            },
+            maxCommuteMinutes: row.partnerMaxCommuteMinutes,
+          }
+        : null,
     noTransferExtraMinutes: row.noTransferExtraMinutes,
     transactionPreference: row.transactionPreference,
     depositMax: row.depositMax,
@@ -65,4 +82,10 @@ export function toHousingRequest(row: HousingRequestRow): HousingRequest {
     status: row.status,
     submittedAt: row.submittedAt.toISOString(),
   });
+}
+
+/** 사용자 화면용: 조건에 맞는 동네를 찾았는지까지 붙인다 */
+export function withMatching(row: HousingRequestRow & { areaRecommendation: { status: string; result: unknown } | null }): HousingRequest {
+  const area = row.areaRecommendation ? { status: row.areaRecommendation.status, result: row.areaRecommendation.result as AreaRecommendationResult | null } : null;
+  return { ...toHousingRequest(row), matching: requestMatchingOf(area) };
 }

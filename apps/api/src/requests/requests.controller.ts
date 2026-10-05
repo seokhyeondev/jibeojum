@@ -15,6 +15,7 @@ type CreateBody = RequestInput & { clientKey: string };
 /** 서비스 지역(서울·경기·인천) 밖 출근지는 받지 않는다 */
 function assertServiceArea(input: RequestInput) {
   if (!isInServiceArea(input.commuteDestination)) throw new ApiException(400, "invalid_input", SERVICE_AREA_MESSAGE);
+  if (input.partner && !isInServiceArea(input.partner.destination)) throw new ApiException(400, "invalid_input", SERVICE_AREA_MESSAGE);
 }
 
 @Controller("requests")

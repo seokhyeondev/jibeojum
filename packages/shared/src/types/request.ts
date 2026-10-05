@@ -56,10 +56,18 @@ export interface Place {
   longitude?: number | null;
 }
 
+/** 같이 사는 사람의 출근지와 최대 통근시간 (선택) */
+export interface PartnerCommute {
+  destination: Place;
+  maxCommuteMinutes: MaxCommuteMinutes;
+}
+
 /** 5단계 입력 흐름 전체를 담는 작성 중 요청 */
 export interface RequestDraft {
   commuteDestination: Place;
   maxCommuteMinutes: MaxCommuteMinutes;
+  /** 같이 사는 사람 출근지. 없으면 null (두 사람 모두 갈 수 있는 동네를 찾는다) */
+  partner: PartnerCommute | null;
   noTransferExtraMinutes: NoTransferExtraMinutes;
   transactionPreference: TransactionPreference;
   /** 월세 예산. 만원 단위, 입력 전이거나 전세만 찾으면 null */
@@ -85,9 +93,17 @@ export interface RequestDraft {
 
 export type RequestStatus = "submitted" | "matching" | "proposed" | "closed";
 
+/** 조건에 맞는 동네를 찾았는지. checking: 계산 중, found: 찾음, none: 못 찾음 (reason에 이유) */
+export interface RequestMatching {
+  state: "checking" | "found" | "none";
+  reason: string | null;
+}
+
 /** 제출된 요청. 서버 도입 전에는 로컬에만 저장된다. */
 export interface HousingRequest extends Omit<RequestDraft, "privacyAgreed"> {
   id: string;
   status: RequestStatus;
   submittedAt: string;
+  /** 내 요청 목록·상세 응답에만 있다 */
+  matching?: RequestMatching;
 }

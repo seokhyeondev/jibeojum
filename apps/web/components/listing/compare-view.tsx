@@ -53,6 +53,9 @@ export function CompareView() {
     ["가격", formatPrice],
     ["출근시간", (x) => `${destination} ${x.commute.totalMinutes}분`],
     ["환승", (x) => formatTransfers(x.commute.transferCount)],
+    ...(criteria.partner
+      ? ([["같이 사는 분", (x) => (x.partnerCommute ? `${x.partnerCommute.totalMinutes}분 · ${formatTransfers(x.partnerCommute.transferCount)}` : "-")]] as [string, (listing: Listing) => string][])
+      : []),
     ["면적", (x) => `${x.exclusiveAreaM2}㎡`],
     ["층수", formatFloor],
     ["건물", (x) => formatBuilding(x.builtYear, now)],

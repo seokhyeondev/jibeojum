@@ -50,6 +50,7 @@ function toProposedListing(row: ProposalRow): ProposedListing {
     description: l.description,
     images: l.images as unknown as ListingImage[],
     commute: row.commute as unknown as CommuteSummary,
+    partnerCommute: (row.partnerCommute as unknown as CommuteSummary | null) ?? null,
     verifiedAt: l.verifiedAt.toISOString(),
     status: l.status as Listing["status"],
   };

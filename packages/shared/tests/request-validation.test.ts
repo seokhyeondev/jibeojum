@@ -113,3 +113,16 @@ describe("요청 입력", () => {
     expect(requestDraftSchema.safeParse({ ...DEFAULT_DRAFT, housingTypes: ["원룸"] }).success).toBe(false);
   });
 });
+
+describe("같이 사는 사람 출근지", () => {
+  const GANGNAM = { label: "강남역", address: "서울 강남구 강남대로 396", latitude: 37.4979, longitude: 127.0276 };
+  const base = { ...DEFAULT_DRAFT, depositMax: 5000, monthlyRentMax: 130, commuteDestination: GANGNAM };
+  it("추가했으면 목록에서 골라야 하고 수도권이어야 한다", () => {
+    expect(validateStep({ ...base, partner: { destination: { label: "" }, maxCommuteMinutes: 60 } }, 1)).toBe("같이 사는 분 출근지를 검색해주세요.");
+    expect(validateStep({ ...base, partner: { destination: { label: "판교역" }, maxCommuteMinutes: 60 } }, 1)).toBe("같이 사는 분 출근지도 검색 목록에서 골라주세요.");
+    const pangyo = { label: "판교역", address: "경기도 성남시 분당구 판교역로 160", latitude: 37.3948, longitude: 127.1111 };
+    expect(validateStep({ ...base, partner: { destination: pangyo, maxCommuteMinutes: 45 } }, 1)).toBeNull();
+    expect(toRequestInput({ ...base, privacyAgreed: true, partner: { destination: pangyo, maxCommuteMinutes: 45 } })?.partner?.maxCommuteMinutes).toBe(45);
+    expect(toRequestInput({ ...base, privacyAgreed: true })?.partner).toBeNull();
+  });
+});

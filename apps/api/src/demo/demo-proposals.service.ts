@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import type { AreaRecommendation, AreaRecommendationResult, CommuteSummary, HousingRequest, HousingType, RequiredOptionId, SafetyOptionId } from "@zipazum/shared";
+import type { AreaCommute, AreaRecommendation, AreaRecommendationResult, CommuteSummary, HousingRequest, HousingType, RequiredOptionId, SafetyOptionId } from "@zipazum/shared";
 import { HOUSING_TYPE_CHOICES, PYEONG_M2, choiceLabel, fitsMonthlyBudget, wantsJeonse, wantsRent } from "@zipazum/shared";
 import { randomUUID } from "node:crypto";
 import { BUDGET_FLEX } from "../areas/area-recommend.js";
@@ -131,8 +131,11 @@ export class DemoProposalsService {
       const options = OPTIONS.filter((o) => (request.requiredOptions.includes(o) ? chance(0.75) : chance(0.35)));
       const security = SECURITY.filter((o) => (request.safetyOptions.includes(o as never) ? chance(0.75) : chance(0.3)));
       const direction = pick(DIRECTIONS);
-      const commute = this.commuteOf(area, station);
-      const building = tx.building_name?.replace(/\(.*?\)/g, "").replace(typeLabel, "").trim();
+      const commute = this.commuteOf(area, area.commute, station);
+      const partnerCommute = area.partnerCommute ? this.commuteOf(area, area.partnerCommute, station) : null;
+      const cleaned = tx.building_name?.replace(/\(.*?\)/g, "").replace(typeLabel, "").trim();
+      // 건물 이름이 동 이름과 같으면 ("양재동 양재동 12평") 빼고 쓴다
+      const building = cleaned && cleaned !== tx.umd_nm ? cleaned : null;
       const title = `${tx.umd_nm} ${building ? `${building} ` : ""}${pyeong}평 ${typeLabel}`.slice(0, 60);
       await db.listing.create({
         data: {
@@ -168,7 +171,15 @@ export class DemoProposalsService {
         },
       });
       await db.proposal.create({
-        data: { requestId, listingId, commute: commute as unknown as Prisma.InputJsonValue, rank: rank++, status: "proposed", agentNote: null },
+        data: {
+          requestId,
+          listingId,
+          commute: commute as unknown as Prisma.InputJsonValue,
+          ...(partnerCommute ? { partnerCommute: partnerCommute as unknown as Prisma.InputJsonValue } : {}),
+          rank: rank++,
+          status: "proposed",
+          agentNote: null,
+        },
       });
     }
     return { userId: row.userId, count: rank - 1 };
@@ -228,10 +239,10 @@ export class DemoProposalsService {
   }
 
   /** 생활권 대표값(도보 + 대중교통)을 매물 통근으로 쓴다 */
-  private commuteOf(area: AreaRecommendation, station: { name: string; walk: number } | null): CommuteSummary {
-    const total = area.commute.bestMinutes ?? 40;
-    const walk = area.commute.walkMinutes ?? station?.walk ?? 5;
-    const transfers = area.commute.bestTransferCount ?? 1;
+  private commuteOf(area: AreaRecommendation, c: AreaCommute, station: { name: string; walk: number } | null): CommuteSummary {
+    const total = c.bestMinutes ?? 40;
+    const walk = c.walkMinutes ?? station?.walk ?? 5;
+    const transfers = c.bestTransferCount ?? 1;
     const ride = Math.max(0, total - walk);
     return {
       totalMinutes: total,

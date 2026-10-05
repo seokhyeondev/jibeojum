@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { HousingRequest, RequestInput } from "@zipazum/shared";
 import { Prisma } from "../generated/prisma/client.js";
 import { PrismaService } from "../prisma/prisma.service.js";
-import { toHousingRequest, toRequestColumns } from "./request-mapper.js";
+import { withMatching, toHousingRequest, toRequestColumns } from "./request-mapper.js";
 
 
 @Injectable()
@@ -41,8 +41,9 @@ export class RequestsService {
       where: { userId },
       orderBy: { submittedAt: "desc" },
       take: 20,
+      include: { areaRecommendation: { select: { status: true, result: true } } },
     });
-    return rows.map(toHousingRequest);
+    return rows.map(withMatching);
   }
 
   async update(requestId: string, input: RequestInput): Promise<HousingRequest> {

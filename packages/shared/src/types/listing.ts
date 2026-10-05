@@ -44,6 +44,8 @@ export interface Listing {
   floorType: "normal" | FloorExclusion;
   /** 향 (모르면 null) */
   direction?: Direction | null;
+  /** 같이 사는 사람 출근지까지 통근 (요청에 있을 때만) */
+  partnerCommute?: CommuteSummary | null;
   /** 시범 운영용 예시 매물 (실거래를 바탕으로 만든 것. 문의·신고 불가) */
   sample?: boolean;
   builtYear: number;

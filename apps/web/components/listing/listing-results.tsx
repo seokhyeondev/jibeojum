@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import type { Recommendation } from "@zipazum/shared";
 import { fetchMyRequests } from "@/lib/api/client";
 import { useCompare, useFavorites, useSubmittedRequest } from "@/lib/store/app-store";
+import { useMyRequests } from "@/components/request/use-my-requests";
 import { ListingCard } from "./listing-card";
 import { useCriteria, useRecommendations } from "./use-recommendations";
 
@@ -58,6 +59,9 @@ export function ListingResults() {
 
 function Results() {
   const router = useRouter();
+  const [current] = useSubmittedRequest();
+  const currentId = current?.id;
+  const { data: mine } = useMyRequests(Boolean(currentId));
   const criteria = useCriteria();
   const { hasRequest, isPending, error, refetch, recommendations } = useRecommendations();
   const { favorites, toggle: toggleFavorite } = useFavorites();
@@ -93,15 +97,26 @@ function Results() {
     );
   }
   if (count === 0) {
+    const reason = mine?.find((r) => r.id === currentId)?.matching;
     return (
       <section className="results">
-        <EmptyState
-          icon={<SearchX />}
-          title="아직 도착한 매물이 없어요"
-          description="중개사가 확인 중이에요. 24시간 안에 제안이 도착하지 않으면 조건을 조금 완화해보세요."
-          actionLabel="조건 수정하기"
-          actionHref="/request?step=1"
-        />
+        {reason?.state === "none" ? (
+          <EmptyState
+            icon={<SearchX />}
+            title="조건에 맞는 동네를 찾지 못했어요"
+            description={reason.reason ?? "조건을 조금 넓혀보세요."}
+            actionLabel="내 요청에서 조건 수정하기"
+            actionHref="/requests"
+          />
+        ) : (
+          <EmptyState
+            icon={<SearchX />}
+            title="아직 도착한 매물이 없어요"
+            description="중개사가 확인 중이에요. 24시간 안에 제안이 도착하지 않으면 조건을 조금 완화해보세요."
+            actionLabel="조건 수정하기"
+            actionHref="/request?step=1"
+          />
+        )}
       </section>
     );
   }

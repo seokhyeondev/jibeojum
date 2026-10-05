@@ -8,9 +8,10 @@ import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/common/empty-state";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@zipazum/shared";
-import { requestConditionLabels, summarizeRequest, type HousingRequest } from "@zipazum/shared";
-import { cancelRequest, fetchMyRequests, fetchProposals } from "@/lib/api/client";
-import { useSubmittedRequest } from "@/lib/store/app-store";
+import { draftFromRequest, requestConditionLabels, summarizeRequest, type HousingRequest } from "@zipazum/shared";
+import { cancelRequest, fetchProposals } from "@/lib/api/client";
+import { useMyRequests } from "./use-my-requests";
+import { useDraft, useSubmittedRequest } from "@/lib/store/app-store";
 
 const STATUS_LABEL = {
   submitted: "접수됨",
@@ -25,7 +26,7 @@ const PROGRESS: Record<HousingRequest["status"], number> = { submitted: 25, matc
 export function MyRequests() {
   const [current] = useSubmittedRequest();
   // 요청은 여러 개일 수 있다. 서버 목록(최신순)을 보여주고, 카드를 누르면 그 요청의 매물로 간다
-  const { data: requests = current ? [current] : [] } = useQuery({ queryKey: ["my-requests"], queryFn: fetchMyRequests, retry: false });
+  const { data: requests = current ? [current] : [] } = useMyRequests();
   return (
     <section className="requests">
       <span className="eyebrow">MY REQUEST</span>
@@ -55,10 +56,19 @@ function RequestCard({ request, current }: { request: HousingRequest; current: b
   const { data: proposals } = useQuery({ queryKey: ["proposals", request.id], queryFn: () => fetchProposals(request.id), retry: false });
   const count = proposals?.length ?? 0;
   const progress = count > 0 ? 100 : PROGRESS[request.status];
+  const { reset } = useDraft();
+  // 조건에 맞는 동네를 못 찾았으면 진행 중으로 두지 않고 이유와 수정 버튼을 보여준다
+  const noMatch = !closed && count === 0 && request.matching?.state === "none";
+  const edit = () => {
+    reset(draftFromRequest(request));
+    router.push(`/request?step=1&edit=${request.id}`);
+  };
   return (
     <div className={["request-card", current && "current", closed && "closed"].filter(Boolean).join(" ")}>
       <header>
-        <span>{count > 0 && request.status !== "closed" ? STATUS_LABEL.proposed : STATUS_LABEL[request.status]}</span>
+        <span className={noMatch ? "warn" : undefined}>
+          {noMatch ? "맞는 동네 없음" : count > 0 && request.status !== "closed" ? STATUS_LABEL.proposed : STATUS_LABEL[request.status]}
+        </span>
         <small>{formatDateTime(request.submittedAt)} 접수</small>
       </header>
       <h2>{request.commuteDestination.label} 출근 · 맞춤 매물 요청</h2>
@@ -68,8 +78,9 @@ function RequestCard({ request, current }: { request: HousingRequest; current: b
           <i key={label}>{label}</i>
         ))}
       </div>
+      {noMatch && <p className="nomatch">{request.matching?.reason}</p>}
       <div
-        className={request.status === "closed" ? "small-progress closed" : "small-progress"}
+        className={request.status === "closed" || noMatch ? "small-progress closed" : "small-progress"}
         role="progressbar"
         aria-label="진행 상황"
         aria-valuemin={0}
@@ -82,16 +93,22 @@ function RequestCard({ request, current }: { request: HousingRequest; current: b
         <span>제안 도착</span>
         <b>{proposals ? `${count}개` : "-"}</b>
       </div>
-      <Button
-        type="button"
-        className="primary wide"
-        onClick={() => {
-          setCurrent(request);
-          router.push(`/listings?request=${request.id}`);
-        }}
-      >
-        제안 확인하기
-      </Button>
+      {noMatch ? (
+        <Button type="button" className="primary wide" onClick={edit}>
+          조건 수정하기
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          className="primary wide"
+          onClick={() => {
+            setCurrent(request);
+            router.push(`/listings?request=${request.id}`);
+          }}
+        >
+          제안 확인하기
+        </Button>
+      )}
       {!closed && (
         <button
           type="button"

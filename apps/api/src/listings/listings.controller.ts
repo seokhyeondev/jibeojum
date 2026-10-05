@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Param, Post, Query, Req } from "@nestjs/common";
 import { listingReactionSchema, listingReportSchema, type ListingReaction, type ListingReportInput } from "@zipazum/shared";
 import type { Request } from "express";
 import { ApiException, notFound } from "../common/api-exception.js";
@@ -33,11 +33,11 @@ export class ListingsController {
 
   /** 매물에서 출근지까지 상세 경로 (구간별 노선). 계산하지 못하면 route: null */
   @Get(":id/route")
-  async route(@Param("id", UuidParamPipe) id: string, @Req() req: Request) {
+  async route(@Param("id", UuidParamPipe) id: string, @Query("for") who: string | undefined, @Req() req: Request) {
     const user = await this.session.getUser(req);
     if (!user) throw notFound();
     if (!routeLimiter.allow(`user:${user.id}`)) throw new ApiException(429, "invalid_input", "잠시 후 다시 시도해주세요.");
-    return { route: await this.routes.forUser(user.id, id) };
+    return { route: await this.routes.forUser(user.id, id, who === "partner" ? "partner" : "me") };
   }
 
   /** 찜·문의 같은 사용자 반응 (처음 한 번만 기록) */

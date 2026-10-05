@@ -1,9 +1,13 @@
-import { fitsMonthlyBudget, type AreaBudgetFit, type AreaCommuteFit, type AreaCriteria, type AreaRecommendation, type BudgetFlexibility, type HousingType, type ZoneTypeStats } from "@zipazum/shared";
+import { fitsMonthlyBudget, type AreaBudgetFit, type AreaCommute, type AreaCommuteFit, type AreaCriteria, type AreaRecommendation, type BudgetFlexibility, type HousingType, type ZoneTypeStats } from "@zipazum/shared";
 
 /** 추천 계산 설정. measureLimit이 요청당 최대 TMAP 호출 수다. */
 export const AREA_SETTINGS = {
   /** 점수 상위 몇 곳을 경로 API로 실측할지 */
   measureLimit: 40,
+  /** 같이 사는 사람 출근지가 있으면 생활권마다 두 번 재므로 곳 수를 줄인다 (30곳 × 2명) */
+  pairMeasureLimit: 30,
+  /** 두 출근지가 이 거리 안이면 같은 곳으로 보고 한 번만 잰다 */
+  samePlaceKm: 1,
   /** 대중교통 직선 환산 속도(km/분). 허용 시간 × 이 값이 후보 반경 */
   straightKmPerMinute: 0.45,
   minRadiusKm: 5,
@@ -89,3 +93,18 @@ export function rankAreas(areas: AreaRecommendation[]): AreaRecommendation[] {
 }
 
 export const isFit = (fit: AreaCommuteFit) => fit === "within" || fit === "no_transfer_extra";
+
+/** 판정에 쓰는 시간: 환승 없는 여유로 통과했으면 환승 없는 경로 시간 */
+export const effectiveMinutes = (c: AreaCommute) => (c.fit === "no_transfer_extra" ? (c.noTransferMinutes ?? Infinity) : (c.bestMinutes ?? Infinity));
+
+/**
+ * 같이 사는 사람이 있을 때: 둘 중 더 오래 걸리는 사람 기준으로 짧은 순 → 두 사람 합계 → 주거 점수.
+ * 합계로만 줄 세우면 한 사람만 오래 걸리는 동네가 앞에 오기 때문이다.
+ */
+export function rankPairAreas(areas: AreaRecommendation[]): AreaRecommendation[] {
+  const pair = (a: AreaRecommendation) => [a.commute, a.partnerCommute ?? a.commute];
+  const worstFit = (a: AreaRecommendation) => Math.max(...pair(a).map((c) => FIT_ORDER[c.fit]));
+  const worst = (a: AreaRecommendation) => Math.max(...pair(a).map(effectiveMinutes));
+  const sum = (a: AreaRecommendation) => pair(a).reduce((n, c) => n + effectiveMinutes(c), 0);
+  return [...areas].sort((a, b) => worstFit(a) - worstFit(b) || worst(a) - worst(b) || sum(a) - sum(b) || b.residentialScore - a.residentialScore);
+}

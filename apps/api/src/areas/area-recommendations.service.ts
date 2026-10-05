@@ -1,6 +1,7 @@
 import { DemoProposalsService } from "../demo/demo-proposals.service.js";
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import type {
+  AreaCommute,
   AreaCriteria,
   AreaRecommendation,
   AreaRecommendationResult,
@@ -22,13 +23,50 @@ import {
   isFit,
   matchTypes,
   rankAreas,
+  rankPairAreas,
 } from "./area-recommend.js";
+import { haversineMeters } from "../residential/anchor-builder.js";
+
+type Destination = { label: string; latitude: number; longitude: number };
 
 export interface AreaRecommendationInput {
-  destination: { label: string; latitude: number; longitude: number };
+  destination: Destination;
   maxCommuteMinutes: number;
   noTransferExtraMinutes: number;
+  /** 같이 사는 사람 출근지 (있으면 두 사람 모두 갈 수 있는 곳만) */
+  partner?: { destination: Destination; maxCommuteMinutes: number } | null;
   criteria?: AreaCriteria | null;
+}
+
+interface Target {
+  destination: Destination;
+  maxCommuteMinutes: number;
+}
+
+const distanceKm = (a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) =>
+  haversineMeters(a.latitude, a.longitude, b.latitude, b.longitude) / 1000;
+
+/** 경로 결과 → 생활권 통근 대표값 (도보 + 대중교통) */
+function areaCommuteOf(
+  r: TransitRouteResult,
+  isEstimate: boolean,
+  walk: number,
+  kind: "station" | "bus",
+  maxCommuteMinutes: number,
+  noTransferExtraMinutes: number,
+): AreaCommute {
+  const best = r.best ? r.best.totalMinutes + walk : null;
+  const noTransfer = r.bestNoTransfer ? r.bestNoTransfer.totalMinutes + walk : null;
+  return {
+    bestMinutes: best,
+    walkMinutes: kind === "station" ? walk : null,
+    transitMinutes: r.best?.totalMinutes ?? null,
+    bestTransferCount: r.best?.transferCount ?? null,
+    noTransferMinutes: noTransfer,
+    fit: classifyMinutes(best, noTransfer, maxCommuteMinutes, noTransferExtraMinutes),
+    provider: isEstimate ? "estimate" : r.provider,
+    estimated: isEstimate,
+  };
 }
 
 interface ZoneCandidate {
@@ -97,10 +135,19 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
   async compute(input: AreaRecommendationInput): Promise<AreaRecommendationResult> {
     const { destination, maxCommuteMinutes, noTransferExtraMinutes } = input;
     const criteria = input.criteria ?? null;
-    const dest = { endX: destination.longitude, endY: destination.latitude };
+    const partner = input.partner ?? null;
+    // 두 출근지가 거의 같은 곳이면 같이 사는 사람 경로는 다시 재지 않고 내 결과를 쓴다
+    const samePlace = partner !== null && distanceKm(destination, partner.destination) <= AREA_SETTINGS.samePlaceKm;
+    const targets: Target[] = [
+      { destination, maxCommuteMinutes },
+      ...(partner ? [{ destination: partner.destination, maxCommuteMinutes: partner.maxCommuteMinutes }] : []),
+    ];
 
-    // 1) 반경 안 생활권
-    const inRadius = await this.zonesAround(destination, candidateRadiusKm(maxCommuteMinutes, noTransferExtraMinutes));
+    // 1) 반경 안 생활권. 같이 사는 사람이 있으면 두 사람 반경이 겹치는 곳만
+    const mine = await this.zonesAround(destination, candidateRadiusKm(maxCommuteMinutes, noTransferExtraMinutes));
+    const inRadius = partner
+      ? mine.filter((z) => distanceKm(z, partner.destination) <= candidateRadiusKm(partner.maxCommuteMinutes, noTransferExtraMinutes))
+      : mine;
 
     // 2) 유형·예산 조건
     const matched = inRadius.flatMap((zone) => {
@@ -108,47 +155,58 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
       return types.length ? [{ zone, types }] : [];
     });
 
-    // 3) 직선 추정으로 확실히 먼 곳 제외 (호출 없음)
-    const cutoff = estimateCutoff(maxCommuteMinutes, noTransferExtraMinutes);
+    // 3) 직선 추정으로 확실히 먼 곳 제외 (호출 없음). 한 사람이라도 확실히 멀면 뺀다
     const estimated = await Promise.all(
       matched.map(async (m) => {
         const origin = originOf(m.zone);
-        const route = await this.estimator.getRoutes({ startX: origin.longitude, startY: origin.latitude, ...dest });
-        return { ...m, origin, estimate: route };
+        const estimates = await Promise.all(
+          targets.map((t) => this.estimator.getRoutes({ startX: origin.longitude, startY: origin.latitude, endX: t.destination.longitude, endY: t.destination.latitude })),
+        );
+        return { ...m, origin, estimates };
       }),
     );
-    const plausible = estimated.filter((e) => (e.estimate.best?.totalMinutes ?? Infinity) + e.origin.walk <= cutoff);
+    const plausible = estimated.filter((e) =>
+      targets.every((t, i) => (e.estimates[i].best?.totalMinutes ?? Infinity) + e.origin.walk <= estimateCutoff(t.maxCommuteMinutes, noTransferExtraMinutes)),
+    );
 
-    // 4) 점수 상위만 실측, 나머지와 한도 초과 이후는 추정값
-    const ordered = [...plausible].sort((a, b) => b.zone.residentialScore - a.zone.residentialScore);
+    // 4) 상위만 실측, 나머지와 한도 초과 이후는 추정값.
+    //    혼자면 주거 점수 순, 같이 사는 사람이 있으면 둘 중 더 오래 걸리는 추정 시간이 짧은 순으로 잰다
+    const worstEstimate = (e: (typeof plausible)[number]) => Math.max(...e.estimates.map((r) => r.best?.totalMinutes ?? Infinity));
+    const ordered = [...plausible].sort((a, b) =>
+      partner ? worstEstimate(a) - worstEstimate(b) || b.zone.residentialScore - a.zone.residentialScore : b.zone.residentialScore - a.zone.residentialScore,
+    );
+    const limit = partner ? AREA_SETTINGS.pairMeasureLimit : AREA_SETTINGS.measureLimit;
     let quotaHit = false;
     let measured = 0;
     const areas: AreaRecommendation[] = [];
     for (const [index, item] of ordered.entries()) {
-      let route: TransitRouteResult | null = null;
-      if (index < AREA_SETTINGS.measureLimit && !quotaHit) {
-        try {
-          route = (
-            await this.routes.getRoutes({
-              originKey: item.origin.key,
-              originLat: item.origin.latitude,
-              originLng: item.origin.longitude,
-              destLat: destination.latitude,
-              destLng: destination.longitude,
-              dataDate: item.zone.sourceTo,
-            })
-          ).result;
-          measured++;
-        } catch (error) {
-          if (error instanceof TransitQuotaError) quotaHit = true;
-          else this.logger.warn(`route failed for ${item.zone.zoneKey}: ${error instanceof Error ? error.message : error}`);
+      const commutes: AreaCommute[] = [];
+      for (const [t, target] of targets.entries()) {
+        if (t === 1 && samePlace) {
+          commutes.push(commutes[0]);
+          continue;
         }
+        let route: TransitRouteResult | null = null;
+        if (index < limit && !quotaHit) {
+          try {
+            route = (
+              await this.routes.getRoutes({
+                originKey: item.origin.key,
+                originLat: item.origin.latitude,
+                originLng: item.origin.longitude,
+                destLat: target.destination.latitude,
+                destLng: target.destination.longitude,
+                dataDate: item.zone.sourceTo,
+              })
+            ).result;
+            measured++;
+          } catch (error) {
+            if (error instanceof TransitQuotaError) quotaHit = true;
+            else this.logger.warn(`route failed for ${item.zone.zoneKey}: ${error instanceof Error ? error.message : error}`);
+          }
+        }
+        commutes.push(areaCommuteOf(route ?? item.estimates[t], route === null, item.origin.walk, item.zone.kind, target.maxCommuteMinutes, noTransferExtraMinutes));
       }
-      const isEstimate = route === null;
-      const r = route ?? item.estimate;
-      const walk = item.origin.walk;
-      const best = r.best ? r.best.totalMinutes + walk : null;
-      const noTransfer = r.bestNoTransfer ? r.bestNoTransfer.totalMinutes + walk : null;
       const z = item.zone;
       areas.push({
         zoneId: z.id,
@@ -163,27 +221,21 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
         longitude: z.longitude,
         distanceKm: Math.round(z.distanceKm * 10) / 10,
         residentialScore: z.residentialScore,
-        commute: {
-          bestMinutes: best,
-          walkMinutes: z.kind === "station" ? walk : null,
-          transitMinutes: r.best?.totalMinutes ?? null,
-          bestTransferCount: r.best?.transferCount ?? null,
-          noTransferMinutes: noTransfer,
-          fit: classifyMinutes(best, noTransfer, maxCommuteMinutes, noTransferExtraMinutes),
-          provider: isEstimate ? "estimate" : r.provider,
-          estimated: isEstimate,
-        },
+        commute: commutes[0],
+        ...(partner ? { partnerCommute: commutes[1] } : {}),
         matchedTypes: item.types,
       });
     }
 
-    // 5) 통근시간까지 맞는 곳만
-    const fit = rankAreas(areas.filter((a) => isFit(a.commute.fit)));
-    const estimatedCount = areas.length - measured;
+    // 5) 통근시간까지 맞는 곳만 (같이 사는 사람이 있으면 두 사람 모두)
+    const passing = areas.filter((a) => isFit(a.commute.fit) && (!a.partnerCommute || isFit(a.partnerCommute.fit)));
+    const fit = partner ? rankPairAreas(passing) : rankAreas(passing);
+    const lookups = areas.length * targets.length - (samePlace ? areas.length : 0);
     return {
       destination,
       maxCommuteMinutes,
       noTransferExtraMinutes,
+      partner: partner ? { destination: partner.destination, maxCommuteMinutes: partner.maxCommuteMinutes } : null,
       criteria,
       provider: this.routes.providerName,
       computedAt: new Date().toISOString(),
@@ -192,15 +244,16 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
         matchedConditions: matched.length,
         afterEstimate: plausible.length,
         measured,
-        estimated: estimatedCount,
+        estimated: lookups - measured,
         fit: fit.length,
       },
       warnings: [
         ...(quotaHit ? ["경로 API 호출 한도를 초과했어요. 캐시에 없는 생활권은 직선거리 추정값입니다."] : []),
-        ...(!quotaHit && plausible.length > AREA_SETTINGS.measureLimit
-          ? [`실측은 점수 상위 ${AREA_SETTINGS.measureLimit}곳까지만 했어요. 나머지 ${plausible.length - AREA_SETTINGS.measureLimit}곳은 추정값입니다.`]
+        ...(!quotaHit && plausible.length > limit
+          ? [`실측은 상위 ${limit}곳까지만 했어요. 나머지 ${plausible.length - limit}곳은 추정값입니다.`]
           : []),
-        ...(inRadius.length === 0 ? ["주변에 생활권이 없어요. 이 지역 실거래 수집·지오코딩 후 pipeline:anchors, pipeline:zones가 필요합니다."] : []),
+        ...(partner && mine.length > 0 && inRadius.length === 0 ? ["두 출근지에서 모두 갈 수 있는 반경 안에 생활권이 없어요. 통근시간을 늘려보세요."] : []),
+        ...(mine.length === 0 ? ["주변에 생활권이 없어요. 이 지역 실거래 수집·지오코딩 후 pipeline:anchors, pipeline:zones가 필요합니다."] : []),
       ],
       areas: fit,
     };
@@ -255,9 +308,11 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
           : null;
       const place = chosen ?? (await this.places.search(request.destinationLabel, 1))[0];
       if (!place) throw new Error(`출근지를 찾지 못했어요: ${request.destinationLabel}`);
+      const partner = await this.partnerOf(request);
       const result = await this.compute({
         destination: { label: place.label, latitude: place.latitude, longitude: place.longitude },
         maxCommuteMinutes: request.maxCommuteMinutes,
+        partner,
         noTransferExtraMinutes: request.noTransferExtraMinutes,
         criteria: {
           housingTypes: request.housingTypes as HousingType[],
@@ -280,6 +335,22 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
       this.logger.warn(`request ${requestId} failed: ${message}`);
       await this.prisma.requestAreaRecommendation.update({ where: { requestId }, data: { status: "failed", error: message } });
     }
+  }
+
+  /** 같이 사는 사람 출근지. 좌표가 없으면 이름으로 찾는다 (못 찾으면 혼자 기준으로 계산) */
+  private async partnerOf(request: {
+    partnerDestinationLabel: string | null;
+    partnerDestinationLatitude: number | null;
+    partnerDestinationLongitude: number | null;
+    partnerMaxCommuteMinutes: number | null;
+  }): Promise<AreaRecommendationInput["partner"]> {
+    const label = request.partnerDestinationLabel;
+    if (!label || !request.partnerMaxCommuteMinutes) return null;
+    if (request.partnerDestinationLatitude !== null && request.partnerDestinationLongitude !== null) {
+      return { destination: { label, latitude: request.partnerDestinationLatitude, longitude: request.partnerDestinationLongitude }, maxCommuteMinutes: request.partnerMaxCommuteMinutes };
+    }
+    const [place] = await this.places.search(label, 1);
+    return place ? { destination: { label, latitude: place.latitude, longitude: place.longitude }, maxCommuteMinutes: request.partnerMaxCommuteMinutes } : null;
   }
 
   private async zonesAround(destination: { latitude: number; longitude: number }, radiusKm: number): Promise<ZoneCandidate[]> {

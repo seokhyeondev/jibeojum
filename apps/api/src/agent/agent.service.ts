@@ -9,6 +9,7 @@ import type {
   AgentSignupInput,
   AgentSummary,
   AreaRecommendationResult,
+  CommuteSummary,
   ProposedListing,
 } from "@zipazum/shared";
 import { requestConditionLabels, summarizeRequest } from "@zipazum/shared";
@@ -248,37 +249,14 @@ export class AgentService {
     const destination = await this.destinationOf(request);
     const listingId = randomUUID();
 
-    let route: TransitRouteResult | null = null;
-    let estimated = false;
-    if (destination) {
-      try {
-        route = (
-          await this.routes.getRoutes({
-            originKey: `listing:${listingId}`,
-            originLat: place.latitude,
-            originLng: place.longitude,
-            destLat: destination.latitude,
-            destLng: destination.longitude,
-            dataDate: new Date().toISOString().slice(0, 10),
-          })
-        ).result;
-      } catch (error) {
-        this.logger.warn(`commute for listing failed, using estimate: ${error instanceof Error ? error.message : error}`);
-      }
-      if (!route?.best) {
-        route = await this.estimator.getRoutes({ startX: place.longitude, startY: place.latitude, endX: destination.longitude, endY: destination.latitude });
-        estimated = true;
-      }
-    }
-    // 걸어갈 거리면 TMAP이 경로를 주지 않는다(경로 없음). 대중교통 추정 대신 도보 시간으로 둔다
-    const walkMeters = destination ? haversineMeters(place.latitude, place.longitude, destination.latitude, destination.longitude) : null;
-    const commute =
-      estimated && walkMeters !== null && walkMeters <= WALK_COMMUTE_MAX_M
-        ? walkingCommute(walkMinutes(walkMeters * 1.3)) // 직선거리 × 1.3 ≈ 실제 걷는 길
-        : route
-          ? toCommuteSummary(route, estimated)
-          : null;
+    const commute = destination ? await this.commuteTo(place, destination, `listing:${listingId}`) : null;
     if (!commute) throw new ApiException(400, "invalid_input", "출근지까지 경로를 계산하지 못했어요. 운영팀에 문의해주세요.");
+    // 같이 사는 사람 출근지까지도 계산한다 (못 하면 비워 둔다)
+    const partner =
+      request.partnerDestinationLatitude !== null && request.partnerDestinationLongitude !== null
+        ? { latitude: request.partnerDestinationLatitude, longitude: request.partnerDestinationLongitude }
+        : null;
+    const partnerCommute = partner ? await this.commuteTo(place, partner, `listing:${listingId}`) : null;
 
     await this.prisma.$transaction(async (tx) => {
       await tx.listing.create({
@@ -316,7 +294,7 @@ export class AgentService {
         },
       });
       await tx.proposal.create({
-        data: { requestId: request.id, listingId, commute: commute as unknown as Prisma.InputJsonValue, rank: 0, status: "proposed", agentNote: input.agentNote },
+        data: { requestId: request.id, listingId, commute: commute as unknown as Prisma.InputJsonValue, ...(partnerCommute ? { partnerCommute: partnerCommute as unknown as Prisma.InputJsonValue } : {}), rank: 0, status: "proposed", agentNote: input.agentNote },
       });
       await tx.requestAssignment.update({ where: { id: assignment.id }, data: { status: "proposed" } });
       // 운영팀이 연락했던 사무소면 연락 기록을 "매물 등록"으로 바꾼다
@@ -354,6 +332,40 @@ export class AgentService {
   }
 
   /** 사용자가 고른 출근지 좌표 → 추천 계산에 쓴 좌표 → 출근지 이름으로 다시 검색 */
+  /**
+   * 매물에서 출근지까지 통근. 경로 API → 안 되면 직선거리 추정.
+   * 걸어갈 거리면 TMAP이 경로를 주지 않으므로(경로 없음) 대중교통 추정 대신 도보 시간으로 둔다.
+   */
+  private async commuteTo(
+    place: { latitude: number; longitude: number },
+    destination: { latitude: number; longitude: number },
+    originKey: string,
+  ): Promise<CommuteSummary | null> {
+    let route: TransitRouteResult | null = null;
+    let estimated = false;
+    try {
+      route = (
+        await this.routes.getRoutes({
+          originKey,
+          originLat: place.latitude,
+          originLng: place.longitude,
+          destLat: destination.latitude,
+          destLng: destination.longitude,
+          dataDate: new Date().toISOString().slice(0, 10),
+        })
+      ).result;
+    } catch (error) {
+      this.logger.warn(`commute for listing failed, using estimate: ${error instanceof Error ? error.message : error}`);
+    }
+    if (!route?.best) {
+      route = await this.estimator.getRoutes({ startX: place.longitude, startY: place.latitude, endX: destination.longitude, endY: destination.latitude });
+      estimated = true;
+    }
+    const walkMeters = haversineMeters(place.latitude, place.longitude, destination.latitude, destination.longitude);
+    if (estimated && walkMeters <= WALK_COMMUTE_MAX_M) return walkingCommute(walkMinutes(walkMeters * 1.3)); // 직선거리 × 1.3 ≈ 실제 걷는 길
+    return toCommuteSummary(route, estimated);
+  }
+
   private async destinationOf(request: {
     destinationLabel: string;
     destinationLatitude: number | null;

@@ -913,3 +913,126 @@
   font-style: normal;
   font-weight: 800;
 }
+
+/* 같이 사는 사람 출근지 */
+.add-partner {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1.5px dashed var(--g-line);
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--gd);
+  font-size: 15px;
+  font-weight: 700;
+}
+.add-partner svg {
+  width: 18px;
+  height: 18px;
+}
+.partner-box {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+/* 폼 카드 바로 아래 label과 같은 모양 */
+.partner-box > label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.partner-box > label.mt {
+  margin-top: 24px;
+}
+.partner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.partner-head b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 800;
+}
+.partner-head b svg {
+  width: 20px;
+  height: 20px;
+  color: var(--g);
+}
+.partner-head button {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.partner-head button svg {
+  width: 15px;
+  height: 15px;
+}
+.partner-head button:hover {
+  background: var(--surface);
+}
+.partner-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 매물 상세: 나 / 같이 사는 분 경로 탭 */
+.route-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 16px 0 8px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.route-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.route-tabs button.on {
+  background: #fff;
+  color: var(--gd);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+}
+
+/* 조건에 맞는 동네를 못 찾았을 때 */
+.nomatch {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--warn-bg);
+  color: #7a5310;
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: left;
+}
+.request-card header span.warn {
+  background: var(--warn-bg);
+  color: #7a5310;
+}
+.success.warn {
+  background: var(--warn-bg);
+  color: #b07a12;
+}

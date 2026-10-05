@@ -34,6 +34,19 @@ export interface ZoneTypeStats {
   jeonseDepositMedian: number | null;
 }
 
+export interface AreaCommute {
+  /** 대표값 = 도보(대표 좌표→역) + 대중교통 */
+  bestMinutes: number | null;
+  walkMinutes: number | null;
+  transitMinutes: number | null;
+  bestTransferCount: number | null;
+  noTransferMinutes: number | null;
+  fit: AreaCommuteFit;
+  provider: string;
+  /** 경로 API를 쓰지 않고 직선거리로 추정한 값 */
+  estimated: boolean;
+}
+
 /** 추천 생활권 (역세권 도보 15분 또는 행정동 버스권) */
 export interface AreaRecommendation {
   zoneId: string;
@@ -50,18 +63,10 @@ export interface AreaRecommendation {
   longitude: number;
   distanceKm: number;
   residentialScore: number;
-  commute: {
-    /** 대표값 = 도보(대표 좌표→역) + 대중교통 */
-    bestMinutes: number | null;
-    walkMinutes: number | null;
-    transitMinutes: number | null;
-    bestTransferCount: number | null;
-    noTransferMinutes: number | null;
-    fit: AreaCommuteFit;
-    provider: string;
-    /** 경로 API를 쓰지 않고 직선거리로 추정한 값 */
-    estimated: boolean;
-  };
+  /** 요청한 사람의 출근지까지 */
+  commute: AreaCommute;
+  /** 같이 사는 사람 출근지까지 (요청에 있을 때만) */
+  partnerCommute?: AreaCommute | null;
   /** 조건에 맞은 유형과 그 시세 */
   matchedTypes: { type: HousingType; stats: ZoneTypeStats; budgetFit: AreaBudgetFit }[];
 }
@@ -80,6 +85,8 @@ export interface AreaRecommendationResult {
   destination: { label: string; latitude: number; longitude: number };
   maxCommuteMinutes: number;
   noTransferExtraMinutes: number;
+  /** 같이 사는 사람 출근지 (있을 때만) */
+  partner?: { destination: { label: string; latitude: number; longitude: number }; maxCommuteMinutes: number } | null;
   criteria: AreaCriteria | null;
   provider: string;
   computedAt: string;

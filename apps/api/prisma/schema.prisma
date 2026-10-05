@@ -162,47 +162,53 @@ model Agent {
 
 /// 사용자 매물 요청. 복수 선택 조건은 배열 컬럼으로 둔다.
 model HousingRequest {
-  id                     String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                 String                     @map("user_id") @db.Uuid
+  id                          String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                      String                     @map("user_id") @db.Uuid
   /// 같은 제출이 두 번 들어와도 한 건만 만들기 위한 클라이언트 키
-  clientKey              String                     @map("client_key")
-  destinationLabel       String                     @map("destination_label")
+  clientKey                   String                     @map("client_key")
+  destinationLabel            String                     @map("destination_label")
   /// 사용자가 출근지 검색에서 고른 장소 (직접 입력이면 null)
-  destinationAddress     String?                    @map("destination_address")
-  destinationLatitude    Float?                     @map("destination_latitude")
-  destinationLongitude   Float?                     @map("destination_longitude")
-  maxCommuteMinutes      Int                        @map("max_commute_minutes")
-  noTransferExtraMinutes Int                        @default(0) @map("no_transfer_extra_minutes")
-  transactionPreference  String                     @default("rent") @map("transaction_preference")
+  destinationAddress          String?                    @map("destination_address")
+  destinationLatitude         Float?                     @map("destination_latitude")
+  destinationLongitude        Float?                     @map("destination_longitude")
+  maxCommuteMinutes           Int                        @map("max_commute_minutes")
+  /// 같이 사는 사람 출근지 (선택). 있으면 두 사람 모두 갈 수 있는 동네를 찾는다
+  partnerDestinationLabel     String?                    @map("partner_destination_label")
+  partnerDestinationAddress   String?                    @map("partner_destination_address")
+  partnerDestinationLatitude  Float?                     @map("partner_destination_latitude")
+  partnerDestinationLongitude Float?                     @map("partner_destination_longitude")
+  partnerMaxCommuteMinutes    Int?                       @map("partner_max_commute_minutes")
+  noTransferExtraMinutes      Int                        @default(0) @map("no_transfer_extra_minutes")
+  transactionPreference       String                     @default("rent") @map("transaction_preference")
   /// 월세 예산(만원). 전세만 찾으면 null
-  depositMax             Int?                       @map("deposit_max")
-  monthlyRentMax         Int?                       @map("monthly_rent_max")
+  depositMax                  Int?                       @map("deposit_max")
+  monthlyRentMax              Int?                       @map("monthly_rent_max")
   /// 전세 예산(만원). 월세만 찾으면 null
-  jeonseMax              Int?                       @map("jeonse_max")
-  budgetFlexibility      String                     @map("budget_flexibility")
-  housingTypes           String[]                   @map("housing_types")
-  moveInDate             DateTime                   @map("move_in_date") @db.Date
-  moveInFlexibility      String                     @map("move_in_flexibility")
-  requiredOptions        String[]                   @map("required_options")
-  floorPreference        String                     @default("any") @map("floor_preference")
-  floorExclusions        String[]                   @map("floor_exclusions")
-  buildingAge            String                     @default("any") @map("building_age")
+  jeonseMax                   Int?                       @map("jeonse_max")
+  budgetFlexibility           String                     @map("budget_flexibility")
+  housingTypes                String[]                   @map("housing_types")
+  moveInDate                  DateTime                   @map("move_in_date") @db.Date
+  moveInFlexibility           String                     @map("move_in_flexibility")
+  requiredOptions             String[]                   @map("required_options")
+  floorPreference             String                     @default("any") @map("floor_preference")
+  floorExclusions             String[]                   @map("floor_exclusions")
+  buildingAge                 String                     @default("any") @map("building_age")
   /// 최소 넓이(평). 0이면 상관없음
-  minPyeong              Int                        @default(0) @map("min_pyeong")
-  safetyOptions          String[]                   @map("safety_options")
+  minPyeong                   Int                        @default(0) @map("min_pyeong")
+  safetyOptions               String[]                   @map("safety_options")
   /// 선호 방향 south | east | west | north
-  directions             String[]                   @default([])
-  infrastructure         String[]
-  verificationStatus     String                     @map("verification_status")
-  status                 String                     @default("matching")
-  submittedAt            DateTime                   @default(now()) @map("submitted_at") @db.Timestamptz(6)
-  updatedAt              DateTime                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  user                   User                       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "housing_requests_user_id_users_id_fk")
-  proposals              Proposal[]
-  areaRecommendation     RequestAreaRecommendation?
-  assignments            RequestAssignment[]
-  brokerContacts         BrokerContact[]
-  agentInvites           AgentInvite[]
+  directions                  String[]                   @default([])
+  infrastructure              String[]
+  verificationStatus          String                     @map("verification_status")
+  status                      String                     @default("matching")
+  submittedAt                 DateTime                   @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  updatedAt                   DateTime                   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user                        User                       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "housing_requests_user_id_users_id_fk")
+  proposals                   Proposal[]
+  areaRecommendation          RequestAreaRecommendation?
+  assignments                 RequestAssignment[]
+  brokerContacts              BrokerContact[]
+  agentInvites                AgentInvite[]
 
   @@unique([userId, clientKey], map: "housing_requests_user_client_key_uq")
   @@index([userId, submittedAt], map: "housing_requests_user_idx")
@@ -257,24 +263,26 @@ model Listing {
 
 /// 요청에 전달된 매물. 통근 정보는 요청의 출근지에 따라 달라서 여기 둔다.
 model Proposal {
-  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  requestId   String         @map("request_id") @db.Uuid
-  listingId   String         @map("listing_id") @db.Uuid
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId      String         @map("request_id") @db.Uuid
+  listingId      String         @map("listing_id") @db.Uuid
   /// CommuteSummary
-  commute     Json
-  rank        Int?
-  status      String         @default("proposed")
-  agentNote   String?        @map("agent_note")
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  commute        Json
+  /// 같이 사는 사람 출근지까지 통근 (CommuteSummary, 요청에 있을 때만)
+  partnerCommute Json?          @map("partner_commute")
+  rank           Int?
+  status         String         @default("proposed")
+  agentNote      String?        @map("agent_note")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   /// 사용자가 처음 연 시각 (24시간 미열람 환급, 열람률 계산에 쓴다)
-  viewedAt    DateTime?      @map("viewed_at") @db.Timestamptz(6)
+  viewedAt       DateTime?      @map("viewed_at") @db.Timestamptz(6)
   /// 사용자가 처음 찜한 시각
-  favoritedAt DateTime?      @map("favorited_at") @db.Timestamptz(6)
+  favoritedAt    DateTime?      @map("favorited_at") @db.Timestamptz(6)
   /// 사용자가 처음 문의한 시각
-  inquiredAt  DateTime?      @map("inquired_at") @db.Timestamptz(6)
-  listing     Listing        @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposals_listing_id_listings_id_fk")
-  chatThread  ChatThread?
-  request     HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "proposals_request_id_housing_requests_id_fk")
+  inquiredAt     DateTime?      @map("inquired_at") @db.Timestamptz(6)
+  listing        Listing        @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposals_listing_id_listings_id_fk")
+  chatThread     ChatThread?
+  request        HousingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "proposals_request_id_housing_requests_id_fk")
 
   @@unique([requestId, listingId], map: "proposals_request_listing_uq")
   @@index([requestId], map: "proposals_request_idx")

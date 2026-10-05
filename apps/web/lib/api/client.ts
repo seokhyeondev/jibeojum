@@ -60,8 +60,8 @@ export async function fetchListing(id: string): Promise<ProposedListing> {
 }
 
 /** 매물에서 출근지까지 상세 경로. 계산하지 못하면 null */
-export async function fetchListingRoute(id: string): Promise<CommuteRoute | null> {
-  const body = await apiRequest<{ route: CommuteRoute | null }>(`/api/listings/${id}/route`);
+export async function fetchListingRoute(id: string, who: "me" | "partner" = "me"): Promise<CommuteRoute | null> {
+  const body = await apiRequest<{ route: CommuteRoute | null }>(`/api/listings/${id}/route${who === "partner" ? "?for=partner" : ""}`);
   return body.route;
 }
 
@@ -69,6 +69,9 @@ export async function fetchListingRoute(id: string): Promise<CommuteRoute | null
 export function fetchMapConfig(): Promise<{ naverMapClientId: string | null }> {
   return apiRequest<{ naverMapClientId: string | null }>("/api/places/map-config");
 }
+
+/** 조건에 맞는 동네를 아직 계산 중인 요청이 있으면 다시 받을 간격 (ms) */
+export const MATCHING_POLL_MS = 5000;
 
 export async function fetchMyRequests(): Promise<HousingRequest[]> {
   const body = await apiRequest<{ requests: HousingRequest[] }>("/api/requests");

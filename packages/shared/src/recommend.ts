@@ -24,7 +24,8 @@ export type RecommendCriteria = Pick<
   | "safetyOptions"
   | "directions"
   | "infrastructure"
->;
+> &
+  Partial<Pick<RequestDraft, "partner">>;
 
 export type CommuteFit = "within" | "no_transfer_extra" | "over";
 
@@ -44,16 +45,21 @@ const WEIGHTS = { commute: 40, budget: 30, conditions: 20, freshness: 10 } as co
 /** 인프라는 도보 10분 이내일 때만 충족으로 본다. */
 const INFRA_WALK_LIMIT = 10;
 
-export function commuteFitOf(listing: Listing, criteria: RecommendCriteria): CommuteFit {
-  const { totalMinutes, transferCount } = listing.commute;
-  if (totalMinutes <= criteria.maxCommuteMinutes) return "within";
-  if (
-    transferCount === 0 &&
-    totalMinutes <= criteria.maxCommuteMinutes + criteria.noTransferExtraMinutes
-  ) {
-    return "no_transfer_extra";
-  }
+function fitOf(totalMinutes: number, transferCount: number, maxMinutes: number, extraMinutes: number): CommuteFit {
+  if (totalMinutes <= maxMinutes) return "within";
+  if (transferCount === 0 && totalMinutes <= maxMinutes + extraMinutes) return "no_transfer_extra";
   return "over";
+}
+
+const FIT_RANK: Record<CommuteFit, number> = { within: 0, no_transfer_extra: 1, over: 2 };
+
+/** 같이 사는 사람이 있으면 두 사람 중 더 나쁜 쪽 */
+export function commuteFitOf(listing: Listing, criteria: RecommendCriteria): CommuteFit {
+  const mine = fitOf(listing.commute.totalMinutes, listing.commute.transferCount, criteria.maxCommuteMinutes, criteria.noTransferExtraMinutes);
+  const p = criteria.partner && listing.partnerCommute;
+  if (!p) return mine;
+  const theirs = fitOf(p.totalMinutes, p.transferCount, criteria.partner!.maxCommuteMinutes, criteria.noTransferExtraMinutes);
+  return FIT_RANK[theirs] > FIT_RANK[mine] ? theirs : mine;
 }
 
 export function recommend<L extends Listing>(listing: L, criteria: RecommendCriteria, now: Date): Recommendation<L> {
@@ -64,17 +70,37 @@ export function recommend<L extends Listing>(listing: L, criteria: RecommendCrit
 
   // 통근 적합도: 허용시간 대비 짧을수록 가점, 환승 없는 여유 구간은 부분 점수
   const commuteFit = commuteFitOf(listing, criteria);
+  const mineFit = fitOf(totalMinutes, transferCount, criteria.maxCommuteMinutes, criteria.noTransferExtraMinutes);
   let commuteScore = 0;
-  if (commuteFit === "within") {
+  if (mineFit === "within") {
     commuteScore = WEIGHTS.commute * (0.6 + 0.4 * (1 - totalMinutes / criteria.maxCommuteMinutes));
     reasons.push(`${destination} ${totalMinutes}분`);
-  } else if (commuteFit === "no_transfer_extra") {
+  } else if (mineFit === "no_transfer_extra") {
     commuteScore = WEIGHTS.commute * 0.5;
     reasons.push(`환승 없이 ${totalMinutes}분`);
   } else {
     warnings.push(`통근 ${totalMinutes}분으로 희망 시간 초과`);
   }
-  if (commuteFit === "within" && transferCount === 0) reasons.push("환승 없음");
+  if (mineFit === "within" && transferCount === 0) reasons.push("환승 없음");
+
+  // 같이 사는 사람 출근: 두 사람 점수의 평균 (한 사람이라도 초과면 크게 깎인다)
+  const partner = criteria.partner;
+  const pc = listing.partnerCommute;
+  if (partner && pc) {
+    const label = partner.destination.label.trim() || "같이 사는 분 출근지";
+    const theirFit = fitOf(pc.totalMinutes, pc.transferCount, partner.maxCommuteMinutes, criteria.noTransferExtraMinutes);
+    let theirScore = 0;
+    if (theirFit === "within") {
+      theirScore = WEIGHTS.commute * (0.6 + 0.4 * (1 - pc.totalMinutes / partner.maxCommuteMinutes));
+      reasons.push(`${label} ${pc.totalMinutes}분`);
+    } else if (theirFit === "no_transfer_extra") {
+      theirScore = WEIGHTS.commute * 0.5;
+      reasons.push(`${label} 환승 없이 ${pc.totalMinutes}분`);
+    } else {
+      warnings.push(`같이 사는 분 통근 ${pc.totalMinutes}분으로 희망 시간 초과`);
+    }
+    commuteScore = (commuteScore + theirScore) / 2;
+  }
 
   // 예산 적합도: 매물의 거래 유형에 맞는 예산과 비교하고, 상한보다 여유가 있을수록 가점
   let budgetScore = 0;

@@ -53,6 +53,12 @@ export function ListingCard({ recommendation, rank, destination, favorite, onTog
             <TrainFront aria-hidden />
             {destination} {listing.commute.totalMinutes}분 · {formatTransfers(listing.commute.transferCount)}
           </span>
+          {listing.partnerCommute && (
+            <span>
+              <TrainFront aria-hidden />
+              같이 사는 분 {listing.partnerCommute.totalMinutes}분 · {formatTransfers(listing.partnerCommute.transferCount)}
+            </span>
+          )}
           <span>
             {listing.exclusiveAreaM2}㎡ · {formatFloor(listing)}
           </span>

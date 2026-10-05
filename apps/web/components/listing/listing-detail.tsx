@@ -39,14 +39,17 @@ export function ListingDetail({ id }: { id: string }) {
   const { favorites, toggle } = useFavorites();
   const [imageIndex, setImageIndex] = useState(0);
   const queryClient = useQueryClient();
+  // 같이 사는 사람 출근지가 있으면 경로를 탭으로 바꿔 본다
+  const [who, setWho] = useState<"me" | "partner">("me");
   // 상세에 들어오면 실제 경로(구간별)를 한 번 계산한다. 서버가 캐시하고, 추정 시간이던 제안은 실제 시간으로 바뀐다
   const { data: route, isPending: routePending } = useQuery({
-    queryKey: ["listing-route", id],
-    queryFn: () => fetchListingRoute(id),
+    queryKey: ["listing-route", id, who],
+    queryFn: () => fetchListingRoute(id, who),
     staleTime: Infinity,
     retry: false,
   });
-  const estimated = recommendations.find((item) => item.listing.id === id)?.listing.commute.provider !== "tmap";
+  const shown = recommendations.find((item) => item.listing.id === id)?.listing;
+  const estimated = (who === "partner" ? shown?.partnerCommute : shown?.commute)?.provider !== "tmap";
   useEffect(() => {
     // 카드의 통근 시간도 새 값으로 다시 받는다
     if (route && estimated) void queryClient.invalidateQueries({ queryKey: ["proposals"] });
@@ -87,6 +90,9 @@ export function ListingDetail({ id }: { id: string }) {
   const images = listingImages(listing.images);
   const image = images[imageIndex] ?? images[0];
   const { commute } = listing;
+  const partnerActive = who === "partner" && listing.partnerCommute;
+  const activeCommute = partnerActive ? listing.partnerCommute! : commute;
+  const activeLabel = partnerActive ? criteria.partner?.destination.label.trim() || "같이 사는 분 출근지" : destination;
   const imageCount = images.length;
   const nearby = [...listing.nearby].sort((x, y) => x.walkMinutes - y.walkMinutes);
 
@@ -157,21 +163,31 @@ export function ListingDetail({ id }: { id: string }) {
           <MapPin aria-hidden />
           {listing.address}
         </p>
+        {listing.partnerCommute && (
+          <div className="route-tabs" role="tablist" aria-label="누구의 출근 경로">
+            <button type="button" role="tab" aria-selected={who === "me"} className={who === "me" ? "on" : ""} onClick={() => setWho("me")}>
+              나 · {commute.totalMinutes}분
+            </button>
+            <button type="button" role="tab" aria-selected={who === "partner"} className={who === "partner" ? "on" : ""} onClick={() => setWho("partner")}>
+              같이 사는 분 · {listing.partnerCommute.totalMinutes}분
+            </button>
+          </div>
+        )}
         <div className="commute">
           <div>
             <TrainFront aria-hidden />
             <span>
-              <small>{destination}까지</small>
-              <b>{route?.totalMinutes ?? commute.totalMinutes}분</b>
+              <small>{activeLabel}까지</small>
+              <b>{route?.totalMinutes ?? activeCommute.totalMinutes}분</b>
             </span>
           </div>
           <p>
             {listing.station.name} 도보 {listing.station.walkMinutes}분
             <br />
-            {formatTransfers(route?.transferCount ?? commute.transferCount)}
+            {formatTransfers(route?.transferCount ?? activeCommute.transferCount)}
           </p>
         </div>
-        <RouteDetail commute={commute} route={route} loading={routePending} />
+        <RouteDetail commute={activeCommute} route={route} loading={routePending} />
         <div className="spec">
           {specs.map(([label, value]) => (
             <div key={label}>
