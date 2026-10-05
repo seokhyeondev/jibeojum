@@ -9,7 +9,9 @@ import {
 } from "../src/request-schema";
 import type { RequestDraft } from "../src/types/request";
 
-const draft = (patch: Partial<RequestDraft> = {}): RequestDraft => ({ ...DEFAULT_DRAFT, ...patch });
+// 기본 예산이 바뀌어도 샘플 매물(월세 130만원까지) 기준 테스트가 흔들리지 않게 고정한다
+const TEST_BUDGET = { depositMax: 5000, monthlyRentMax: 130 };
+const draft = (patch: Partial<RequestDraft> = {}): RequestDraft => ({ ...DEFAULT_DRAFT, ...TEST_BUDGET, ...patch });
 
 describe("단계별 검증", () => {
   it("출근지는 2자 이상이어야 한다 (A01)", () => {

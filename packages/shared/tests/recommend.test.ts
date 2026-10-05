@@ -3,8 +3,10 @@ import { mockListings } from "../src/mock-listings";
 import { commuteFitOf, rankListings, recommend, type RecommendCriteria } from "../src/recommend";
 import { DEFAULT_DRAFT } from "../src/defaults";
 
+// 기본 예산이 바뀌어도 샘플 매물(월세 130만원까지) 기준 테스트가 흔들리지 않게 고정한다
+const TEST_BUDGET = { depositMax: 5000, monthlyRentMax: 130 };
 const now = new Date("2026-10-05T09:00:00+09:00");
-const criteria = (patch: Partial<RecommendCriteria> = {}): RecommendCriteria => ({ ...DEFAULT_DRAFT, ...patch });
+const criteria = (patch: Partial<RecommendCriteria> = {}): RecommendCriteria => ({ ...DEFAULT_DRAFT, ...TEST_BUDGET, ...patch });
 const byId = (id: string) => {
   const listing = mockListings.find((item) => item.id === id);
   if (!listing) throw new Error(`no listing ${id}`);
