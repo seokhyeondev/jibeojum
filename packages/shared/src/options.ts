@@ -21,11 +21,26 @@ export interface Choice<T extends string | number> {
 }
 
 export const COMMUTE_CHOICES: Choice<MaxCommuteMinutes>[] = [
+  { value: 20, label: "20분" },
   { value: 30, label: "30분" },
+  { value: 45, label: "45분" },
   { value: 60, label: "60분" },
   { value: 90, label: "90분" },
-  { value: 120, label: "120분" },
 ];
+
+/** 예산 빠른 선택 (만원). 입력칸 아래 칩으로 보여준다 */
+export const BUDGET_PRESETS = {
+  deposit: [500, 1000, 2000, 3000, 5000],
+  monthlyRent: [50, 60, 70, 80, 100],
+  jeonse: [10000, 15000, 20000, 25000, 30000],
+} as const;
+
+/** 칩에 쓰는 짧은 금액: 500만, 2천, 1.5억 */
+export function shortManwon(value: number): string {
+  if (value >= 10000) return `${Number((value / 10000).toFixed(1))}억`;
+  if (value >= 1000 && value % 1000 === 0) return `${value / 1000}천`;
+  return `${value}만`;
+}
 
 export const NO_TRANSFER_EXTRA_CHOICES: Choice<NoTransferExtraMinutes>[] = [
   { value: 0, label: "아니요" },

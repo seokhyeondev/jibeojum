@@ -101,7 +101,7 @@
   font-size: 17px;
   font-weight: 800;
   text-decoration: none;
-  box-shadow: 0 8px 20px rgb(10 138 95 / 25%);
+  box-shadow: 0 8px 20px rgb(5 150 105 / 25%);
 }
 .lp-cta:hover {
   background: var(--gd);
@@ -697,4 +697,219 @@
   color: #7a5310;
   font-size: 13px;
   font-weight: 600;
+}
+
+/* 칩 5칸 (통근시간) */
+.choices.five {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.choices.five button {
+  padding: 0 4px;
+}
+
+/* 예산 빠른 선택 칩 */
+.money-presets {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.money-presets::-webkit-scrollbar {
+  display: none;
+}
+.money-presets button {
+  flex: 1 0 auto;
+  min-width: 52px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+.money-presets button.on {
+  border-color: var(--g);
+  background: var(--gs);
+  color: var(--gd);
+}
+
+/* 요청 완료: 다시 들어오는 방법 안내 */
+.return-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: left;
+}
+.return-note svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--g);
+}
+
+/* 랜딩 예시 카드: 사진 대신 출근시간 */
+.lp-card .lp-time {
+  width: 70px;
+  height: 64px;
+  flex: none;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  border-radius: 10px;
+  background: var(--gs);
+  color: var(--gd);
+  font-style: normal;
+}
+.lp-card .lp-time b {
+  overflow: visible;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+.lp-card .lp-time small {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* 누구를 위한 서비스인지: 체크 목록 */
+.lp-checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+.lp-checks li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.lp-checks svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 1px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--g);
+  color: #fff;
+  stroke-width: 3;
+}
+.lp-checks span {
+  display: grid;
+  gap: 2px;
+}
+.lp-checks b {
+  font-size: 15px;
+}
+.lp-checks small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Before / After */
+.lp-ba {
+  display: grid;
+  gap: 10px;
+}
+.lp-ba > div {
+  padding: 16px;
+  border-radius: 16px;
+}
+.lp-ba .before {
+  background: var(--surface);
+  color: var(--muted);
+}
+.lp-ba .after {
+  background: var(--gs);
+  color: var(--ink);
+  border: 1.5px solid var(--g-line);
+}
+.lp-ba span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.lp-ba .after span {
+  color: var(--gd);
+}
+.lp-ba ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.lp-ba li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.lp-ba li svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+}
+.lp-ba .before li {
+  text-decoration: line-through;
+  text-decoration-color: rgb(0 0 0 / 25%);
+}
+.lp-ba .before svg {
+  color: var(--faint);
+}
+.lp-ba .after svg {
+  color: var(--g);
+  stroke-width: 3;
+}
+.lp-flow {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.lp-flow li {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  word-break: keep-all;
+}
+.lp-flow em {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--g);
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
 }

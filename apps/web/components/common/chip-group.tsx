@@ -18,7 +18,7 @@ export function SingleChips<T extends string | number>({ label, choices, value, 
     <div
       role="radiogroup"
       aria-label={label}
-      className={layout === "wrap" ? "tags" : choices.length === 3 ? "choices three" : "choices"}
+      className={layout === "wrap" ? "tags" : choices.length === 3 ? "choices three" : choices.length === 5 ? "choices five" : "choices"}
     >
       {choices.map((choice) => (
         <button

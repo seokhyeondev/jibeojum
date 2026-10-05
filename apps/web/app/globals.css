@@ -4,10 +4,10 @@
 
 /* ===== 디자인 토큰 ===== */
 :root {
-  --g: #0a8a5f;
-  --gd: #066b49;
-  --gs: #e9f7f0;
-  --g-line: #bfe5d3;
+  --g: #059669;
+  --gd: #047857;
+  --gs: #ecfdf5;
+  --g-line: #a7f3d0;
   --ink: #0f1f1a;
   --ink-2: #3a4a45;
   --muted: #6f7f7a;
@@ -275,7 +275,7 @@ img {
   color: #fff !important;
   font-size: 16px !important;
   font-weight: 700 !important;
-  box-shadow: 0 6px 16px rgb(10 138 95 / 22%);
+  box-shadow: 0 6px 16px rgb(5 150 105 / 22%);
 }
 .primary:hover {
   background: var(--gd) !important;
@@ -536,7 +536,7 @@ img {
 .inputbox:focus-within,
 .money:focus-within {
   border-color: var(--g);
-  box-shadow: 0 0 0 4px rgb(10 138 95 / 10%);
+  box-shadow: 0 0 0 4px rgb(5 150 105 / 10%);
 }
 .inputbox input,
 .money input {
@@ -831,7 +831,7 @@ img {
   place-items: center;
   background: var(--g);
   color: #fff;
-  box-shadow: 0 12px 28px rgb(10 138 95 / 28%);
+  box-shadow: 0 12px 28px rgb(5 150 105 / 28%);
 }
 .success svg {
   width: 36px;
@@ -957,7 +957,7 @@ img {
 .timeline .active i {
   background: var(--gs);
   color: var(--g);
-  box-shadow: 0 0 0 4px rgb(10 138 95 / 10%);
+  box-shadow: 0 0 0 4px rgb(5 150 105 / 10%);
 }
 
 /* ===== 매물 목록 ===== */

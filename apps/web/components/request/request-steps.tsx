@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import {
   BUDGET_FLEXIBILITY_CHOICES,
   BUILDING_AGE_CHOICES,
+  BUDGET_PRESETS,
+  shortManwon,
   DIRECTION_CHOICES,
   MIN_PYEONG_CHOICES,
   pyeongToM2,
@@ -107,11 +109,14 @@ function MoneyField({
   label,
   value,
   onChange,
+  presets,
 }: {
   id: string;
   label: string;
   value: number | null;
   onChange: (value: number | null) => void;
+  /** 빠른 선택 금액 (만원) */
+  presets: readonly number[];
 }) {
   return (
     <div>
@@ -124,6 +129,13 @@ function MoneyField({
           onChange={(e) => onChange(parseManwon(e.target.value))}
         />
         <span>만원</span>
+      </div>
+      <div className="money-presets" role="group" aria-label={`${label} 빠른 선택`}>
+        {presets.map((amount) => (
+          <button type="button" key={amount} className={value === amount ? "on" : ""} aria-pressed={value === amount} onClick={() => onChange(amount)}>
+            {shortManwon(amount)}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -153,12 +165,14 @@ export function BudgetStep({ draft, update }: StepProps) {
             label="최대 보증금"
             value={draft.depositMax}
             onChange={(depositMax) => update({ depositMax })}
+            presets={BUDGET_PRESETS.deposit}
           />
           <MoneyField
             id="rent"
             label="최대 월세"
             value={draft.monthlyRentMax}
             onChange={(monthlyRentMax) => update({ monthlyRentMax })}
+            presets={BUDGET_PRESETS.monthlyRent}
           />
         </div>
       )}
@@ -170,6 +184,7 @@ export function BudgetStep({ draft, update }: StepProps) {
             label="최대 전세금"
             value={draft.jeonseMax}
             onChange={(jeonseMax) => update({ jeonseMax })}
+            presets={BUDGET_PRESETS.jeonse}
           />
         </div>
       )}

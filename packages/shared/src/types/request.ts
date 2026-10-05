@@ -1,6 +1,7 @@
 export type HousingType = "studio" | "officetel" | "two_room" | "apartment";
 
-export type MaxCommuteMinutes = 30 | 60 | 90 | 120;
+/** 120은 예전에 저장된 요청 호환용 (지금은 고를 수 없다) */
+export type MaxCommuteMinutes = 20 | 30 | 45 | 60 | 90 | 120;
 
 /** 환승 없이 갈 수 있으면 허용 통근시간에 더해 줄 여유 시간 */
 export type NoTransferExtraMinutes = 0 | 10 | 20;

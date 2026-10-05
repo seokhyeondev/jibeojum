@@ -59,3 +59,10 @@ describe("요청 요약", () => {
     expect(summarizeRequest({ ...base, transactionPreference: "both" })).toContain("월세 130만원 · 전세 2억 5,000만원");
   });
 });
+
+describe("예산 빠른 선택 표시", () => {
+  it("만·천·억 단위로 짧게", async () => {
+    const { shortManwon } = await import("../src/options");
+    expect([500, 1000, 2000, 1500, 10000, 15000, 25000].map(shortManwon)).toEqual(["500만", "1천", "2천", "1500만", "1억", "1.5억", "2.5억"]);
+  });
+});

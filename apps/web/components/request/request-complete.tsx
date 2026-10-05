@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ClipboardList, MapPin } from "lucide-react";
+import { BellRing, Check, ClipboardList, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/common/empty-state";
@@ -66,6 +66,15 @@ export function RequestComplete() {
         </button>
       </div>
       <RequestTimeline />
+      {/* 링크를 잃어버려도 다시 들어오는 방법을 알려준다 */}
+      <p className="return-note">
+        <BellRing aria-hidden />
+        <span>
+          매물이 도착하면 알림으로 알려드려요.
+          <br />
+          카카오로 로그인하면 언제든 다시 볼 수 있어요.
+        </span>
+      </p>
       <Button asChild className="primary wide">
         <Link href={`/listings?request=${request.id}`}>{proposals ? `도착한 매물 ${proposals.length}개 보기` : "도착한 매물 보기"}</Link>
       </Button>

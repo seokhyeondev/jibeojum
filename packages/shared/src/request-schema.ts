@@ -25,7 +25,7 @@ const placeExtras = {
 
 const draftShape = {
   commuteDestination: z.object({ label: z.string(), ...placeExtras }),
-  maxCommuteMinutes: z.union([z.literal(30), z.literal(60), z.literal(90), z.literal(120)]),
+  maxCommuteMinutes: z.union([z.literal(20), z.literal(30), z.literal(45), z.literal(60), z.literal(90), z.literal(120)]),
   noTransferExtraMinutes: z.union([z.literal(0), z.literal(10), z.literal(20)]),
   transactionPreference: z.enum(["rent", "jeonse", "both"]),
   budgetFlexibility: z.enum(["fixed", "negotiable", "consultation"]),

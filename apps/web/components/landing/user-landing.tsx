@@ -1,27 +1,21 @@
-import { BellRing, Building2, MapPinned, Search, ShieldCheck, TrainFront, Users } from "lucide-react";
-import Image from "next/image";
+import { BellRing, Building2, Check, TrainFront, X } from "lucide-react";
 import Link from "next/link";
 import { SiteFooter } from "@/components/common/site-footer";
 
 const START = "/request?step=1";
 
-const PAINS = [
-  { icon: <Search />, title: "허위·중복 매물이 너무 많아요", body: "연락해보면 이미 나간 집이거나, 같은 집이 여러 번 올라와 있어요." },
-  { icon: <TrainFront />, title: "출근시간은 내가 직접 계산", body: "매물마다 지도 앱을 열어 환승·도보 시간을 따로 찾아봐야 해요." },
-  { icon: <MapPinned />, title: "어느 동네가 맞는지 모르겠어요", body: "출근하기 편하면서 예산에 맞는 동네가 어디인지 하나하나 찾아봐야 해요." },
-];
+/** 직접 찾을 때 vs 집어줌으로 받을 때 */
+const BEFORE = ["허위·중복 매물 사이에서 진짜 매물 찾기", "매물마다 지도 앱으로 출근시간 따로 계산", "어느 동네가 맞는지 하나하나 비교"];
+const AFTER = ["동네 중개사가 확인한 매물만 받아요", "출근시간이 계산된 채로 도착해요", "출근하기 좋은 동네를 먼저 골라드려요"];
 
-const STEPS = [
-  { title: "출근지·예산 입력", body: "회사 위치, 최대 통근시간, 예산, 집 유형만 1분이면 끝나요." },
-  { title: "근처 중개사가 매물 확인", body: "출근하기 좋은 동네를 골라 그 동네 공인중개사가 조건에 맞는 실제 매물을 확인해요." },
-  { title: "알림으로 제안 도착", body: "도착한 매물을 통근시간과 함께 비교하고, 마음에 들면 바로 문의하세요." },
-];
+const FLOW = ["출근지·예산 1분 입력", "근처 중개사가 매물 확인", "알림으로 제안 도착"];
 
-const FEATURES = [
-  { icon: <TrainFront />, title: "실제 통근시간", body: "평일 아침 출근 시간 기준 대중교통 경로로 계산해요." },
-  { icon: <MapPinned />, title: "환승 없는 동네까지", body: "조금 더 걸려도 갈아타지 않는 동네를 같이 찾아드려요." },
-  { icon: <ShieldCheck />, title: "안심 조건", body: "여성 전용 건물, 공동현관 보안, CCTV 같은 조건도 골라요." },
-  { icon: <Users />, title: "중개사가 확인한 매물만", body: "이미 나간 매물은 신고할 수 있고, 확인되면 바로 내려요." },
+/** 누구를 위한 서비스인지: 아이콘 카드 대신 짧은 체크 목록 */
+const FOR_COMMUTERS = [
+  { title: "실제 통근시간", body: "평일 아침 8시 대중교통 경로 기준" },
+  { title: "환승 없는 동네까지", body: "조금 더 걸려도 갈아타지 않는 곳" },
+  { title: "안심 조건", body: "여성 전용·공동현관 보안·CCTV" },
+  { title: "확인된 매물만", body: "이미 나간 매물은 신고하면 바로 내려요" },
 ];
 
 const FAQ = [
@@ -50,7 +44,10 @@ export function UserLanding() {
         <div className="lp-preview" aria-label="제안 매물 예시">
           <span className="lp-tag">예시</span>
           <div className="lp-card">
-            <Image src="/room-1.png" alt="" width={112} height={84} />
+            <i className="lp-time" aria-hidden>
+              <b>14</b>
+              <small>분</small>
+            </i>
             <div>
               <b>역삼역 3분 채광 좋은 원룸</b>
               <strong>보증금 1,000 / 월 65</strong>
@@ -60,7 +57,10 @@ export function UserLanding() {
             </div>
           </div>
           <div className="lp-card dim">
-            <Image src="/room-2.png" alt="" width={112} height={84} />
+            <i className="lp-time" aria-hidden>
+              <b>19</b>
+              <small>분</small>
+            </i>
             <div>
               <b>선릉역 신축 오피스텔</b>
               <strong>보증금 2,000 / 월 70</strong>
@@ -76,14 +76,14 @@ export function UserLanding() {
       </section>
 
       <section className="lp-section">
-        <h2>집 구하기, 이게 제일 힘들죠</h2>
-        <ul className="lp-list">
-          {PAINS.map((p) => (
-            <li key={p.title}>
-              <i aria-hidden>{p.icon}</i>
+        <h2>출근하는 사람을 위해 만들었어요</h2>
+        <ul className="lp-checks">
+          {FOR_COMMUTERS.map((f) => (
+            <li key={f.title}>
+              <Check aria-hidden />
               <span>
-                <b>{p.title}</b>
-                <small>{p.body}</small>
+                <b>{f.title}</b>
+                <small>{f.body}</small>
               </span>
             </li>
           ))}
@@ -91,32 +91,37 @@ export function UserLanding() {
       </section>
 
       <section className="lp-section">
-        <span className="lp-eyebrow">이렇게 바뀌어요</span>
         <h2>찾아다니지 말고, 받아보세요</h2>
-        <ol className="lp-steps">
-          {STEPS.map((s, i) => (
-            <li key={s.title}>
+        <div className="lp-ba">
+          <div className="before">
+            <span>직접 찾을 때</span>
+            <ul>
+              {BEFORE.map((t) => (
+                <li key={t}>
+                  <X aria-hidden /> {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="after">
+            <span>집어줌</span>
+            <ul>
+              {AFTER.map((t) => (
+                <li key={t}>
+                  <Check aria-hidden /> {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <ol className="lp-flow">
+          {FLOW.map((t, i) => (
+            <li key={t}>
               <em>{i + 1}</em>
-              <span>
-                <b>{s.title}</b>
-                <small>{s.body}</small>
-              </span>
+              {t}
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="lp-section">
-        <h2>출근하는 사람을 위해 만들었어요</h2>
-        <div className="lp-grid">
-          {FEATURES.map((f) => (
-            <div key={f.title}>
-              <i aria-hidden>{f.icon}</i>
-              <b>{f.title}</b>
-              <small>{f.body}</small>
-            </div>
-          ))}
-        </div>
       </section>
 
       <section className="lp-section">
