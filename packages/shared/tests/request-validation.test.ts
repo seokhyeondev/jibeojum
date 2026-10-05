@@ -11,13 +11,16 @@ import type { RequestDraft } from "../src/types/request";
 
 // 기본 예산이 바뀌어도 샘플 매물(월세 130만원까지) 기준 테스트가 흔들리지 않게 고정한다
 const TEST_BUDGET = { depositMax: 5000, monthlyRentMax: 130 };
-const draft = (patch: Partial<RequestDraft> = {}): RequestDraft => ({ ...DEFAULT_DRAFT, ...TEST_BUDGET, ...patch });
+const GANGNAM = { label: "강남역", address: "서울 강남구 강남대로 396", latitude: 37.4979, longitude: 127.0276 };
+const draft = (patch: Partial<RequestDraft> = {}): RequestDraft => ({ ...DEFAULT_DRAFT, ...TEST_BUDGET, commuteDestination: GANGNAM, ...patch });
 
 describe("단계별 검증", () => {
   it("출근지는 2자 이상이어야 한다 (A01)", () => {
     expect(validateStep(draft({ commuteDestination: { label: "강" } }), 1)).not.toBeNull();
     expect(validateStep(draft({ commuteDestination: { label: "  " } }), 1)).not.toBeNull();
-    expect(validateStep(draft({ commuteDestination: { label: "강남" } }), 1)).toBeNull();
+    // 글자만 넣고 목록에서 고르지 않으면 다음으로 갈 수 없다
+    expect(validateStep(draft({ commuteDestination: { label: "강남" } }), 1)).toBe("검색 목록에서 출근지를 골라주세요.");
+    expect(validateStep(draft({ commuteDestination: GANGNAM }), 1)).toBeNull();
   });
 
   it("예산이 비어 있으면 넘어갈 수 없다", () => {

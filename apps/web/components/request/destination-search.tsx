@@ -17,7 +17,7 @@ const DEBOUNCE_MS = 250;
 
 /**
  * 출근지 검색 입력. 2글자부터 회사·빌딩·역·주소 후보를 보여주고, 고르면 좌표까지 저장한다.
- * 목록에서 고르지 않고 입력만 해도 다음 단계로 갈 수 있다 (서버가 나중에 위치를 찾는다).
+ * 목록에서 골라야 다음 단계로 갈 수 있다 (출근 경로를 좌표로 계산한다).
  */
 export function DestinationSearch({ value, onChange }: Props) {
   const listId = useId();
@@ -109,7 +109,7 @@ export function DestinationSearch({ value, onChange }: Props) {
             </li>
           ))}
           {!isFetching && places.length === 0 && debounced === text.trim() && (
-            <li className="place-empty">{isError ? "검색이 잠시 안 돼요. 입력한 이름으로 그대로 진행해도 괜찮아요." : "찾는 곳이 없어요. 도로명 주소로 검색해보세요."}</li>
+            <li className="place-empty">{isError ? "검색이 잠시 안 돼요. 잠시 후 다시 검색해주세요." : "찾는 곳이 없어요. 도로명 주소로 검색해보세요."}</li>
           )}
         </ul>
       )}
@@ -119,7 +119,7 @@ export function DestinationSearch({ value, onChange }: Props) {
           <Check aria-hidden /> {value.address ?? value.label}
         </p>
       ) : (
-        text.trim().length >= MIN_QUERY && !showList && <p className="place-hint">목록에서 고르면 출근 위치를 더 정확하게 잡을 수 있어요.</p>
+        text.trim().length >= MIN_QUERY && !showList && <p className="place-hint">검색 목록에서 출근지를 골라주세요.</p>
       )}
     </div>
   );

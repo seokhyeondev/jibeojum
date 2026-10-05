@@ -679,3 +679,11 @@
 .facilities.iconed li {
   grid-template-columns: 22px 68px 1fr auto;
 }
+
+/* 입력칸 포커스: 바깥 칸 전체만 초록 테두리 (안쪽 input의 포커스 테두리는 지운다) */
+.inputbox input:focus,
+.inputbox input:focus-visible,
+.money input:focus,
+.money input:focus-visible {
+  outline: none !important;
+}

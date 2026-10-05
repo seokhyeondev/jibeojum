@@ -76,10 +76,12 @@ export const REQUEST_STEP_COUNT = 5;
 /** 단계별 다음 버튼 조건. 통과하면 null, 아니면 안내 문구. */
 export function validateStep(draft: RequestDraft, step: number): string | null {
   switch (step) {
-    case 1:
-      return draft.commuteDestination.label.trim().length >= 2
-        ? null
-        : "출근지를 2자 이상 입력해주세요.";
+    case 1: {
+      // 검색 목록에서 골라 좌표가 있어야 출근 경로를 정확히 계산할 수 있다
+      const { label, latitude, longitude } = draft.commuteDestination;
+      if (label.trim().length < 2) return "출근지를 검색해주세요.";
+      return latitude != null && longitude != null ? null : "검색 목록에서 출근지를 골라주세요.";
+    }
     case 2:
       if (wantsRent(draft.transactionPreference)) {
         if (draft.depositMax === null) return "최대 보증금을 숫자로 입력해주세요.";

@@ -2,7 +2,8 @@ import type { HousingRequest, RequestDraft } from "./types/request";
 
 /** 입력 흐름을 처음 열었을 때의 초안 */
 export const DEFAULT_DRAFT: RequestDraft = {
-  commuteDestination: { label: "강남역" },
+  // 검색 목록에서 골라야 하므로 비워 둔다
+  commuteDestination: { label: "" },
   maxCommuteMinutes: 60,
   noTransferExtraMinutes: 10,
   transactionPreference: "rent",
