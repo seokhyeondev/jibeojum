@@ -21,6 +21,7 @@ import { PlaceSearch } from "../places/place-search.js";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { toHousingRequest } from "../requests/request-mapper.js";
 import { haversineMeters } from "../residential/anchor-builder.js";
+import { NearbyFacilitiesFinder } from "../places/nearby-facilities.js";
 import { MockTransitProvider } from "../transit/mock-transit.provider.js";
 import { TransitRouteCacheService } from "../transit/transit-route-cache.service.js";
 import type { TransitRouteResult } from "../transit/transit.types.js";
@@ -36,6 +37,7 @@ export class AgentService {
   private readonly logger = new Logger("Agent");
   private readonly places = new PlaceSearch(process.env);
   private readonly estimator = new MockTransitProvider();
+  private readonly nearby = new NearbyFacilitiesFinder();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -242,7 +244,7 @@ export class AgentService {
     // 주소는 웹에서 주소 검색으로 골라 좌표와 함께 온다
     const place = { address: input.address, latitude: input.latitude, longitude: input.longitude };
 
-    const station = await this.nearestStation(place.latitude, place.longitude);
+    const [station, nearby] = await Promise.all([this.nearestStation(place.latitude, place.longitude), this.nearby.find(place.latitude, place.longitude)]);
     const destination = await this.destinationOf(request);
     const listingId = randomUUID();
 
@@ -304,7 +306,8 @@ export class AgentService {
           moveInNote: input.moveInNote,
           options: input.options,
           security: input.security,
-          nearby: [],
+          // 주변 시설은 서버가 카카오 로컬 검색으로 채운다 (중개사 입력 없음)
+          nearby: nearby as unknown as Prisma.InputJsonValue,
           tags: listingTags(input),
           description: input.description,
           images: input.imageUrls.map((src, i) => ({ src, alt: `${input.title} 사진 ${i + 1}` })),

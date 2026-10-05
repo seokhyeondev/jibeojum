@@ -536,3 +536,146 @@
   font-size: 15px;
   font-weight: 600;
 }
+
+/* 매물 상세: 구간별 출근 경로 */
+.route .route-legs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0;
+}
+.route-legs li {
+  --leg: var(--faint);
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 0 0 14px;
+  background: none;
+  border-radius: 0;
+}
+.route-legs li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 28px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--leg);
+  opacity: 0.45;
+}
+.route-legs li.walk:not(:last-child)::after {
+  background: repeating-linear-gradient(to bottom, var(--faint) 0 3px, transparent 3px 6px);
+  opacity: 0.6;
+}
+.route-legs i {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--leg);
+  color: #fff;
+}
+.route-legs li.walk i {
+  background: var(--surface);
+  color: var(--ink-2);
+}
+.route-legs i svg {
+  width: 15px;
+  height: 15px;
+}
+.route-legs span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 4px;
+}
+.route-legs b {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.route-legs span small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  word-break: keep-all;
+}
+.route-legs em {
+  padding-top: 5px;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* 매물 상세: 위치 지도 (움직이지 않는 지도, 누르면 네이버 지도) */
+.listing-map {
+  position: relative;
+  display: block;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.listing-map > div {
+  height: 180px;
+  pointer-events: none;
+}
+.listing-map > small {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 92%);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
+}
+.map-home {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--g);
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+}
+/* 주변 시설 아이콘: 지도 핀과 목록이 같은 색·아이콘 */
+.map-pin,
+.facility-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-style: normal;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+}
+.map-pin svg,
+.facility-icon svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.4;
+}
+.facility-icon {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  box-shadow: none;
+}
+.facility-icon svg {
+  width: 12px;
+  height: 12px;
+}
+.facilities.iconed li {
+  grid-template-columns: 22px 68px 1fr auto;
+}

@@ -11,6 +11,12 @@ export class PlacesController {
 
   constructor(private readonly places: PlacesService) {}
 
+  /** 웹 지도(네이버 Dynamic Map) 클라이언트 ID. 공개용 값이며, 등록된 도메인에서만 지도가 뜬다 */
+  @Get("map-config")
+  mapConfig() {
+    return { naverMapClientId: process.env.NAVER_MAP_CLIENT_ID || null };
+  }
+
   @Get()
   async search(@Query("query") query: string | undefined, @Req() req: Request) {
     const q = query?.trim() ?? "";

@@ -1,6 +1,6 @@
 import type { RequestInput } from "@zipazum/shared";
 import type { ChatThreadSummary, ListingReaction, ListingReportInput, UserChat, NotificationItem, PlaceCandidate, ProposedListing, UploadRequest, UploadTicket } from "@zipazum/shared";
-import type { HousingRequest } from "@zipazum/shared";
+import type { CommuteRoute, HousingRequest } from "@zipazum/shared";
 
 // 브라우저에서 쓰는 API 클라이언트. 화면은 이 함수들로만 서버 데이터를 읽고 쓴다.
 
@@ -57,6 +57,17 @@ export async function fetchProposals(requestId: string): Promise<ProposedListing
 export async function fetchListing(id: string): Promise<ProposedListing> {
   const body = await apiRequest<{ listing: ProposedListing }>(`/api/listings/${id}`);
   return body.listing;
+}
+
+/** 매물에서 출근지까지 상세 경로. 계산하지 못하면 null */
+export async function fetchListingRoute(id: string): Promise<CommuteRoute | null> {
+  const body = await apiRequest<{ route: CommuteRoute | null }>(`/api/listings/${id}/route`);
+  return body.route;
+}
+
+/** 웹 지도 설정 (네이버 지도 클라이언트 ID, 공개용) */
+export function fetchMapConfig(): Promise<{ naverMapClientId: string | null }> {
+  return apiRequest<{ naverMapClientId: string | null }>("/api/places/map-config");
 }
 
 export async function fetchMyRequests(): Promise<HousingRequest[]> {

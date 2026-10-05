@@ -31,6 +31,8 @@ function toProposedListing(row: ProposalRow): ProposedListing {
     monthlyRent: l.monthlyRent,
     maintenanceFee: l.maintenanceFee,
     address: l.address,
+    latitude: l.latitude,
+    longitude: l.longitude,
     station: { name: l.stationName, walkMinutes: l.stationWalkMinutes },
     exclusiveAreaM2: l.exclusiveAreaM2,
     floor: l.floor,

@@ -3,7 +3,7 @@
 import { Check, ChevronLeft, ChevronRight, Heart, Info, MapPin, Minus, TrainFront } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SimpleHead } from "@/components/navigation/simple-head";
 import { Button } from "@/components/ui/button";
 import { HOUSING_TYPE_CHOICES, INFRA_CHOICES, SAFETY_CHOICES, choiceLabel } from "@zipazum/shared";
@@ -14,9 +14,13 @@ import {
   formatManwon,
   formatMoveIn,
   formatPrice,
-  commuteSourceNote,
   formatTransfers,
 } from "@zipazum/shared";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchListingRoute } from "@/lib/api/client";
+import { FacilityIcon } from "./facility-icon";
+import { ListingMap } from "./listing-map";
+import { RouteDetail } from "./route-detail";
 import { useFavorites } from "@/lib/store/app-store";
 import { ReasonList } from "./reason-list";
 import { ErrorState } from "@/components/common/error-state";
@@ -34,6 +38,19 @@ export function ListingDetail({ id }: { id: string }) {
   const { isPending, error, refetch, recommendations } = useRecommendations();
   const { favorites, toggle } = useFavorites();
   const [imageIndex, setImageIndex] = useState(0);
+  const queryClient = useQueryClient();
+  // 상세에 들어오면 실제 경로(구간별)를 한 번 계산한다. 서버가 캐시하고, 추정 시간이던 제안은 실제 시간으로 바뀐다
+  const { data: route, isPending: routePending } = useQuery({
+    queryKey: ["listing-route", id],
+    queryFn: () => fetchListingRoute(id),
+    staleTime: Infinity,
+    retry: false,
+  });
+  const estimated = recommendations.find((item) => item.listing.id === id)?.listing.commute.provider !== "tmap";
+  useEffect(() => {
+    // 카드의 통근 시간도 새 값으로 다시 받는다
+    if (route && estimated) void queryClient.invalidateQueries({ queryKey: ["proposals"] });
+  }, [route, estimated, queryClient]);
 
   const index = recommendations.findIndex((item) => item.listing.id === id);
   const recommendation = recommendations[index];
@@ -71,6 +88,7 @@ export function ListingDetail({ id }: { id: string }) {
   const image = images[imageIndex] ?? images[0];
   const { commute } = listing;
   const imageCount = images.length;
+  const nearby = [...listing.nearby].sort((x, y) => x.walkMinutes - y.walkMinutes);
 
   const heart = (
     <button
@@ -144,25 +162,16 @@ export function ListingDetail({ id }: { id: string }) {
             <TrainFront aria-hidden />
             <span>
               <small>{destination}까지</small>
-              <b>{commute.totalMinutes}분</b>
+              <b>{route?.totalMinutes ?? commute.totalMinutes}분</b>
             </span>
           </div>
           <p>
             {listing.station.name} 도보 {listing.station.walkMinutes}분
             <br />
-            {formatTransfers(commute.transferCount)}
+            {formatTransfers(route?.transferCount ?? commute.transferCount)}
           </p>
         </div>
-        <div className="route">
-          <p>{commute.routeSummary}</p>
-          <ul>
-            <li>도보 {commute.walkMinutes}분</li>
-            {commute.busMinutes > 0 && <li>버스 {commute.busMinutes}분</li>}
-            {commute.subwayMinutes > 0 && <li>지하철 {commute.subwayMinutes}분</li>}
-            <li>{formatTransfers(commute.transferCount)}</li>
-          </ul>
-          <small>{commuteSourceNote(commute)}</small>
-        </div>
+        <RouteDetail commute={commute} route={route} loading={routePending} />
         <div className="spec">
           {specs.map(([label, value]) => (
             <div key={label}>
@@ -192,20 +201,26 @@ export function ListingDetail({ id }: { id: string }) {
             })}
           </ul>
         </section>
-        <section>
-          <h2>주변 시설</h2>
-          <ul className="facilities">
-            {[...listing.nearby]
-              .sort((a, b) => a.walkMinutes - b.walkMinutes)
-              .map((facility) => (
-                <li key={`${facility.type}-${facility.name}`}>
-                  <small>{choiceLabel(INFRA_CHOICES, facility.type)}</small>
-                  <span>{facility.name}</span>
-                  <b>도보 {facility.walkMinutes}분</b>
-                </li>
-              ))}
-          </ul>
-        </section>
+        {(listing.nearby.length > 0 || (listing.latitude != null && listing.longitude != null)) && (
+          <section>
+            <h2>위치·주변 시설</h2>
+            {listing.latitude != null && listing.longitude != null && (
+              <ListingMap latitude={listing.latitude} longitude={listing.longitude} address={listing.address} facilities={nearby} />
+            )}
+            {nearby.length > 0 && (
+              <ul className="facilities iconed">
+                {nearby.map((facility) => (
+                  <li key={`${facility.type}-${facility.name}`}>
+                    <FacilityIcon type={facility.type} />
+                    <small>{choiceLabel(INFRA_CHOICES, facility.type)}</small>
+                    <span>{facility.name}</span>
+                    <b>도보 {facility.walkMinutes}분</b>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
         <section>
           <h2>이 집의 특징</h2>
           <div className="mini">

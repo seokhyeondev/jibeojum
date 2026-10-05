@@ -18,6 +18,9 @@ export interface NearbyFacility {
   type: InfraId;
   name: string;
   walkMinutes: number;
+  /** 지도 표시용 좌표 (예전에 저장된 값에는 없다) */
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Listing {
@@ -31,6 +34,9 @@ export interface Listing {
   monthlyRent: number;
   maintenanceFee: number;
   address: string;
+  /** 지도 표시용 좌표 (모르면 null) */
+  latitude?: number | null;
+  longitude?: number | null;
   station: { name: string; walkMinutes: number };
   exclusiveAreaM2: number;
   floor: number;

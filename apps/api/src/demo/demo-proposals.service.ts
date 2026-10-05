@@ -1,9 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import type { AreaRecommendation, AreaRecommendationResult, CommuteSummary, HousingRequest, HousingType, NearbyFacility, RequiredOptionId, SafetyOptionId } from "@zipazum/shared";
+import type { AreaRecommendation, AreaRecommendationResult, CommuteSummary, HousingRequest, HousingType, RequiredOptionId, SafetyOptionId } from "@zipazum/shared";
 import { HOUSING_TYPE_CHOICES, PYEONG_M2, choiceLabel, fitsMonthlyBudget, wantsJeonse, wantsRent } from "@zipazum/shared";
 import { randomUUID } from "node:crypto";
 import { BUDGET_FLEX } from "../areas/area-recommend.js";
 import type { Prisma } from "../generated/prisma/client.js";
+import { NearbyFacilitiesFinder } from "../places/nearby-facilities.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { toHousingRequest } from "../requests/request-mapper.js";
@@ -32,16 +33,6 @@ const OPTIONS: RequiredOptionId[] = ["station", "elevator", "parking", "pet", "j
 const SECURITY: SafetyOptionId[] = ["secure_entrance", "cctv", "window_guard", "main_road", "parcel_locker"];
 const DIRECTIONS = ["south", "south", "south", "east", "west", "north"] as const;
 const IMAGES = ["/room-1.png", "/room-2.png", "/room-3.png"];
-/** 주변 시설 예시 (이름은 일반 명칭만 쓴다) */
-const NEARBY: Omit<NearbyFacility, "walkMinutes">[] = [
-  { type: "convenience_store", name: "편의점" },
-  { type: "mart", name: "마트" },
-  { type: "hospital", name: "내과·약국" },
-  { type: "park", name: "근린공원" },
-  { type: "gym", name: "헬스장" },
-  { type: "laundry", name: "코인세탁소" },
-  { type: "cafe", name: "카페" },
-];
 
 const pick = <T>(list: readonly T[]) => list[Math.floor(Math.random() * list.length)];
 const chance = (p: number) => Math.random() < p;
@@ -67,6 +58,7 @@ interface Tx {
 @Injectable()
 export class DemoProposalsService {
   private readonly logger = new Logger("Demo");
+  private readonly nearby = new NearbyFacilitiesFinder();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -167,7 +159,7 @@ export class DemoProposalsService {
           moveInNote: "날짜 협의 가능",
           options,
           security,
-          nearby: NEARBY.filter(() => chance(0.6)).map((f) => ({ ...f, walkMinutes: between(2, 10) })) as unknown as Prisma.InputJsonValue,
+          nearby: (await this.nearby.find(tx.latitude, tx.longitude)) as unknown as Prisma.InputJsonValue,
           tags: [],
           description: `${tx.umd_nm}의 ${typeLabel}이에요. 실거래 정보를 바탕으로 만든 시범 매물로, 실제 매물과 다를 수 있어요.`,
           images: [{ src: pick(IMAGES), alt: `${title} 예시 사진` }],
