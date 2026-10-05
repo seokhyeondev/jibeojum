@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { COMPANY, SITE } from "@/lib/site";
+import { COMPANY, COMPANY_NAME, SITE } from "@/lib/site";
 
 /** 약관·개인정보처리방침·사업자 정보. 랜딩과 마이페이지 아래에 둔다 */
 export function SiteFooter({ children }: { children?: ReactNode }) {
@@ -28,7 +28,7 @@ export function SiteFooter({ children }: { children?: ReactNode }) {
           </dd>
         </div>
       </dl>
-      <small>© {SITE.name}</small>
+      <small>© {COMPANY_NAME}</small>
     </footer>
   );
 }

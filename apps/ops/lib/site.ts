@@ -8,9 +8,6 @@ export const SITE = {
  * 푸터에 보이는 사업자 정보. 값이 있는 항목만 보인다.
  * 통신판매업 신고번호·전화가 생기면 채운다.
  */
-/** 공인중개사 웹 주소 (apps/ops). 설정 전이면 랜딩의 공인중개사 링크를 숨긴다 */
-export const PARTNERS_URL = process.env.NEXT_PUBLIC_PARTNERS_URL?.replace(/\/$/, "") ?? null;
-
 export const COMPANY_NAME = "에이치코어";
 
 export const COMPANY: { label: string; value: string | null }[] = [
@@ -22,3 +19,6 @@ export const COMPANY: { label: string; value: string | null }[] = [
   { label: "전화", value: null },
   { label: "고객센터", value: "09:00~17:00 (주말·공휴일 휴무)" },
 ];
+
+/** 사용자 웹 주소. 약관·개인정보처리방침·고객용 서비스 링크에 쓴다 */
+export const WEB_URL = (process.env.NEXT_PUBLIC_WEB_URL ?? "https://zipazum.com").replace(/\/$/, "");

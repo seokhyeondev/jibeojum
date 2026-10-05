@@ -1,0 +1,1061 @@
+/* 랜딩 페이지: 사용자(/)와 공인중개사(/partners). 모바일 360px 우선 */
+
+.lp {
+  padding-bottom: calc(96px + var(--safe-b));
+  color: var(--ink);
+}
+.lp-partner {
+  min-height: 100dvh;
+  max-width: 600px;
+  margin: 0 auto;
+  background: #fff;
+}
+.lp-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 var(--gutter);
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 17px;
+  text-decoration: none;
+}
+.lp-brand i {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--g);
+  color: #fff;
+}
+.lp-brand svg {
+  width: 17px;
+  height: 17px;
+}
+.lp-brand span {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef0ff;
+  color: #3b46b5;
+  font-size: 12px;
+}
+.lp-login {
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.lp-hero {
+  padding: 36px var(--gutter) 28px;
+  background: linear-gradient(180deg, var(--gs) 0%, #fff 100%);
+}
+.lp-eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--g);
+  font-size: 13px;
+  font-weight: 800;
+}
+.lp-hero h1 {
+  margin: 0 0 14px;
+  font-size: 30px;
+  line-height: 1.32;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+}
+.lp-hero h1 em {
+  color: var(--g);
+  font-style: normal;
+}
+.lp-hero > p {
+  margin: 0 0 22px;
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.lp-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  border-radius: var(--r-md);
+  background: var(--g);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgb(5 150 105 / 25%);
+}
+.lp-cta:hover {
+  background: var(--gd);
+}
+.lp-hero > small {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.lp-preview {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 18px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: #fff;
+  box-shadow: var(--shadow-md);
+}
+.lp-tag {
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.lp-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.lp-card.dim {
+  opacity: 0.6;
+}
+.lp-card img {
+  width: 92px;
+  height: 70px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.lp-card div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.lp-card b {
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lp-card strong {
+  font-size: 15px;
+}
+.lp-card span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--g);
+  font-size: 12px;
+  font-weight: 700;
+}
+.lp-card svg {
+  width: 14px;
+  height: 14px;
+}
+.lp-toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.lp-toast svg {
+  width: 15px;
+  height: 15px;
+  color: #ffd54a;
+}
+
+.lp-section {
+  padding: 36px var(--gutter) 8px;
+}
+.lp-section h2 {
+  margin: 0 0 18px;
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+}
+.lp-section .lp-eyebrow {
+  margin-bottom: 6px;
+}
+.lp-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-list li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+}
+.lp-list i,
+.lp-grid i {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--gs);
+  color: var(--g);
+}
+.lp-list svg,
+.lp-grid svg {
+  width: 20px;
+  height: 20px;
+}
+.lp-list b,
+.lp-steps b,
+.lp-grid b {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 16px;
+}
+.lp-list small,
+.lp-steps small,
+.lp-grid small {
+  display: block;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.lp-steps {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-steps li {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding-bottom: 22px;
+}
+.lp-steps li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 34px;
+  bottom: 4px;
+  left: 15px;
+  width: 2px;
+  background: var(--g-line);
+}
+.lp-steps em {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--g);
+  color: #fff;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.lp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.lp-grid > div {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+}
+
+.lp-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.lp-compare > div {
+  padding: 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.lp-compare > div.on {
+  border-color: var(--g);
+  background: var(--gs);
+}
+.lp-compare b {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+.lp-compare ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-compare li {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+.lp-compare svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--faint);
+}
+.lp-compare .on svg {
+  color: var(--g);
+}
+
+.lp-request {
+  position: relative;
+  padding: 22px 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: #fff;
+  box-shadow: var(--shadow-md);
+}
+.lp-request > b {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 17px;
+}
+.lp-request p {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 12px;
+  color: var(--g);
+  font-weight: 700;
+  font-size: 14px;
+}
+.lp-request p svg {
+  width: 15px;
+  height: 15px;
+}
+.lp-request ul {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.lp-request li {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 14px;
+}
+.lp-request small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.lp-faq {
+  display: grid;
+  gap: 8px;
+}
+.lp-faq details {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fff;
+}
+.lp-faq summary {
+  padding: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.lp-faq summary::-webkit-details-marker {
+  display: none;
+}
+.lp-faq summary::after {
+  content: "+";
+  float: right;
+  color: var(--muted);
+  font-weight: 500;
+}
+.lp-faq details[open] summary::after {
+  content: "−";
+}
+.lp-faq p {
+  margin: 0;
+  padding: 0 16px 16px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+/* 공통 푸터: 약관 링크 + 사업자 정보 */
+.site-footer {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+  padding: 24px var(--gutter) 32px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.site-footer > nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 13px;
+}
+.site-footer > nav a {
+  color: var(--ink-2);
+}
+.site-footer > nav b {
+  font-weight: 700;
+}
+.site-footer dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin: 0;
+}
+.site-footer dl > div {
+  display: flex;
+  gap: 6px;
+}
+.site-footer dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+.site-footer dd a {
+  color: inherit;
+}
+.site-footer > small {
+  color: var(--faint);
+  font-size: 12px;
+}
+.mypage .site-footer {
+  margin: 32px calc(-1 * var(--gutter)) 0;
+}
+.lp-partner-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink) !important;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+}
+.lp-partner-link svg {
+  width: 18px;
+  height: 18px;
+  color: var(--g);
+}
+
+.lp-sticky {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 30;
+  width: 100%;
+  max-width: var(--app-w);
+  padding: 12px var(--gutter) calc(12px + var(--safe-b));
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0%) 0%, #fff 30%);
+}
+.lp-partner .lp-sticky {
+  max-width: 600px;
+}
+
+@media (min-width: 560px) {
+  .lp-hero h1 {
+    font-size: 36px;
+  }
+}
+
+/* 시범 매물: 문의 버튼 대신 */
+.detail-cta > .cta-off {
+  flex: 1;
+  height: 54px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--line, #e6ebe8);
+  color: #5b6762;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* 매물 상세: 구간별 출근 경로 */
+.route .route-legs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0;
+}
+.route-legs li {
+  --leg: var(--faint);
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 0 0 14px;
+  background: none;
+  border-radius: 0;
+}
+.route-legs li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 28px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--leg);
+  opacity: 0.45;
+}
+.route-legs li.walk:not(:last-child)::after {
+  background: repeating-linear-gradient(to bottom, var(--faint) 0 3px, transparent 3px 6px);
+  opacity: 0.6;
+}
+.route-legs i {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--leg);
+  color: #fff;
+}
+.route-legs li.walk i {
+  background: var(--surface);
+  color: var(--ink-2);
+}
+.route-legs i svg {
+  width: 15px;
+  height: 15px;
+}
+.route-legs span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 4px;
+}
+.route-legs b {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.route-legs span small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  word-break: keep-all;
+}
+.route-legs em {
+  padding-top: 5px;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* 매물 상세: 위치 지도 (움직이지 않는 지도, 누르면 네이버 지도) */
+.listing-map {
+  position: relative;
+  display: block;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.listing-map > div {
+  height: 180px;
+  pointer-events: none;
+}
+.listing-map > small {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 92%);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 12%);
+}
+.map-home {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--g);
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+}
+/* 주변 시설 아이콘: 지도 핀과 목록이 같은 색·아이콘 */
+.map-pin,
+.facility-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-style: normal;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+}
+.map-pin svg,
+.facility-icon svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.4;
+}
+.facility-icon {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  box-shadow: none;
+}
+.facility-icon svg {
+  width: 12px;
+  height: 12px;
+}
+.facilities.iconed li {
+  grid-template-columns: 22px 68px 1fr auto;
+}
+
+/* 입력칸 포커스: 바깥 칸 전체만 초록 테두리 (안쪽 input의 포커스 테두리는 지운다) */
+.inputbox input:focus,
+.inputbox input:focus-visible,
+.money input:focus,
+.money input:focus-visible {
+  outline: none !important;
+}
+
+/* 출근지가 서비스 지역 밖일 때 */
+.place-outside {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  color: #7a5310;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 칩 5칸 (통근시간) */
+.choices.five {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.choices.five button {
+  padding: 0 4px;
+}
+
+/* 예산 빠른 선택 칩 */
+.money-presets {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.money-presets::-webkit-scrollbar {
+  display: none;
+}
+.money-presets button {
+  flex: 1 0 auto;
+  min-width: 52px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+.money-presets button.on {
+  border-color: var(--g);
+  background: var(--gs);
+  color: var(--gd);
+}
+
+/* 요청 완료: 다시 들어오는 방법 안내 */
+.return-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: left;
+}
+.return-note svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--g);
+}
+
+/* 랜딩 예시 카드: 사진 대신 출근시간 */
+.lp-card .lp-time {
+  width: 70px;
+  height: 64px;
+  flex: none;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  border-radius: 10px;
+  background: var(--gs);
+  color: var(--gd);
+  font-style: normal;
+}
+.lp-card .lp-time b {
+  overflow: visible;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+.lp-card .lp-time small {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* 누구를 위한 서비스인지: 체크 목록 */
+.lp-checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+.lp-checks li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.lp-checks svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 1px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--g);
+  color: #fff;
+  stroke-width: 3;
+}
+.lp-checks span {
+  display: grid;
+  gap: 2px;
+}
+.lp-checks b {
+  font-size: 15px;
+}
+.lp-checks small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Before / After */
+.lp-ba {
+  display: grid;
+  gap: 10px;
+}
+.lp-ba > div {
+  padding: 16px;
+  border-radius: 16px;
+}
+.lp-ba .before {
+  background: var(--surface);
+  color: var(--muted);
+}
+.lp-ba .after {
+  background: var(--gs);
+  color: var(--ink);
+  border: 1.5px solid var(--g-line);
+}
+.lp-ba span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.lp-ba .after span {
+  color: var(--gd);
+}
+.lp-ba ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.lp-ba li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.lp-ba li svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+}
+.lp-ba .before li {
+  text-decoration: line-through;
+  text-decoration-color: rgb(0 0 0 / 25%);
+}
+.lp-ba .before svg {
+  color: var(--faint);
+}
+.lp-ba .after svg {
+  color: var(--g);
+  stroke-width: 3;
+}
+.lp-flow {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.lp-flow li {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  word-break: keep-all;
+}
+.lp-flow em {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--g);
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+/* 같이 사는 사람 출근지 */
+.add-partner {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 56px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1.5px dashed var(--g-line);
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--gd);
+  font-size: 15px;
+  font-weight: 700;
+}
+.add-partner svg {
+  width: 18px;
+  height: 18px;
+}
+.partner-box {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+/* 폼 카드 바로 아래 label과 같은 모양 */
+.partner-box > label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.partner-box > label.mt {
+  margin-top: 24px;
+}
+.partner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.partner-head b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 800;
+}
+.partner-head b svg {
+  width: 20px;
+  height: 20px;
+  color: var(--g);
+}
+.partner-head button {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.partner-head button svg {
+  width: 15px;
+  height: 15px;
+}
+.partner-head button:hover {
+  background: var(--surface);
+}
+.partner-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 매물 상세: 나 / 같이 사는 분 경로 탭 */
+.route-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 16px 0 8px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.route-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.route-tabs button.on {
+  background: #fff;
+  color: var(--gd);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+}
+
+/* 조건에 맞는 동네를 못 찾았을 때 */
+.nomatch {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--warn-bg);
+  color: #7a5310;
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: left;
+}
+.request-card header span.warn {
+  background: var(--warn-bg);
+  color: #7a5310;
+}
+.success.warn {
+  background: var(--warn-bg);
+  color: #b07a12;
+}
+.add-partner span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.add-partner small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 함께 고려할 곳 종류: "같이 사는 분 직장"이 한 줄에 들어가게 첫 칸을 넓힌다 */
+.second-kind .choices {
+  grid-template-columns: 1.45fr 1fr 1fr;
+  gap: 6px;
+}
+.second-kind .choices button {
+  padding: 0 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}

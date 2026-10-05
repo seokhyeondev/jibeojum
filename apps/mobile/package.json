@@ -2,7 +2,7 @@
   "name": "@zipazum/mobile",
   "version": "0.1.0",
   "private": true,
-  "description": "집어줌 앱 (Capacitor). 배포된 웹(jibeojum.vercel.app)을 띄우고 푸시·로그인·딥링크를 붙인다",
+  "description": "집어줌 앱 (Capacitor). 배포된 웹(zipazum.com)을 띄우고 푸시·로그인·딥링크를 붙인다",
   "scripts": {
     "sync": "cap sync",
     "android": "cap open android",

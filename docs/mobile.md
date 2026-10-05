@@ -1,6 +1,6 @@
 # 앱 (Capacitor)
 
-`apps/mobile`은 배포된 웹(`https://jibeojum.vercel.app`)을 앱 안에 띄우고, 웹으로 할 수 없는 기능만 붙인다.
+`apps/mobile`은 배포된 웹(`https://zipazum.com`)을 앱 안에 띄우고, 웹으로 할 수 없는 기능만 붙인다.
 화면은 웹 그대로라 웹을 배포하면 앱에도 바로 반영된다 (스토어 재심사 없이).
 
 | 기능 | 구현 |
@@ -33,12 +33,12 @@ pnpm mobile:ios        # Xcode로 열기 (맥에서)
 
 ### 2. Apple 로그인 (iOS 심사 필수)
 1. Apple Developer → Identifiers: App ID `com.zipazum.app`에 Sign in with Apple, Push Notifications 켜기.
-2. Services ID(예: `com.zipazum.web`)를 만들고 도메인 `jibeojum.vercel.app`, Return URL `https://jibeojum.vercel.app/api/auth/apple/callback` 등록.
+2. Services ID(예: `com.zipazum.web`)를 만들고 도메인 `zipazum.com`, Return URL `https://zipazum.com/api/auth/apple/callback` 등록.
 3. Keys에서 Sign in with Apple 키(.p8)를 만든다.
 4. API 환경변수 `APPLE_CLIENT_ID`(Services ID), `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_REDIRECT_URI`. 넣으면 로그인 화면에 Apple 버튼이 나타난다.
 
 ### 3. 카카오
-- 카카오 개발자 콘솔의 Redirect URI는 웹과 같다 (`https://jibeojum.vercel.app/api/auth/kakao/callback`). 앱도 시스템 브라우저로 같은 주소를 쓴다.
+- 카카오 개발자 콘솔의 Redirect URI는 웹과 같다 (`https://zipazum.com/api/auth/kakao/callback`). 앱도 시스템 브라우저로 같은 주소를 쓴다.
 - 회원탈퇴 때 카카오 연결을 끊으려면 Admin 키를 `KAKAO_ADMIN_KEY`로 넣는다.
 
 ### 4. 안드로이드 출시
@@ -53,6 +53,6 @@ pnpm mobile:ios        # Xcode로 열기 (맥에서)
 
 ### 6. 심사 제출 메모
 - 심사용 계정: Apple 로그인으로 들어가면 되므로 따로 만들 필요는 없다. 매물 제안까지 보여주려면 운영 웹에서 심사 계정 요청에 테스트 매물을 하나 붙여 둔다.
-- 개인정보처리방침 URL: `https://jibeojum.vercel.app/privacy`
+- 개인정보처리방침 URL: `https://zipazum.com/privacy`
 - 앱 기능 설명: 푸시 알림(새 매물·답장), 중개사와 채팅, 출근 조건 기반 매물 요청
 - 약관·개인정보처리방침은 초안이다. 출시 전에 법률 검토를 받는다.

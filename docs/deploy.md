@@ -21,11 +21,29 @@
 
 ## Vercel (웹)
 
+웹은 두 프로젝트로 따로 배포한다. 사용자 앱(Capacitor)은 사용자 웹만 감싸므로 운영·중개사 화면이 앱에 들어가지 않는다.
+
+**사용자 웹** (`zipazum.com`, `www.zipazum.com`)
+
 | 설정 | 값 |
 | --- | --- |
 | Root Directory | `apps/web` |
-| Install / Build | 기본값 (pnpm workspace 자동 인식) |
+| Install / Build | `apps/web/vercel.json` |
 | 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
+| 환경 변수 `NEXT_PUBLIC_PARTNERS_URL` | 운영·중개사 웹 주소. 랜딩의 공인중개사 링크와 예전 `/admin`·`/agent`·`/partners` 주소 리다이렉트에 쓴다 |
+
+**운영·중개사 웹** (`partner.zipazum.com`, `apps/ops`: `/partners` 공인중개사 소개, `/agent` 공인중개사, `/admin` 내부 운영)
+
+| 설정 | 값 |
+| --- | --- |
+| Root Directory | `apps/ops` |
+| Install / Build | `apps/ops/vercel.json` |
+| 환경 변수 `API_URL` | `https://d2ax97ny1avlxk.cloudfront.net` |
+| 환경 변수 `NEXT_PUBLIC_WEB_URL` | 사용자 웹 주소 (약관·개인정보처리방침·고객용 서비스 링크) |
+
+DNS는 Route 53 `zipazum.com` 호스팅 영역에 있다: `zipazum.com` A 76.76.21.21, `www`·`partner` CNAME `cname.vercel-dns.com` (Vercel).
+
+API의 `OPS_ORIGIN`(ECS 태스크 정의)에 운영·중개사 웹 주소를 넣어야 초대 링크가 그쪽으로 나간다.
 
 `API_URL`은 빌드할 때 rewrites에 들어간다. 바꾸면 다시 배포해야 한다.
 웹에는 다른 비밀값이 없다. 나머지 키는 전부 API 쪽(SSM)에 있다.
@@ -35,7 +53,7 @@
 **자동:** `main`에 `apps/api/**`, `packages/shared/**`, `pnpm-lock.yaml`이 바뀐 커밋이 올라오면 GitHub Actions(`.github/workflows/deploy-api.yml`)가
 타입체크·테스트 후 배포한다. Actions 탭에서 "Deploy API → Run workflow"로 손으로 돌릴 수도 있다.
 AWS 키는 GitHub에 없다. OIDC로 `zipazum-github-deploy` 역할(빌드 시작·ECS 갱신만 가능)을 잠깐 빌린다.
-신뢰 조건은 `repo:seokhyeondev@64835957/jibeojum@1404607378:ref:refs/heads/main` (이 저장소 ID의 main 브랜치만).
+신뢰 조건은 `repo:seokhyeondev@64835957/zip-a-zum@1404607378:ref:refs/heads/main` (이 저장소 ID의 main 브랜치만). 저장소 이름을 바꾸면 이 조건도 바꿔야 한다.
 
 **수동 (로컬):**
 

@@ -64,7 +64,7 @@
         },
         {
           "name": "KAKAO_REDIRECT_URI",
-          "value": "https://jibeojum.vercel.app/api/auth/kakao/callback"
+          "value": "https://zipazum.com/api/auth/kakao/callback"
         },
         {
           "name": "TRUST_PROXY_HOPS",
@@ -72,11 +72,16 @@
         },
         {
           "name": "WEB_ORIGIN",
-          "value": "https://jibeojum.vercel.app"
+          "value": "https://zipazum.com"
         },
-        { "name": "DEMO_PROPOSALS", "value": "true" }
+        { "name": "DEMO_PROPOSALS", "value": "true" },
+        { "name": "OPS_ORIGIN", "value": "https://partner.zipazum.com" }
       ],
       "secrets": [
+        {
+         "name": "FIREBASE_SERVICE_ACCOUNT",
+         "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/FIREBASE_SERVICE_ACCOUNT"
+        },
         {
           "name": "DATABASE_URL",
           "valueFrom": "arn:aws:ssm:ap-northeast-2:893918474407:parameter/zipazum/prod/DATABASE_URL"

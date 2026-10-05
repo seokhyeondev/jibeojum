@@ -28,19 +28,9 @@ function hidesBottomNav(pathname: string): boolean {
   );
 }
 
-/** 내부 운영 웹·공인중개사 웹·공인중개사 소개 페이지는 사용자 화면 틀 없이 그린다 */
-const isOps = (pathname: string) => /^\/(admin|agent|partners)(\/|$)/.test(pathname);
-
+/** 사용자 화면 틀. 운영·중개사 웹은 apps/ops로 따로 배포한다 */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  if (isOps(pathname)) {
-    return (
-      <>
-        {children}
-        <Toaster position="top-center" theme="light" />
-      </>
-    );
-  }
   return <UserShell pathname={pathname}>{children}</UserShell>;
 }
 

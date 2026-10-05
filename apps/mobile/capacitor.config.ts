@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 // 집어줌 앱: 배포된 웹을 그대로 띄우고(server.url), 푸시·로그인·딥링크 같은 앱 기능만 붙인다.
 // 웹을 배포하면 앱에도 바로 반영된다 (스토어 재심사 없이). 개발 중에는 ZIPAZUM_APP_URL로 바꿔 띄울 수 있다.
-const appUrl = process.env.ZIPAZUM_APP_URL ?? "https://jibeojum.vercel.app";
+const appUrl = process.env.ZIPAZUM_APP_URL ?? "https://zipazum.com";
 
 const config: CapacitorConfig = {
   appId: "com.zipazum.app",

@@ -1,6 +1,7 @@
 import { BellRing, Building2, Check, TrainFront, X } from "lucide-react";
 import Link from "next/link";
 import { SiteFooter } from "@/components/common/site-footer";
+import { PARTNERS_URL } from "@/lib/site";
 
 const START = "/request?step=1";
 
@@ -137,9 +138,11 @@ export function UserLanding() {
       </section>
 
       <SiteFooter>
-        <Link href="/partners" className="lp-partner-link">
-          <Building2 aria-hidden /> 공인중개사이신가요? 집어줌과 함께하기
-        </Link>
+        {PARTNERS_URL && (
+          <a href={PARTNERS_URL} className="lp-partner-link">
+            <Building2 aria-hidden /> 공인중개사이신가요? 집어줌과 함께하기
+          </a>
+        )}
       </SiteFooter>
 
       <div className="lp-sticky">
