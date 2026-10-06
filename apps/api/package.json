@@ -11,6 +11,7 @@
     "test": "vitest run",
     "prisma:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
+    "env:pull": "node scripts/pull-env.mjs",
     "postinstall": "prisma generate",
     "pipeline:collect": "tsx src/pipeline/collect-rents.ts",
     "pipeline:geocode": "tsx src/pipeline/geocode-addresses.ts",

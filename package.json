@@ -14,6 +14,7 @@
     "typecheck": "pnpm build:shared && pnpm -r typecheck",
     "test": "pnpm -r test",
     "db:migrate": "pnpm --filter @zipazum/api db:migrate",
+    "env:pull": "pnpm --filter @zipazum/api env:pull",
     "pipeline:collect": "pnpm --filter @zipazum/api pipeline:collect",
     "pipeline:geocode": "pnpm --filter @zipazum/api pipeline:geocode",
     "pipeline:anchors": "pnpm --filter @zipazum/api pipeline:anchors",

@@ -29,7 +29,8 @@ packages/
 
 ```sh
 pnpm install                                   # Prisma 클라이언트도 함께 생성
-cp apps/api/.env.example apps/api/.env.local   # DATABASE_URL 채우기
+cp apps/api/.env.example apps/api/.env.local   # 일반 값 채우기
+pnpm env:pull                                  # 비밀값을 SSM에서 채우기 (AWS_PROFILE, docs/deploy.md 참고)
 pnpm db:migrate                                # 마이그레이션 적용 (prisma migrate deploy)
 pnpm dev                                       # 웹 http://localhost:3000, API http://localhost:4000/api
 ```
@@ -39,6 +40,7 @@ pnpm dev                                       # 웹 http://localhost:3000, API 
 - `pnpm dev`: shared 감시 빌드 + API + 웹을 함께 실행
 - `pnpm build` / `pnpm typecheck` / `pnpm lint` / `pnpm test`
 - `pnpm db:migrate`
+- `pnpm env:pull`: SSM `/zipazum/dev/*` 비밀값을 `apps/api/.env.local`에 채운다 (`--from prod,dev`로 운영 값 보충)
 
 ## 배포
 

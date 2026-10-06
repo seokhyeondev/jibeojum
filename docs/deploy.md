@@ -70,17 +70,22 @@ pnpm db:migrate     # 스키마가 바뀌었으면 먼저 (SQL 검토 후). 자�
 pnpm deploy:api     # 소스 → S3 → CodeBuild(이미지) → ECR → ECS 롤링 배포
 ```
 
-- 로컬에 Docker가 없어도 된다. `aws` CLI와 `default` 프로필(893918474407)만 있으면 된다.
+- 로컬에 Docker가 없어도 된다. `aws` CLI와 893918474407 계정 프로필만 있으면 된다. 프로필은 `AWS_PROFILE`로 고르고 기본은 `default`다.
+  `default`가 다른 계정이면 `AWS_PROFILE=<프로필> pnpm deploy:api`로 실행한다.
 - 새 태스크가 헬스체크(`/api/health`)를 통과하지 못하면 ECS가 이전 버전으로 되돌린다.
 - 로그: CloudWatch `/ecs/zipazum-api` (빌드 로그는 `/aws/codebuild/zipazum-api-build`)
 
 ## 환경 변수
 
 - 비밀값: SSM Parameter Store `/zipazum/prod/*` (SecureString). 태스크가 시작할 때 읽는다.
-  `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PASSWORD`, `TMAP_APP_KEY`, `VWORLD_API_KEY`, `NAVER_MAP_*`, `NAVER_API_HUB_*`, `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`
+  `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PASSWORD`, `TMAP_APP_KEY`, `VWORLD_API_KEY`, `NAVER_MAP_*`, `NAVER_API_HUB_*`, `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `FIREBASE_SERVICE_ACCOUNT`
 - 일반 값: 태스크 정의 `zipazum-api`의 environment (`KAKAO_REDIRECT_URI`, `ASSET_BASE_URL`, `TRUST_PROXY_HOPS=3` 등)
 - 값을 바꾼 뒤에는 `aws ecs update-service --cluster zipazum --service zipazum-api --force-new-deployment`로 다시 띄운다
   (태스크 정의를 고쳤으면 새 리비전을 등록하고 `--task-definition zipazum-api`).
+- 로컬 개발: `pnpm env:pull`이 SSM 값을 `apps/api/.env.local`의 표시된 구역에 채운다 (값은 출력하지 않는다).
+  - 기본은 `/zipazum/dev/*`만 읽는다. `--from prod,dev`는 운영 값을 먼저 넣고 dev 값으로 덮는다. 운영 DB·운영 `AUTH_SECRET`을 쓰게 되니 주의한다.
+  - 구역 밖에 값을 적은 키는 그 로컬 값을 유지한다. 일반 값(`S3_BUCKET`, `KAKAO_REDIRECT_URI` 등)은 구역 밖에 직접 적는다.
+  - `AWS_PROFILE`로 893918474407 계정 프로필을 고른다. 다른 계정이면 아무것도 쓰지 않는다.
 
 ## AWS 리소스 (모두 `Service=zipazum` 태그)
 
@@ -94,6 +99,6 @@ pnpm deploy:api     # 소스 → S3 → CodeBuild(이미지) → ECR → ECS 롤
 | CloudFront | API `E1UTYCUKXNE92U`, 사진 `E6661YDMC3G0F` |
 | S3 | `zipazum-assets-893918474407` (사진) |
 | IAM | `zipazum-codebuild`, `zipazum-ecs-execution`, `zipazum-api-task`(사진 업로드만), `zipazum-github-deploy`(GitHub Actions, OIDC) |
-| SSM | `/zipazum/prod/*` |
+| SSM | `/zipazum/prod/*`, `/zipazum/dev/*`(로컬 개발용) |
 
 같은 계정에 다른 서비스 운영 리소스가 있다. `zipazum-*` 밖은 건드리지 않는다.
