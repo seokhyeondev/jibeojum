@@ -1,4 +1,5 @@
 import { fitsMonthlyBudget, type AreaBudgetFit, type AreaCommute, type AreaCommuteFit, type AreaCriteria, type AreaRecommendation, type BudgetFlexibility, type HousingType, type ZoneTypeStats } from "@zipazum/shared";
+import { walkMinutes } from "../zones/zone-builder.js";
 
 /** 추천 계산 설정. measureLimit이 요청당 최대 TMAP 호출 수다. */
 export const AREA_SETTINGS = {
@@ -17,6 +18,8 @@ export const AREA_SETTINGS = {
   estimateSlackMinutes: 5,
   /** 유형별 거래가 이보다 적으면 그 유형이 있는 동네로 보지 않는다 */
   minTypeTransactions: 3,
+  /** 출근지까지 걸어서 이 시간 안이면 대중교통을 재지 않고 도보 통근으로 넣는다 */
+  walkCommuteMaxMinutes: 15,
 } as const;
 
 /** 예산 조정 가능 여부만큼 상한을 늘려 본다 */
@@ -74,6 +77,26 @@ export function classifyMinutes(
   if (bestMinutes <= maxCommuteMinutes) return "within";
   if (noTransferMinutes !== null && noTransferMinutes <= maxCommuteMinutes + noTransferExtraMinutes) return "no_transfer_extra";
   return "over";
+}
+
+/**
+ * 직주근접: 직선 도보(4km/h, 역세권과 같은 기준) 시간이 기준 안이면 도보 통근 대표값, 아니면 null.
+ * 아주 가까우면 대중교통 경로가 없거나 도보보다 길게 나와서 경로 API를 쓰지 않는다.
+ */
+export function walkCommuteOf(meters: number, maxCommuteMinutes: number, noTransferExtraMinutes: number): AreaCommute | null {
+  const minutes = walkMinutes(meters);
+  if (minutes > AREA_SETTINGS.walkCommuteMaxMinutes) return null;
+  return {
+    bestMinutes: minutes,
+    walkMinutes: minutes,
+    transitMinutes: null,
+    bestTransferCount: 0,
+    noTransferMinutes: minutes,
+    fit: classifyMinutes(minutes, minutes, maxCommuteMinutes, noTransferExtraMinutes),
+    provider: "walk",
+    estimated: true,
+    walkOnly: true,
+  };
 }
 
 /** 직선 추정이 이 값을 넘으면 실측할 가치가 없다 */

@@ -25,6 +25,7 @@ import {
   matchTypes,
   rankAreas,
   rankPairAreas,
+  walkCommuteOf,
 } from "./area-recommend.js";
 import { haversineMeters } from "../residential/anchor-builder.js";
 
@@ -103,6 +104,7 @@ const KM_PER_DEG_LAT = 111.32;
  * 출근지 기준 추천 생활권 (역세권 도보 15분 / 행정동 버스권).
  * 1) 반경 안 생활권 → 2) 유형·예산 조건 → 3) 직선 추정으로 먼 곳 제외 → 4) 점수 상위만 경로 API 실측
  * → 5) 대표값(도보 + 대중교통)이 허용 시간 안인 곳만 돌려준다.
+ * 출근지까지 걸어서 15분 안인 곳(직주근접)은 경로 API 없이 도보 통근으로 넣는다.
  * 요청이 들어오면 백그라운드에서 한 건씩 계산해 저장한다. 사용자 화면에는 노출하지 않는다.
  */
 @Injectable()
@@ -156,35 +158,50 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
       return types.length ? [{ zone, types }] : [];
     });
 
-    // 3) 직선 추정으로 확실히 먼 곳 제외 (호출 없음). 한 사람이라도 확실히 멀면 뺀다
+    // 3) 직선 추정으로 확실히 먼 곳 제외 (호출 없음). 한 사람이라도 확실히 멀면 뺀다. 걸어서 갈 수 있는 사람은 통과
     const estimated = await Promise.all(
       matched.map(async (m) => {
         const origin = originOf(m.zone);
         const estimates = await Promise.all(
           targets.map((t) => this.estimator.getRoutes({ startX: origin.longitude, startY: origin.latitude, endX: t.destination.longitude, endY: t.destination.latitude })),
         );
-        return { ...m, origin, estimates };
+        const walks = targets.map((t) =>
+          walkCommuteOf(haversineMeters(m.zone.latitude, m.zone.longitude, t.destination.latitude, t.destination.longitude), t.maxCommuteMinutes, noTransferExtraMinutes),
+        );
+        return { ...m, origin, estimates, walks };
       }),
     );
     const plausible = estimated.filter((e) =>
-      targets.every((t, i) => (e.estimates[i].best?.totalMinutes ?? Infinity) + e.origin.walk <= estimateCutoff(t.maxCommuteMinutes, noTransferExtraMinutes)),
+      targets.every(
+        (t, i) => e.walks[i] !== null || (e.estimates[i].best?.totalMinutes ?? Infinity) + e.origin.walk <= estimateCutoff(t.maxCommuteMinutes, noTransferExtraMinutes),
+      ),
     );
 
     // 4) 상위만 실측, 나머지와 한도 초과 이후는 추정값.
-    //    혼자면 주거 점수 순, 같이 사는 사람이 있으면 둘 중 더 오래 걸리는 추정 시간이 짧은 순으로 잰다
+    //    혼자면 주거 점수 순, 같이 사는 사람이 있으면 둘 중 더 오래 걸리는 추정 시간이 짧은 순으로 잰다.
+    //    모두 걸어서 갈 수 있는 곳은 실측하지 않으므로 실측 상한에 세지 않는다
     const worstEstimate = (e: (typeof plausible)[number]) => Math.max(...e.estimates.map((r) => r.best?.totalMinutes ?? Infinity));
     const ordered = [...plausible].sort((a, b) =>
       partner ? worstEstimate(a) - worstEstimate(b) || b.zone.residentialScore - a.zone.residentialScore : b.zone.residentialScore - a.zone.residentialScore,
     );
     const limit = partner ? AREA_SETTINGS.pairMeasureLimit : AREA_SETTINGS.measureLimit;
+    const needsRoute = (e: (typeof plausible)[number]) => e.walks.some((w, t) => w === null && !(t === 1 && samePlace));
+    const routable = plausible.filter(needsRoute).length;
     let quotaHit = false;
     let measured = 0;
+    let rank = 0;
     const areas: AreaRecommendation[] = [];
-    for (const [index, item] of ordered.entries()) {
+    for (const item of ordered) {
+      const index = needsRoute(item) ? rank++ : -1;
       const commutes: AreaCommute[] = [];
       for (const [t, target] of targets.entries()) {
         if (t === 1 && samePlace) {
           commutes.push(commutes[0]);
+          continue;
+        }
+        const walk = item.walks[t];
+        if (walk) {
+          commutes.push(walk);
           continue;
         }
         let route: TransitRouteResult | null = null;
@@ -250,8 +267,8 @@ export class AreaRecommendationsService implements OnApplicationBootstrap {
       },
       warnings: [
         ...(quotaHit ? ["경로 API 호출 한도를 초과했어요. 캐시에 없는 생활권은 직선거리 추정값입니다."] : []),
-        ...(!quotaHit && plausible.length > limit
-          ? [`실측은 상위 ${limit}곳까지만 했어요. 나머지 ${plausible.length - limit}곳은 추정값입니다.`]
+        ...(!quotaHit && routable > limit
+          ? [`실측은 상위 ${limit}곳까지만 했어요. 나머지 ${routable - limit}곳은 추정값입니다.`]
           : []),
         ...(partner && mine.length > 0 && inRadius.length === 0 ? ["두 출근지에서 모두 갈 수 있는 반경 안에 생활권이 없어요. 통근시간을 늘려보세요."] : []),
         ...(mine.length === 0 ? ["주변에 생활권이 없어요. 이 지역 실거래 수집·지오코딩 후 pipeline:anchors, pipeline:zones가 필요합니다."] : []),

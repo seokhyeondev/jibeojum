@@ -243,8 +243,14 @@ function AreaResult({ result }: { result: AreaRecommendationResult }) {
               <span>
                 <b>{area.commute.bestMinutes === null ? "-" : `${area.commute.bestMinutes}분`}</b>
                 <small>
-                  {area.commute.walkMinutes !== null ? `도보 ${area.commute.walkMinutes} + ` : ""}
-                  대중교통 {area.commute.transitMinutes ?? "-"}분 · 환승 {area.commute.bestTransferCount ?? "-"}회
+                  {area.commute.walkOnly ? (
+                    "걸어서 (직선 도보)"
+                  ) : (
+                    <>
+                      {area.commute.walkMinutes !== null ? `도보 ${area.commute.walkMinutes} + ` : ""}
+                      대중교통 {area.commute.transitMinutes ?? "-"}분 · 환승 {area.commute.bestTransferCount ?? "-"}회
+                    </>
+                  )}
                 </small>
                 {area.commute.estimated && <em className="fit estimate">추정</em>}
               </span>

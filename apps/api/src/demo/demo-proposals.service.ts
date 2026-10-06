@@ -250,7 +250,7 @@ export class DemoProposalsService {
       busMinutes: area.kind === "bus" ? ride : 0,
       subwayMinutes: area.kind === "bus" ? 0 : ride,
       transferCount: transfers,
-      routeSummary: `${area.name} 동네 기준 · ${transfers ? `환승 ${transfers}회` : "환승 없음"} · 도보 ${walk}분`,
+      routeSummary: c.walkOnly ? `${area.name} 동네 기준 · 걸어서 ${walk}분` : `${area.name} 동네 기준 · ${transfers ? `환승 ${transfers}회` : "환승 없음"} · 도보 ${walk}분`,
       calculatedAt: new Date().toISOString(),
       provider: "internal",
     };

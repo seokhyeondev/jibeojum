@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AreaCriteria, AreaRecommendation, ZoneTypeStats } from "@zipazum/shared";
-import { budgetFitOf, candidateRadiusKm, classifyMinutes, estimateCutoff, matchTypes, rankAreas, rankPairAreas } from "../src/areas/area-recommend.js";
+import { budgetFitOf, candidateRadiusKm, classifyMinutes, estimateCutoff, matchTypes, rankAreas, rankPairAreas, walkCommuteOf } from "../src/areas/area-recommend.js";
 import { mergePlaces, parseNaverAddresses, parseNaverLocal, parseVworldPlaces } from "../src/places/place-search.js";
 
 const stats = (count: number, dep: number | null, rent: number | null, jeonse: number | null): ZoneTypeStats => ({
@@ -69,6 +69,15 @@ describe("통근 분류와 후보 범위", () => {
     expect(candidateRadiusKm(5, 0)).toBe(5);
     expect(candidateRadiusKm(120, 20)).toBe(45);
     expect(estimateCutoff(60, 10)).toBeCloseTo(96);
+  });
+
+  it("걸어서 15분(직선 1km, 4km/h) 안이면 대중교통 없이 도보 통근으로 넣는다", () => {
+    const near = walkCommuteOf(600, 20, 10);
+    expect(near).toMatchObject({ bestMinutes: 9, walkMinutes: 9, transitMinutes: null, bestTransferCount: 0, fit: "within", walkOnly: true, provider: "walk" });
+    expect(walkCommuteOf(1000, 20, 10)?.bestMinutes).toBe(15);
+    expect(walkCommuteOf(1100, 20, 10)).toBeNull();
+    // 출근지 바로 앞이어도 1분
+    expect(walkCommuteOf(0, 20, 10)?.bestMinutes).toBe(1);
   });
 
   it("시간 내가 먼저, 같은 그룹은 짧은 순", () => {

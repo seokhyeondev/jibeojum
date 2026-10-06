@@ -45,6 +45,8 @@ export interface AreaCommute {
   provider: string;
   /** 경로 API를 쓰지 않고 직선거리로 추정한 값 */
   estimated: boolean;
+  /** 출근지까지 걸어서 가는 거리(직주근접). bestMinutes가 도보 시간이다 */
+  walkOnly?: boolean;
 }
 
 /** 추천 생활권 (역세권 도보 15분 또는 행정동 버스권) */
