@@ -104,5 +104,6 @@ pnpm pipeline:collect && pnpm pipeline:geocode && pnpm pipeline:anchors
 
 - Nest CLI 12는 Node 22.14에서 실행되지 않아, API는 `tsc`로 빌드하고 `apps/api/scripts/dev.mjs`(tsc --watch + node --watch)로 개발 서버를 띄웁니다.
 - 환경변수 예시는 `apps/api/.env.example`, `apps/web/.env.example`. 실제 값은 `.env.local`에만 두고 커밋하지 않습니다.
+- 기획 문서: [docs/commute-zones-plan.md](docs/commute-zones-plan.md) (추천 생활권·직주근접), [docs/coliving-plan.md](docs/coliving-plan.md) (코리빙 제안 구상, 미확정)
 
 개발 규칙은 `AGENTS.md`를 참고하세요.
